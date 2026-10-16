@@ -30,12 +30,20 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
 ## Findings so far
 
-- **UCUM service on JS and Wasm.** Since cqframework #1819 (in 5.2.0 and later), the compiler asks the UCUM service
-  about every quantity literal, calendar durations such as `4 weeks` included. On JS and Wasm cqframework's default
-  service throws "No default UCUM service available", so every library with a quantity literal fails to compile
-  unless the caller supplies a service through `createUcumService` or `LibraryManager`'s `lazyUcumService`. The tests
-  use `UnvalidatedUcumService` there, which accepts every unit and converts only between identical units. There is no
-  multiplatform UCUM implementation in cqframework; its `ucum` module is JVM only.
+- **UCUM service on JS and Wasm.** On JS and Wasm the caller must supply a UCUM service, by design: cqframework's
+  default there throws "No default UCUM service available", and its playground supplies one by wrapping the
+  `@lhncbc/ucum-lhc` npm package with `createUcumService`. cqframework has no multiplatform UCUM implementation (its
+  `ucum` module is JVM only), so a Kotlin consumer on a web target has nothing to plug in short of wrapping
+  `ucum-lhc` through JS interop. The tests use `UnvalidatedUcumService` there, which accepts every unit and converts
+  only between identical units. That is exact for this content: the closure's quantity literals use only calendar
+  units (`months` 160 times, `weeks` 70, `year` 4).
+- **Calendar-only CQL needs a UCUM service since cqframework #1819** (read, not run). Before #1819 (5.1.0 and
+  earlier) quantity literals in calendar units did not consult the UCUM service. Since #1819 (5.2.0 and later) the
+  check for UCUM arbitrary units consults it for every unit, so CQL such as the WHO closure, which compiled on JS and
+  Wasm without a UCUM service, now fails to compile without one. Seen on 5.4.0 under Node; the 5.1.0 side is from
+  reading the source.
+- **`validateUnits` compiler option is not read** (read, not run). On cqframework `main` at fb8055df the CLI and
+  options files set it, but nothing in the compiler reads it; quantity units are validated regardless.
 - **Patient context paths.** The element linking each resource type to its patient is a hand-written table for seven
   types (`KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS`); the model info does not record it.
 - **dateTime precision.** kotlin-fhir does not record how many fractional-second digits a dateTime had, so a value
