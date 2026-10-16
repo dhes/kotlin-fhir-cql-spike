@@ -15,6 +15,11 @@ The pieces are in `src/commonMain`:
 results in `fixtures/expected/`. `src/commonTest` checks the same scenarios against those files and against WHO's
 expectations on every target.
 
+Both runs in `src/jvmTest` use the same `FhirCqlEvaluator`, `InMemoryRetrieveProvider` and
+`InMemoryTerminologyProvider`; only the converter and the model resolver differ. Agreement with HAPI therefore checks
+`KotlinFhirToCql` and `KotlinFhirModelResolver`. The retrieve and terminology providers are checked only by WHO's
+expectations: the guidance text, the predicted `$apply` resource count and, for Conditions, the twins.
+
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
 ## Status
