@@ -42,7 +42,8 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   fails in all three versions. The change is consistent with cqframework #1819 (first released in 5.2.0), whose
   check for UCUM arbitrary units consults the service for every quantity literal. So the WHO closure, whose only
   quantities are calendar durations, compiled on JS and Wasm with no UCUM service before 5.2.0 and does not now.
-  The probe is in Dan's cqframework hub, `probes/2026-10-15-ucum-calendar-units`.
+  The probe is in Dan's cqframework hub, `probes/2026-10-15-ucum-calendar-units`. Reported as
+  cqframework/clinical_quality_language#1869 (2026-10-16).
 - **`validateUnits` compiler option is not read** (read, not run). On cqframework `main` at fb8055df the CLI and
   options files set it, but nothing in the compiler reads it; quantity units are validated regardless.
 - **Patient context paths.** The element linking each resource type to its patient is a hand-written table for seven
