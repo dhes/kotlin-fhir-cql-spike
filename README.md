@@ -67,7 +67,8 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 - **`Split` is not implemented on JS or Wasm.** In cqframework 5.4.0, and on `main` at fb8055df, the engine's
   `stringUtilsSplit` is `TODO()` on both targets, so CQL's `Split` throws `NotImplementedError`; on the JVM it calls
   Apache Commons `StringUtils.split`. WHO's `WHOCommon.references()` and `IMMZCommon`'s medication lookup use
-  `Split`. In step 4 it is reached by 6 Typhoid Ty21a scenarios. Not raised upstream.
+  `Split`. In step 4 it is reached by 6 Typhoid Ty21a scenarios. Reported as
+  cqframework/clinical_quality_language#1870 (2026-10-16).
 - **An invalid WHO test bundle.** `tests-Typhoid41.1-bundle.json` has a MedicationRequest without `medication[x]`,
   which R4 requires. kotlin-fhir rejects the bundle; HAPI's parser accepts it. Its scenario and twin are skipped on
   the kotlin-fhir side. Not raised upstream.
