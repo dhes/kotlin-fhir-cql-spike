@@ -37,11 +37,12 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   `ucum-lhc` through JS interop. The tests use `UnvalidatedUcumService` there, which accepts every unit and converts
   only between identical units. That is exact for this content: the closure's quantity literals use only calendar
   units (`months` 160 times, `weeks` 70, `year` 4).
-- **Calendar-only CQL needs a UCUM service since cqframework #1819** (read, not run). Before #1819 (5.1.0 and
-  earlier) quantity literals in calendar units did not consult the UCUM service. Since #1819 (5.2.0 and later) the
-  check for UCUM arbitrary units consults it for every unit, so CQL such as the WHO closure, which compiled on JS and
-  Wasm without a UCUM service, now fails to compile without one. Seen on 5.4.0 under Node; the 5.1.0 side is from
-  reading the source.
+- **Calendar-only CQL needs a UCUM service since cqframework 5.2.0.** Ran 2026-10-15: `define X: 4 weeks` compiles
+  with no UCUM service under cql-to-elm 5.1.0 and fails under 5.2.0 and 5.4.0, on JS, Wasm and the JVM; `4 'mg'`
+  fails in all three versions. The change is consistent with cqframework #1819 (first released in 5.2.0), whose
+  check for UCUM arbitrary units consults the service for every quantity literal. So the WHO closure, whose only
+  quantities are calendar durations, compiled on JS and Wasm with no UCUM service before 5.2.0 and does not now.
+  The probe is in Dan's cqframework hub, `probes/2026-10-15-ucum-calendar-units`.
 - **`validateUnits` compiler option is not read** (read, not run). On cqframework `main` at fb8055df the CLI and
   options files set it, but nothing in the compiler reads it; quantity units are validated regardless.
 - **Patient context paths.** The element linking each resource type to its patient is a hand-written table for seven
