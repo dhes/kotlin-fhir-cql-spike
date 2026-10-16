@@ -37,7 +37,8 @@ object MeaslesFixtures {
 
     val modelInfoXml: String by lazy { readText("third_party/cqframework-quick-5.4.0/fhir-modelinfo-4.0.1.xml") }
 
-    val libraries: List<String> by lazy { list(CQL_DIR).filter { it.endsWith(".cql") }.map { it.removeSuffix(".cql") } }
+    /** The logic library and the 10 libraries it includes, directly or not. */
+    val libraries: List<String> by lazy { WhoSuite.closure(LOGIC_LIBRARY) }
 
     val librarySources: List<String> by lazy {
         libraries.map { readText("$CQL_DIR/$it.cql") } + readText("third_party/cqframework-quick-5.4.0/FHIRHelpers-4.0.1.cql")

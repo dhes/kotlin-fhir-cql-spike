@@ -1,0 +1,2008 @@
+{
+  "IMMZD18SBCG": {
+    "library": "IMMZD18SBCGLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Bacille Calmette\u2013Gu\u00e9rin (BCG) dose 1"
+      }
+    ]
+  },
+  "IMMZD18SCholeraWCRBSVaccine2Doses": {
+    "library": "IMMZD18SCholeraWCRBSVaccine2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera booster dose"
+      }
+    ]
+  },
+  "IMMZD18SCholeraWCRBSVaccine3Doses": {
+    "library": "IMMZD18SCholeraWCRBSVaccine3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera booster dose"
+      }
+    ]
+  },
+  "IMMZD18SCholeraWCVaccines": {
+    "library": "IMMZD18SCholeraWCVaccinesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera booster dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Cholera booster dose 2"
+      }
+    ]
+  },
+  "IMMZD18SDTPDelayedOrInterruptedSeries": {
+    "library": "IMMZD18SDTPDelayedOrInterruptedSeriesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "DTP dose 1 (delayed start)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "DTP dose 2 (delayed start)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "DTP dose 3 (delayed start)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 1 (delayed start)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 2 (delayed start)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pertussis-containing vaccine booster dose 1 (delayed start)"
+      }
+    ]
+  },
+  "IMMZD18SDTPOnTimeStart": {
+    "library": "IMMZD18SDTPOnTimeStartLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "DTP dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "DTP dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "DTP dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pertussis-containing vaccine booster dose"
+      }
+    ]
+  },
+  "IMMZD18SDTPPregnancyStartingWith3Doses": {
+    "library": "IMMZD18SDTPPregnancyStartingWith3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 1 (during pregnancy)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 2 (during pregnancy)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 3"
+      }
+    ]
+  },
+  "IMMZD18SDTPPregnancyStartingWith4Doses": {
+    "library": "IMMZD18SDTPPregnancyStartingWith4DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 2 (during pregnancy)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tetanus and diphtheria-containing vaccine booster dose 3"
+      }
+    ]
+  },
+  "IMMZD18SDengue3DosesWithPreVaccinationScreening": {
+    "library": "IMMZD18SDengue3DosesWithPreVaccinationScreeningLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Dengue dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Dengue dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Dengue dose 3"
+      }
+    ]
+  },
+  "IMMZD18SHPV2Doses": {
+    "library": "IMMZD18SHPV2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "HPV dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "HPV dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "HPV dose 3 (immunocompromised or HIV-positive)"
+      }
+    ]
+  },
+  "IMMZD18SHPVSingleDose": {
+    "library": "IMMZD18SHPVSingleDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Human papillomavirus (HPV) dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "HPV dose 2 (Immunocompromised or HIV-positive)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "HPV dose 3 (Immunocompromised or HIV-positive)"
+      }
+    ]
+  },
+  "IMMZD18SHepatitisAInactivatedHAV1Dose": {
+    "library": "IMMZD18SHepatitisAInactivatedHAV1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis A dose 1"
+      }
+    ]
+  },
+  "IMMZD18SHepatitisAInactivatedHAV2Doses": {
+    "library": "IMMZD18SHepatitisAInactivatedHAV2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis A dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis A dose 2"
+      }
+    ]
+  },
+  "IMMZD18SHepatitisALiveAttenuatedHAV1Dose": {
+    "library": "IMMZD18SHepatitisALiveAttenuatedHAV1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis A dose 1"
+      }
+    ]
+  },
+  "IMMZD18SHepatitisB3Doses": {
+    "library": "IMMZD18SHepatitisB3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 3"
+      }
+    ]
+  },
+  "IMMZD18SHepatitisB4Doses": {
+    "library": "IMMZD18SHepatitisB4DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 3"
+      }
+    ]
+  },
+  "IMMZD18SHepatitisBBirthDose": {
+    "library": "IMMZD18SHepatitisBBirthDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B birth dose"
+      }
+    ]
+  },
+  "IMMZD18SHepatitisBDelayedStart": {
+    "library": "IMMZD18SHepatitisBDelayedStartLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hepatitis B dose 3"
+      }
+    ]
+  },
+  "IMMZD18SHib2DosesWithBoosterDose": {
+    "library": "IMMZD18SHib2DosesWithBoosterDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Haemophilus influenzae type b (Hib) dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hib dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hib booster dose"
+      }
+    ]
+  },
+  "IMMZD18SHib3Doses": {
+    "library": "IMMZD18SHib3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Haemophilus influenzae type b (Hib) dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hib dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hib dose 3"
+      }
+    ]
+  },
+  "IMMZD18SHib3DosesWithBoosterDose": {
+    "library": "IMMZD18SHib3DosesWithBoosterDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Haemophilus influenzae type b (Hib) dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hib dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hib dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Hib booster dose"
+      }
+    ]
+  },
+  "IMMZD18SJEInactivatedVeroCellDerivedVaccine": {
+    "library": "IMMZD18SJEInactivatedVeroCellDerivedVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Japanese encephalitis (JE) dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "JE dose 2"
+      }
+    ]
+  },
+  "IMMZD18SJELiveAttenuatedVaccine": {
+    "library": "IMMZD18SJELiveAttenuatedVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Japanese encephalitis (JE) dose 1"
+      }
+    ]
+  },
+  "IMMZD18SJELiveRecombinantVaccine": {
+    "library": "IMMZD18SJELiveRecombinantVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Japanese encephalitis (JE) dose 1"
+      }
+    ]
+  },
+  "IMMZD18SMalaria": {
+    "library": "IMMZD18SMalariaLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Malaria dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Malaria dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Malaria dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Malaria dose 4"
+      }
+    ]
+  },
+  "IMMZD18SMeaslesLowTransmission": {
+    "library": "IMMZD18SMeaslesLowTransmissionLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "MCV dose 1 (MCV1)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "MCV2"
+      }
+    ]
+  },
+  "IMMZD18SMeaslesMCVDose0": {
+    "library": "IMMZD18SMeaslesMCVDose0Logic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "MCV0"
+      }
+    ]
+  },
+  "IMMZD18SMeaslesOngoingTransmission": {
+    "library": "IMMZD18SMeaslesOngoingTransmissionLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "MCV dose 1 (MCV1)"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "MCV2"
+      }
+    ]
+  },
+  "IMMZD18SMeaslesSupplementaryDose": {
+    "library": "IMMZD18SMeaslesSupplementaryDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Measles-containing vaccine (MCV) supplementary dose"
+      }
+    ]
+  },
+  "IMMZD18SMeningococcalMenAConjugateVaccine1Dose": {
+    "library": "IMMZD18SMeningococcalMenAConjugateVaccine1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 1"
+      }
+    ]
+  },
+  "IMMZD18SMeningococcalMenAConjugateVaccine2Doses": {
+    "library": "IMMZD18SMeningococcalMenAConjugateVaccine2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 2"
+      }
+    ]
+  },
+  "IMMZD18SMeningococcalMonovalentMenCConjugateVaccine": {
+    "library": "IMMZD18SMeningococcalMonovalentMenCConjugateVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal booster dose"
+      }
+    ]
+  },
+  "IMMZD18SMeningococcalPolysaccharideVaccines": {
+    "library": "IMMZD18SMeningococcalPolysaccharideVaccinesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal booster dose"
+      }
+    ]
+  },
+  "IMMZD18SMeningococcalQuadrivalentConjugateVaccines1Dose": {
+    "library": "IMMZD18SMeningococcalQuadrivalentConjugateVaccines1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 1"
+      }
+    ]
+  },
+  "IMMZD18SMeningococcalQuadrivalentConjugateVaccines2Doses": {
+    "library": "IMMZD18SMeningococcalQuadrivalentConjugateVaccines2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Meningococcal dose 2"
+      }
+    ]
+  },
+  "IMMZD18SMumps": {
+    "library": "IMMZD18SMumpsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Mumps dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Mumps dose 2"
+      }
+    ]
+  },
+  "IMMZD18SPneumococcal2DosesWithBoosterDose": {
+    "library": "IMMZD18SPneumococcal2DosesWithBoosterDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal second booster dose"
+      }
+    ]
+  },
+  "IMMZD18SPneumococcal3Doses": {
+    "library": "IMMZD18SPneumococcal3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal dose 2, first within 24m"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal dose 2, first after 24m"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Pneumococcal booster dose"
+      }
+    ]
+  },
+  "IMMZD18SPolioBOPVPlusIPV": {
+    "library": "IMMZD18SPolioBOPVPlusIPVLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "bOPV dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "bOPV dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "bOPV dose 3"
+      }
+    ]
+  },
+  "IMMZD18SPolioBirthDose": {
+    "library": "IMMZD18SPolioBirthDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "bOPV birth dose (a zero dose)"
+      }
+    ]
+  },
+  "IMMZD18SPolioIPVOnly": {
+    "library": "IMMZD18SPolioIPVOnlyLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV booster"
+      }
+    ]
+  },
+  "IMMZD18SPolioSequentialIPVbOPV": {
+    "library": "IMMZD18SPolioSequentialIPVbOPVLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "IPV dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "bOPV dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "bOPV dose 2"
+      }
+    ]
+  },
+  "IMMZD18SRabies": {
+    "library": "IMMZD18SRabiesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Rabies dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Rabies dose 2"
+      }
+    ]
+  },
+  "IMMZD18SRotavirus": {
+    "library": "IMMZD18SRotavirusLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Rotavirus dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Rotavirus dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Rotavirus dose 3"
+      }
+    ]
+  },
+  "IMMZD18SRubellaHighIncidence": {
+    "library": "IMMZD18SRubellaHighIncidenceLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Rubella dose 1"
+      }
+    ]
+  },
+  "IMMZD18SRubellaLowIncidence": {
+    "library": "IMMZD18SRubellaLowIncidenceLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Rubella dose 1"
+      }
+    ]
+  },
+  "IMMZD18SSeasonalinfluenzaSeasonalInfluenza": {
+    "library": "IMMZD18SSeasonalinfluenzaSeasonalInfluenzaLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Seasonal influenza dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Seasonal influenza dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Seasonal influenza annual dose"
+      }
+    ]
+  },
+  "IMMZD18STBEEnceVir": {
+    "library": "IMMZD18STBEEnceVirLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tick-borne encephalitis (TBE) EnceVir dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE EnceVir Dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE EnceVir dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE EnceVir booster dose"
+      }
+    ]
+  },
+  "IMMZD18STBEEncepur": {
+    "library": "IMMZD18STBEEncepurLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tick-borne encephalitis (TBE) Encepur dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE Encepur dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE Encepur dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE Encepur booster dose"
+      }
+    ]
+  },
+  "IMMZD18STBEFSMEImmun": {
+    "library": "IMMZD18STBEFSMEImmunLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tick-borne encephalitis (TBE) FSME-Immun dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE FSME-Immun dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE FSME-Immun dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE FSME-Immun booster dose"
+      }
+    ]
+  },
+  "IMMZD18STBETBEMoscow": {
+    "library": "IMMZD18STBETBEMoscowLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Tick-borne encephalitis (TBE)-Moscow dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE-Moscow dose 2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE-Moscow dose 3"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TBE-Moscow booster dose(s)"
+      }
+    ]
+  },
+  "IMMZD18STyphoidTCV": {
+    "library": "IMMZD18STyphoidTCVLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "TCV dose 1"
+      }
+    ]
+  },
+  "IMMZD18STyphoidTy21a": {
+    "library": "IMMZD18STyphoidTy21aLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Typhoid Ty21a primary series"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Typhoid booster dose(s) repeat 3-doses series"
+      }
+    ]
+  },
+  "IMMZD18STyphoidViPS": {
+    "library": "IMMZD18STyphoidViPSLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Typhoid dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Typhoid booster dose(s)"
+      }
+    ]
+  },
+  "IMMZD18SVaricella1Dose": {
+    "library": "IMMZD18SVaricella1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Varicella dose 1"
+      }
+    ]
+  },
+  "IMMZD18SVaricella2Doses": {
+    "library": "IMMZD18SVaricella2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Varicella dose 1"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Varicella dose 2"
+      }
+    ]
+  },
+  "IMMZD18SYellowfeverYellowFever": {
+    "library": "IMMZD18SYellowfeverYellowFeverLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Yellow fever dose 1"
+      }
+    ]
+  },
+  "IMMZD2DTBCG": {
+    "library": "IMMZD2DTBCGLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for BCG vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTCholeraWCRBSVaccine2Doses": {
+    "library": "IMMZD2DTCholeraWCRBSVaccine2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for cholera vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for cholera booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTCholeraWCRBSVaccine3Doses": {
+    "library": "IMMZD2DTCholeraWCRBSVaccine3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for cholera vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for cholera booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTCholeraWCVaccines": {
+    "library": "IMMZD2DTCholeraWCVaccinesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for cholera vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for cholera booster dose"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for cholera booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTDTPDelayedOrInterruptedSeries": {
+    "library": "IMMZD2DTDTPDelayedOrInterruptedSeriesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for DTP vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary DTP series is complete. Client is due for tetanus and diphtheria booster dose"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for tetanus and diphtheria booster dose"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary DTP series is complete. Client is due for pertussis booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTDTPOnTimeStart": {
+    "library": "IMMZD2DTDTPOnTimeStartLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for DTP vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary DTP series is complete. Client is due for tetanus and diphtheria booster dose"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for tetanus and diphtheria booster dose"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary DTP series is complete. Client is due for pertussis booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTDTPPregnancy": {
+    "library": "IMMZD2DTDTPPregnancyLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTDTPPregnancyStartingWith3Doses": {
+    "library": "IMMZD2DTDTPPregnancyStartingWith3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for tetanus and diphtheria booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTDTPPregnancyStartingWith4Doses": {
+    "library": "IMMZD2DTDTPPregnancyStartingWith4DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for tetanus and diphtheria booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTDengue3DosesWithPreVaccinationScreening": {
+    "library": "IMMZD2DTDengue3DosesWithPreVaccinationScreeningLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for dengue vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTDengue3DosesWithoutPreVaccinationScreening": {
+    "library": "IMMZD2DTDengue3DosesWithoutPreVaccinationScreeningLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for dengue vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHPV2Doses": {
+    "library": "IMMZD2DTHPV2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for HPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHPVSingleDose": {
+    "library": "IMMZD2DTHPVSingleDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for HPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHepatitisAInactivatedHAV1Dose": {
+    "library": "IMMZD2DTHepatitisAInactivatedHAV1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Hepatitis A vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHepatitisAInactivatedHAV2Doses": {
+    "library": "IMMZD2DTHepatitisAInactivatedHAV2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Hepatitis A vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHepatitisALiveAttenuatedHAV1Dose": {
+    "library": "IMMZD2DTHepatitisALiveAttenuatedHAV1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Hepatitis A vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHepatitisB3Doses": {
+    "library": "IMMZD2DTHepatitisB3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for a hepatitis B vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHepatitisB4Doses": {
+    "library": "IMMZD2DTHepatitisB4DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for a hepatitis B vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHepatitisBBirthDose": {
+    "library": "IMMZD2DTHepatitisBBirthDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for hepatitis B monovalent vaccine"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHepatitisBDelayedStart": {
+    "library": "IMMZD2DTHepatitisBDelayedStartLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for hepatitis B vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for a hepatitis B vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHib2DosesWithBoosterDose": {
+    "library": "IMMZD2DTHib2DosesWithBoosterDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Hib vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for Hib booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHib3Doses": {
+    "library": "IMMZD2DTHib3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Hib vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTHib3DosesWithBoosterDose": {
+    "library": "IMMZD2DTHib3DosesWithBoosterDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Hib vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for Hib booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTJEInactivatedVeroCellDerivedVaccine": {
+    "library": "IMMZD2DTJEInactivatedVeroCellDerivedVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for JE vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTJELiveAttenuatedVaccine": {
+    "library": "IMMZD2DTJELiveAttenuatedVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for JE vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTJELiveRecombinantVaccine": {
+    "library": "IMMZD2DTJELiveRecombinantVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for JE vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMalaria": {
+    "library": "IMMZD2DTMalariaLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for malaria vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeaslesLowTransmission": {
+    "library": "IMMZD2DTMeaslesLowTransmissionLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for MCV1"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for MCV2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeaslesMCVDose0": {
+    "library": "IMMZD2DTMeaslesMCVDose0Logic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeaslesOngoingTransmission": {
+    "library": "IMMZD2DTMeaslesOngoingTransmissionLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for MCV1"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for MCV2"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeaslesSupplementaryDose": {
+    "library": "IMMZD2DTMeaslesSupplementaryDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeningococcalMenAConjugateVaccine1Dose": {
+    "library": "IMMZD2DTMeningococcalMenAConjugateVaccine1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for meningococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeningococcalMenAConjugateVaccine2Doses": {
+    "library": "IMMZD2DTMeningococcalMenAConjugateVaccine2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for meningococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeningococcalMonovalentMenCConjugateVaccine": {
+    "library": "IMMZD2DTMeningococcalMonovalentMenCConjugateVaccineLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for meningococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "The primary series is complete. Client is due for meningococcal booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeningococcalPolysaccharideVaccines": {
+    "library": "IMMZD2DTMeningococcalPolysaccharideVaccinesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for meningococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeningococcalQuadrivalentConjugateVaccines1Dose": {
+    "library": "IMMZD2DTMeningococcalQuadrivalentConjugateVaccines1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for meningococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMeningococcalQuadrivalentConjugateVaccines2Doses": {
+    "library": "IMMZD2DTMeningococcalQuadrivalentConjugateVaccines2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for meningococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTMumps": {
+    "library": "IMMZD2DTMumpsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for mumps vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTPneumococcal2DosesWithBoosterDose": {
+    "library": "IMMZD2DTPneumococcal2DosesWithBoosterDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for pneumococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for pneumococcal booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTPneumococcal3Doses": {
+    "library": "IMMZD2DTPneumococcal3DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for pneumococcal vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for pneumococcal booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTPolioBOPVPlusIPV": {
+    "library": "IMMZD2DTPolioBOPVPlusIPVLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for bOPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for bOPV and IPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for bOPV and IPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for IPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTPolioBirthDose": {
+    "library": "IMMZD2DTPolioBirthDoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for the bOPV birth dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTPolioIPVOnly": {
+    "library": "IMMZD2DTPolioIPVOnlyLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for IPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for IPV booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTPolioSequentialIPVbOPV": {
+    "library": "IMMZD2DTPolioSequentialIPVbOPVLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for IPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for bOPV vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTRabies": {
+    "library": "IMMZD2DTRabiesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for rabies vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTRotavirus": {
+    "library": "IMMZD2DTRotavirusLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for rotavirus vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTRubellaHighIncidence": {
+    "library": "IMMZD2DTRubellaHighIncidenceLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for rubella vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTRubellaLowIncidence": {
+    "library": "IMMZD2DTRubellaLowIncidenceLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for rubella vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTSeasonalinfluenzaSeasonalInfluenza": {
+    "library": "IMMZD2DTSeasonalinfluenzaSeasonalInfluenzaLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for seasonal influenza vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "The primary series is complete. Client is due for seasonal influenza annual dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTTBEEnceVir": {
+    "library": "IMMZD2DTTBEEnceVirLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for TBE vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for TBE booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTTBEEncepur": {
+    "library": "IMMZD2DTTBEEncepurLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for TBE vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "The primary series is complete"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTTBEFSMEImmun": {
+    "library": "IMMZD2DTTBEFSMEImmunLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for TBE vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for TBE booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTTBETBEMoscow": {
+    "library": "IMMZD2DTTBETBEMoscowLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for TBE vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for TBE booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTTyphoidTCV": {
+    "library": "IMMZD2DTTyphoidTCVLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Typhoid vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTTyphoidTy21a": {
+    "library": "IMMZD2DTTyphoidTy21aLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Typhoid vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for typhoid booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTTyphoidViPS": {
+    "library": "IMMZD2DTTyphoidViPSLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for Typhoid vaccination"
+      },
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Primary series is complete. Client is due for typhoid booster dose"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTVaricella1Dose": {
+    "library": "IMMZD2DTVaricella1DoseLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for varicella vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTVaricella2Doses": {
+    "library": "IMMZD2DTVaricella2DosesLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for varicella vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD2DTYellowfeverYellowFever": {
+    "library": "IMMZD2DTYellowfeverYellowFeverLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTMR",
+        "condition": "Client is due for yellow fever vaccination"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTBCGContraindications": {
+    "library": "IMMZD5DTBCGContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "BCG vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Bacille Calmette\u2013Gu\u00e9rin (BCG) vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTDTPContraindications": {
+    "library": "IMMZD5DTDTPContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Tetanus vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTDengueContraindications": {
+    "library": "IMMZD5DTDengueContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Dengue vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTHPVContraindications": {
+    "library": "IMMZD5DTHPVContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Human papillomavirus (HPV) vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTHepatitisAContraindications": {
+    "library": "IMMZD5DTHepatitisAContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Live attentuated Hepatitis A-containing vaccine is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTHepatitisBContraindications": {
+    "library": "IMMZD5DTHepatitisBContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTHibContraindications": {
+    "library": "IMMZD5DTHibContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTJEContraindications": {
+    "library": "IMMZD5DTJEContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTMalariaContraindications": {
+    "library": "IMMZD5DTMalariaContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTMeaslesContraindications": {
+    "library": "IMMZD5DTMeaslesContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Measles vaccination contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTMeningococcalContraindications": {
+    "library": "IMMZD5DTMeningococcalContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTMumpsContraindications": {
+    "library": "IMMZD5DTMumpsContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Mumps vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTPneumococcalContraindications": {
+    "library": "IMMZD5DTPneumococcalContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTPolioContraindications": {
+    "library": "IMMZD5DTPolioContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Poliovirus vaccination with bOPV is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTRabiesContraindications": {
+    "library": "IMMZD5DTRabiesContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTRotavirusContraindications": {
+    "library": "IMMZD5DTRotavirusContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Rotavirus vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTRubellaContraindications": {
+    "library": "IMMZD5DTRubellaContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Rubella vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTSeasonalInfluenzaContraindications": {
+    "library": "IMMZD5DTSeasonalInfluenzaContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTTBEContraindications": {
+    "library": "IMMZD5DTTBEContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTTyphoidContraindications": {
+    "library": "IMMZD5DTTyphoidContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Typhoid vaccination is contraindicated for Ty21a vaccine."
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTVaricellaContraindications": {
+    "library": "IMMZD5DTVaricellaContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Varicella vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  },
+  "IMMZD5DTYellowFeverContraindications": {
+    "library": "IMMZD5DTYellowFeverContraindicationsLogic",
+    "actions": [
+      {
+        "definition": "IMMZD5DTMR",
+        "condition": "Yellow fever vaccination is contraindicated"
+      },
+      {
+        "definition": "IMMZD2DTCR",
+        "condition": "Has Guidance"
+      }
+    ]
+  }
+}

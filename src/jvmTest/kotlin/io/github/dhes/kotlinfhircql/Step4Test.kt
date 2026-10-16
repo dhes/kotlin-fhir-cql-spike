@@ -1,0 +1,91 @@
+package io.github.dhes.kotlinfhircql
+
+import ca.uhn.fhir.context.FhirContext
+import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertTrue
+import kotlin.time.measureTime
+import kotlinx.serialization.json.Json
+import org.opencds.cqf.cql.engine.fhir.model.R4FhirModelResolver
+import org.opencds.cqf.cql.engine.runtime.ClassInstance
+
+/**
+ * Step 4: WHO's whole immunization test suite (1,021 scenarios) and 79 twins recording a contraindication as a
+ * Condition. For every scenario, every definition in the closure of its logic library is compared with
+ * cqframework's HAPI-based resolver; WHO's expected guidance and resource count are checked on both sides.
+ * Records the HAPI outcomes in [WhoSuite.EXPECTED] for [WhoSuiteTest] on the other targets.
+ */
+class Step4Test {
+    private fun hapiResources(scenario: WhoScenario, resolver: R4FhirModelResolver, context: FhirContext): List<ClassInstance> {
+        val bundle = context.newJsonParser().parseResource(org.hl7.fhir.r4.model.Bundle::class.java, WhoSuite.bundleJson(scenario))
+        return bundle.entry.mapNotNull { it.resource }.map { resolver.toCqlValue(it)!! }
+    }
+
+    @Test
+    fun whoSuiteAgreesWithHapi() {
+        val terminology = InMemoryTerminologyProvider(WhoSuite.valueSets)
+        val ours = FhirCqlEvaluator(WhoSuite.librarySources, MeaslesFixtures.modelInfoXml, terminology)
+        val hapiContext = FhirContext.forR4Cached()
+        val hapiResolver = R4FhirModelResolver(hapiContext)
+        val reference =
+            FhirCqlEvaluator(WhoSuite.librarySources, MeaslesFixtures.modelInfoXml, terminology, modelResolverFactory = { hapiResolver })
+
+        val differences = mutableListOf<String>()
+        val recorded = sortedMapOf<String, WhoOutcome>()
+        val oursOutcomes = mutableMapOf<String, WhoOutcome>()
+        val rejected = mutableListOf<String>()
+        var compared = 0
+        val elapsed = measureTime {
+            for (scenario in WhoSuite.scenarios) {
+                val referenceResults = WhoSuite.evaluateClosure(reference, scenario, hapiResources(scenario, hapiResolver, hapiContext))
+                recorded[scenario.id] = WhoSuite.outcome(scenario, referenceResults)
+                val oursResources =
+                    try {
+                        WhoSuite.kotlinFhirResources(scenario)
+                    } catch (e: Exception) {
+                        rejected += "${scenario.id}: ${e.message}"
+                        continue
+                    }
+                val oursResults = WhoSuite.evaluateClosure(ours, scenario, oursResources)
+                for (key in (oursResults.keys + referenceResults.keys).sorted()) {
+                    compared++
+                    if (oursResults[key] != referenceResults[key]) {
+                        differences += "${scenario.id} $key\n    kotlin-fhir: ${oursResults[key]}\n    HAPI:        ${referenceResults[key]}"
+                    }
+                }
+                oursOutcomes[scenario.id] = WhoSuite.outcome(scenario, oursResults)
+            }
+        }
+        println("${WhoSuite.scenarios.size} scenarios, $compared results compared in $elapsed; ${differences.size} differ from HAPI")
+        differences.take(40).forEach(::println)
+        println("Bundles kotlin-fhir rejects (scenario skipped on the kotlin-fhir side): ${rejected.size}")
+        rejected.forEach { println("  $it") }
+        report("kotlin-fhir", oursOutcomes)
+        report("HAPI", recorded)
+
+        val file = File(PROJECT_DIR, WhoSuite.EXPECTED)
+        file.parentFile.mkdirs()
+        file.writeText(prettyJson.encodeToString<Map<String, WhoOutcome>>(recorded) + "\n")
+
+        assertTrue(differences.isEmpty(), "${differences.size} results differ from HAPI")
+    }
+
+    companion object {
+        private val prettyJson = Json { prettyPrint = true }
+
+        fun report(label: String, outcomes: Map<String, WhoOutcome>) {
+            val byId = WhoSuite.scenarios.associateBy { it.id }
+            val guidance = outcomes.values.mapNotNull { it.guidanceMatchesWho }
+            val contained = outcomes.values.mapNotNull { it.containedMatchesWho }
+            val withErrors = outcomes.filterValues { it.errors.isNotEmpty() }
+            println("$label: guidance matches WHO ${guidance.count { it }}/${guidance.size}; resource count matches WHO ${contained.count { it }}/${contained.size}; scenarios with errors ${withErrors.size}")
+            val twins = outcomes.filterKeys { byId.getValue(it).twinOf != null }
+            println("$label: Condition twins matching WHO on both checks ${twins.values.count { it.guidanceMatchesWho != false && it.containedMatchesWho != false }}/${twins.size}")
+            outcomes.filterValues { it.guidanceMatchesWho == false || it.containedMatchesWho == false }.entries.take(25).forEach { (id, o) ->
+                val s = byId.getValue(id)
+                println("  $label mismatch $id: contained ${o.contained} (WHO ${s.expectedContained}); guidance ${o.guidance}\n      WHO guidance: ${s.expectedGuidance}")
+            }
+            withErrors.entries.take(10).forEach { (id, o) -> println("  $label error $id: ${o.errors.first().take(400)}") }
+        }
+    }
+}

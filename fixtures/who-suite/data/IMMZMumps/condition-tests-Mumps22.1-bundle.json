@@ -1,0 +1,91 @@
+{
+  "resourceType": "Bundle",
+  "id": "tests-Mumps22.1-bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "ciimmunodeficiencysyndromes-Mumps22.1-condition",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://smart.who.int/immunizations/CodeSystem/IMMZ.D",
+              "code": "DE187",
+              "display": "Immunodeficiency syndromes"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/Mumps22.1"
+        },
+        "onsetDateTime": "2025-11-24",
+        "recordedDate": "2025-11-24"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/ciimmunodeficiencysyndromes-Mumps22.1-condition"
+      },
+      "fullUrl": "Condition/ciimmunodeficiencysyndromes-Mumps22.1-condition"
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "Mumps22.1",
+        "name": [
+          {
+            "use": "official",
+            "text": "Mumps22.1"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "2023-11-25"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/Mumps22.1"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "mumps-Mumps22.1",
+        "status": "draft",
+        "intent": "proposal",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://id.who.int/icd/release/11/mms",
+              "code": "XM1131",
+              "display": "Mumps, live attenuated"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/Mumps22.1"
+        },
+        "authoredOn": "2025-11-25"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationRequest/mumps-Mumps22.1"
+      }
+    }
+  ]
+}

@@ -10,3 +10,8 @@ actual fun whoTestDateTime(): ZonedDateTime {
     val zone = TimeZone.currentSystemDefault()
     return ZonedDateTimeJs(LocalDateTime(2025, 11, 12, 12, 0).toInstant(zone), zone)
 }
+
+actual fun noonOn(year: Int, month: Int, day: Int): ZonedDateTime {
+    val zone = TimeZone.currentSystemDefault()
+    return ZonedDateTimeJs(LocalDateTime(year, month, day, 12, 0).toInstant(zone), zone)
+}

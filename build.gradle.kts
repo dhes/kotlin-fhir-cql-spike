@@ -13,14 +13,14 @@ kotlin {
 
     js {
         nodejs {
-            testTask { useMocha { timeout = "300s" } }
+            testTask { useMocha { timeout = "3600s" } }
         }
     }
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         nodejs {
-            testTask { useMocha { timeout = "300s" } }
+            testTask { useMocha { timeout = "3600s" } }
         }
     }
 

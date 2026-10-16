@@ -12,8 +12,9 @@ import org.opencds.cqf.cql.engine.terminology.ValueSetInfo
  */
 class InMemoryTerminologyProvider(valueSets: List<ValueSet>) : TerminologyProvider {
 
-    private val codesByUrl: Map<String, List<Code>> =
-        valueSets.associate { vs -> (vs.url?.value ?: error("ValueSet ${vs.id} has no url")) to codesOf(vs) }
+    // Built on first use, so a value set this provider cannot expand fails only if CQL uses it.
+    private val codesByUrl: Map<String, Lazy<List<Code>>> =
+        valueSets.associate { vs -> (vs.url?.value ?: error("ValueSet ${vs.id} has no url")) to lazy { codesOf(vs) } }
 
     override fun `in`(code: Code, valueSet: ValueSetInfo): Boolean =
         codes(valueSet).any { it.code == code.code && (code.system == null || it.system == code.system) }
@@ -23,7 +24,7 @@ class InMemoryTerminologyProvider(valueSets: List<ValueSet>) : TerminologyProvid
     override fun lookup(code: Code, codeSystem: CodeSystemInfo): Code? = null
 
     private fun codes(valueSet: ValueSetInfo): List<Code> =
-        codesByUrl[valueSet.id] ?: throw IllegalArgumentException("Unknown value set ${valueSet.id}")
+        codesByUrl[valueSet.id]?.value ?: throw IllegalArgumentException("Unknown value set ${valueSet.id}")
 
     private fun codesOf(vs: ValueSet): List<Code> {
         val expansion = vs.expansion

@@ -1,0 +1,91 @@
+{
+  "resourceType": "Bundle",
+  "id": "tests-Seasonalinfluenza21.1-bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cihistoryofanaphylacticreactions-Seasonalinfluenza21.1-condition",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://smart.who.int/immunizations/CodeSystem/IMMZ.D",
+              "code": "DE166",
+              "display": "History of anaphylactic reactions"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/Seasonalinfluenza21.1"
+        },
+        "onsetDateTime": "2025-11-24",
+        "recordedDate": "2025-11-24"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cihistoryofanaphylacticreactions-Seasonalinfluenza21.1-condition"
+      },
+      "fullUrl": "Condition/cihistoryofanaphylacticreactions-Seasonalinfluenza21.1-condition"
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "Seasonalinfluenza21.1",
+        "name": [
+          {
+            "use": "official",
+            "text": "Seasonalinfluenza21.1"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "2025-04-25"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/Seasonalinfluenza21.1"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "seasonalinfluenza-Seasonalinfluenza21.1",
+        "status": "draft",
+        "intent": "proposal",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://id.who.int/icd/release/11/mms",
+              "code": "XM8857",
+              "display": "Influenza vaccine, inactivated, whole virus"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/Seasonalinfluenza21.1"
+        },
+        "authoredOn": "2025-11-25"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationRequest/seasonalinfluenza-Seasonalinfluenza21.1"
+      }
+    }
+  ]
+}

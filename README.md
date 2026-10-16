@@ -12,8 +12,8 @@ The pieces are in `src/commonMain`:
 - `FhirCqlEvaluator`: compiles CQL from source and evaluates it in Patient context.
 
 `src/jvmTest` checks each result against cqframework's HAPI-based `R4FhirModelResolver`, and records the HAPI
-results in `fixtures/expected/measles-closure-results.json`. `src/commonTest` checks the same closure against that
-file and against WHO's expected guidance on every target.
+results in `fixtures/expected/`. `src/commonTest` checks the same scenarios against those files and against WHO's
+expectations on every target.
 
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
@@ -27,6 +27,20 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 - Step 3 (2026-10-15): the same 2,219 results, guidance and `Test Validation` on JS and on wasmJs, both under Node,
   with a stand-in UCUM service (see Findings). First patient, including compiling the 12 libraries: about 1.5 s on
   JS, 0.7 s on wasmJs, 0.2–0.6 s on a warm JVM; later patients 10–120 ms.
+- Step 4 (2026-10-16): WHO's whole immunization test suite, 1,021 scenarios over 138 PlanDefinitions (decision
+  tables, schedules and contraindications), plus 79 twins of the contraindication scenarios that record the
+  contraindication as a Condition instead of an Observation. For each scenario, every definition in the closure of
+  its logic library is evaluated (343,922 results on the JVM).
+  - JVM: all 343,922 agree with the HAPI result. Of the 1,098 scenarios kotlin-fhir can parse (see Findings), the
+    guidance matches WHO's expected text in all 634 that assert one, and the resource count `$apply` would return
+    matches WHO's in 1,082. HAPI gives the same outcomes, so the 16 count differences do not come from kotlin-fhir.
+    All 78 parseable Condition twins give the same outcome as their Observation originals.
+  - JS and wasmJs: the same outcomes as the recorded HAPI ones for every scenario, except 6 Typhoid Ty21a scenarios
+    that reach CQL's `Split`, which cqframework does not implement on JS or Wasm (see Findings). 1,098 scenarios take
+    about 7 s on the JVM, 42 s on wasmJs and 2 min 27 s on JS, compiling included.
+  - The resource count is predicted as 1 (the RequestGroup) plus one resource per action whose applicability
+    condition is true; every action in this package has exactly one condition, a CQL definition. Counting one
+    resource per ActivityDefinition instead matches WHO less often (978 of 1,021 against 1,005).
 
 ## Findings so far
 
@@ -50,18 +64,25 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   types (`KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS`); the model info does not record it.
 - **dateTime precision.** kotlin-fhir does not record how many fractional-second digits a dateTime had, so a value
   with `.000` converts at second precision. Not exercised by these patients, whose dates are all date-only.
-- **Coverage.** WHO's example patients contain only Patient and Immunization resources, so the Condition,
-  Observation and MedicationRequest retrieves run but return nothing. Date-range filtering in retrieve is not
-  implemented.
+- **`Split` is not implemented on JS or Wasm.** In cqframework 5.4.0, and on `main` at fb8055df, the engine's
+  `stringUtilsSplit` is `TODO()` on both targets, so CQL's `Split` throws `NotImplementedError`; on the JVM it calls
+  Apache Commons `StringUtils.split`. WHO's `WHOCommon.references()` and `IMMZCommon`'s medication lookup use
+  `Split`. In step 4 it is reached by 6 Typhoid Ty21a scenarios. Not raised upstream.
+- **An invalid WHO test bundle.** `tests-Typhoid41.1-bundle.json` has a MedicationRequest without `medication[x]`,
+  which R4 requires. kotlin-fhir rejects the bundle; HAPI's parser accepts it. Its scenario and twin are skipped on
+  the kotlin-fhir side. Not raised upstream.
+- **Contraindications recorded as Conditions** count in WHO's CQL only while `prevalenceInterval()` includes Today,
+  so a Condition needs an onset. The twins take the Observation's effective time as onset.
+- **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
+  twins cover Conditions. Date-range filtering in retrieve is not implemented and was not needed.
 
 ## Third-party content
 
 - `third_party/cqframework-quick-5.4.0/`: `fhir-modelinfo-4.0.1.xml` and `FHIRHelpers-4.0.1.cql`, copied from
   `org.cqframework:quick:5.4.0` (Apache License 2.0).
-- `third_party/smart-immunizations-0.2.0/cql/`: CQL from the Library resources of the WHO SMART immunizations
-  package `smart.who.int.immunizations` 0.2.0 (package licence CC0-1.0).
-- `third_party/smart-immunizations-0.2.0/valuesets/`: the 32 ValueSet resources, from the same package, that the
-  closure's CQL declares. Three more it declares are not in the package and are not needed by these patients.
-- `fixtures/who-measles-tests/`: the test bundles and `.feature` file for the decision table, from
-  WorldHealthOrganization/smart-immunizations at 12ec2fc54, `input/testing/features/plandefinition/IMMZMeasles/`
-  (CC0-1.0).
+- `third_party/smart-immunizations-0.2.0/cql/` and `valuesets/`: the CQL of all 279 Library resources and all 192
+  ValueSet resources of the WHO SMART immunizations package `smart.who.int.immunizations` 0.2.0 (package licence
+  CC0-1.0). The CQL is the same as in WorldHealthOrganization/smart-immunizations at 12ec2fc54, line endings aside.
+- `fixtures/who-measles-tests/` and `fixtures/who-suite/`: test bundles, `.feature` file and scenario list from
+  WorldHealthOrganization/smart-immunizations at 12ec2fc54, `input/testing/features/plandefinition/` (CC0-1.0).
+  `fixtures/who-suite/` is written by `tools/build_who_suite.py`, which also writes the Condition twins.

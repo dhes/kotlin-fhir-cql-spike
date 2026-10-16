@@ -1,0 +1,91 @@
+{
+  "resourceType": "Bundle",
+  "id": "tests-Varicella34.1-bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cicurrentlypregnant-Varicella34.1-condition",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://smart.who.int/immunizations/CodeSystem/IMMZ.D",
+              "code": "DE162",
+              "display": "Currently pregnant"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/Varicella34.1"
+        },
+        "onsetDateTime": "2025-11-24",
+        "recordedDate": "2025-11-24"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cicurrentlypregnant-Varicella34.1-condition"
+      },
+      "fullUrl": "Condition/cicurrentlypregnant-Varicella34.1-condition"
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "Varicella34.1",
+        "name": [
+          {
+            "use": "official",
+            "text": "Varicella34.1"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "2000-11-25"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/Varicella34.1"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "varicella-Varicella34.1",
+        "status": "draft",
+        "intent": "proposal",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://id.who.int/icd/release/11/mms",
+              "code": "XM8DG3",
+              "display": "Varicella zoster vaccines"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/Varicella34.1"
+        },
+        "authoredOn": "2025-11-25"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationRequest/varicella-Varicella34.1"
+      }
+    }
+  ]
+}
