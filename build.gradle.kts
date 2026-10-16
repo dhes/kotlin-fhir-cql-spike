@@ -12,12 +12,16 @@ kotlin {
     jvm()
 
     js {
-        nodejs()
+        nodejs {
+            testTask { useMocha { timeout = "300s" } }
+        }
     }
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        nodejs()
+        nodejs {
+            testTask { useMocha { timeout = "300s" } }
+        }
     }
 
     sourceSets {
@@ -26,9 +30,14 @@ kotlin {
             implementation("org.cqframework:engine:$cqlVersion")
             implementation("dev.ohs.fhir:fhir-model-r4:$kotlinFhirVersion")
         }
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+        commonTest {
+            kotlin.srcDir(layout.buildDirectory.dir("generated/testPaths"))
+            dependencies {
+                implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
+            }
         }
         jvmTest.dependencies {
             // The reference result: cqframework's HAPI-based R4 model resolver, JVM only.
@@ -38,6 +47,21 @@ kotlin {
         }
     }
 }
+
+// Tests on every platform read fixtures from the project directory by absolute path.
+val generateTestPaths by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/testPaths")
+    val projectPath = projectDir.absolutePath
+    outputs.dir(outputDir)
+    doLast {
+        val file = outputDir.get().file("ProjectDir.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText("package io.github.dhes.kotlinfhircql\n\nconst val PROJECT_DIR = \"$projectPath\"\n")
+    }
+}
+
+tasks.matching { it.name.startsWith("compileTestKotlin") || it.name == "compileTestDevelopmentExecutableKotlinJs" }
+    .configureEach { dependsOn(generateTestPaths) }
 
 tasks.withType<Test>().configureEach {
     testLogging {

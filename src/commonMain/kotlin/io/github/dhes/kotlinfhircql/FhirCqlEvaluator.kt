@@ -7,6 +7,8 @@ import org.cqframework.cql.cql2elm.LibrarySourceProvider
 import org.cqframework.cql.cql2elm.ModelManager
 import org.hl7.cql.model.NamespaceManager
 import org.cqframework.cql.cql2elm.createModelInfoProvider
+import org.cqframework.cql.cql2elm.ucum.UcumService
+import org.cqframework.cql.cql2elm.ucum.defaultLazyUcumService
 import org.cqframework.cql.cql2elm.utils.asSource
 import org.hl7.cql.model.SystemModelInfoProvider
 import org.cqframework.cql.cql2elm.LibraryBuilder.SignatureLevel
@@ -27,12 +29,14 @@ import org.opencds.cqf.cql.engine.util.ZonedDateTime
  * @param librarySources CQL source text of every library needed, FHIRHelpers included
  * @param fhirModelInfoXml the text of fhir-modelinfo-4.0.1.xml
  * @param modelResolverFactory makes the FHIR model resolver; the default answers from the model info
+ * @param ucumService the UCUM service; cqframework provides a default on the JVM only
  */
 class FhirCqlEvaluator(
     librarySources: List<String>,
     fhirModelInfoXml: String,
     private val terminologyProvider: TerminologyProvider? = null,
     modelResolverFactory: (ModelManager) -> ModelResolver = { KotlinFhirModelResolver(it.resolveModel("FHIR", "4.0.1")) },
+    ucumService: Lazy<UcumService> = defaultLazyUcumService,
 ) {
     val modelManager =
         ModelManager(NamespaceManager(), false).apply {
@@ -58,6 +62,7 @@ class FhirCqlEvaluator(
                     CqlCompilerOptions.Options.DisableListDemotion,
                     CqlCompilerOptions.Options.DisableListPromotion,
                 ),
+                lazyUcumService = ucumService,
             )
             .apply {
                 librarySourceLoader.registerProvider(
@@ -97,6 +102,6 @@ class FhirCqlEvaluator(
     }
 
     private companion object {
-        val LIBRARY_DECLARATION = Regex("""(?m)^\s*library\s+"?([A-Za-z0-9_]+)"?""")
+        val LIBRARY_DECLARATION = Regex("""^\s*library\s+"?([A-Za-z0-9_]+)"?""", RegexOption.MULTILINE)
     }
 }

@@ -11,9 +11,11 @@ The pieces are in `src/commonMain`:
   engine's `ModelResolver`, `RetrieveProvider` and `TerminologyProvider`.
 - `FhirCqlEvaluator`: compiles CQL from source and evaluates it in Patient context.
 
-`src/jvmTest` checks each result against cqframework's HAPI-based `R4FhirModelResolver`.
+`src/jvmTest` checks each result against cqframework's HAPI-based `R4FhirModelResolver`, and records the HAPI
+results in `fixtures/expected/measles-closure-results.json`. `src/commonTest` checks the same closure against that
+file and against WHO's expected guidance on every target.
 
-Run: `./gradlew jvmTest`
+Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
 ## Status
 
@@ -22,6 +24,25 @@ Run: `./gradlew jvmTest`
   (317 per patient), for WHO's 7 example patients of that decision table, agrees with the HAPI result on the JVM
   (2,219 results, 0 differences). For all 7, the logic library's `Guidance` equals the text WHO's test suite expects,
   and its `Test Validation` is true. Evaluated as of 2025-11-12, the date WHO's test suite uses.
+- Step 3 (2026-10-15): the same 2,219 results, guidance and `Test Validation` on JS and on wasmJs, both under Node,
+  with a stand-in UCUM service (see Findings). First patient, including compiling the 12 libraries: about 1.5 s on
+  JS, 0.7 s on wasmJs, 0.2–0.6 s on a warm JVM; later patients 10–120 ms.
+
+## Findings so far
+
+- **UCUM service on JS and Wasm.** Since cqframework #1819 (in 5.2.0 and later), the compiler asks the UCUM service
+  about every quantity literal, calendar durations such as `4 weeks` included. On JS and Wasm cqframework's default
+  service throws "No default UCUM service available", so every library with a quantity literal fails to compile
+  unless the caller supplies a service through `createUcumService` or `LibraryManager`'s `lazyUcumService`. The tests
+  use `UnvalidatedUcumService` there, which accepts every unit and converts only between identical units. There is no
+  multiplatform UCUM implementation in cqframework; its `ucum` module is JVM only.
+- **Patient context paths.** The element linking each resource type to its patient is a hand-written table for seven
+  types (`KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS`); the model info does not record it.
+- **dateTime precision.** kotlin-fhir does not record how many fractional-second digits a dateTime had, so a value
+  with `.000` converts at second precision. Not exercised by these patients, whose dates are all date-only.
+- **Coverage.** WHO's example patients contain only Patient and Immunization resources, so the Condition,
+  Observation and MedicationRequest retrieves run but return nothing. Date-range filtering in retrieve is not
+  implemented.
 
 ## Third-party content
 
