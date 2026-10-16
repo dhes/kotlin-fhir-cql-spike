@@ -18,6 +18,7 @@ import org.opencds.cqf.cql.engine.model.ModelResolver
 import org.opencds.cqf.cql.engine.runtime.ClassInstance
 import org.opencds.cqf.cql.engine.runtime.Value
 import org.opencds.cqf.cql.engine.terminology.TerminologyProvider
+import org.opencds.cqf.cql.engine.util.ZonedDateTime
 
 /**
  * Compiles CQL libraries from source against the FHIR 4.0.1 model info supplied by the caller, and
@@ -75,6 +76,8 @@ class FhirCqlEvaluator(
         patientId: String,
         resources: List<ClassInstance>,
         expressions: List<String>? = null,
+        parameters: Map<String, Value?>? = null,
+        evaluationDateTime: ZonedDateTime? = null,
     ): Map<String, Value?> {
         val environment = Environment(libraryManager, null, terminologyProvider)
         environment.registerDataProvider(
@@ -86,6 +89,8 @@ class FhirCqlEvaluator(
                 .evaluate {
                     library(library) { if (expressions != null) expressions(expressions) }
                     contextParameter = "Patient" to patientId
+                    this.parameters = parameters
+                    this.evaluationDateTime = evaluationDateTime
                 }
                 .onlyResultOrThrow
         return result.expressionResults.mapValues { it.value.value }
