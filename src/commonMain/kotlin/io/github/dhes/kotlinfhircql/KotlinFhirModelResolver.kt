@@ -10,10 +10,10 @@ import org.opencds.cqf.cql.engine.runtime.anyTypeName
 import org.opencds.cqf.cql.engine.runtime.Boolean as CqlBoolean
 import org.opencds.cqf.cql.engine.runtime.String as CqlString
 
-/**
- * A [ModelResolver] for FHIR R4 values made by [KotlinFhirToCql], answering type questions from the
- * FHIR model info rather than from Java classes.
- */
+    /**
+     * A [ModelResolver] for FHIR R4 values made by [KotlinFhirToCql], answering type questions from the
+     * FHIR model info rather than from Java classes.
+     */
 class KotlinFhirModelResolver(private val model: Model) : ModelResolver {
 
     override fun getContextPath(contextType: String?, targetType: String?): String? {
