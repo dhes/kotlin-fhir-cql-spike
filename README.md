@@ -66,7 +66,18 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   compiled on the ELM side. Needs the local cqframework build of step 5 (`-PcqlVersion=`), because the wrappers
   include libraries that define functions. Not covered: WHO's tests don't record these values, so they are compared
   between the two routes, not with WHO's expected output; and turning the CQL values into kotlin-fhir fields at
-  each dynamicValue's `path`, which `$apply` would do next.
+  each dynamicValue's `path`, which `$apply` would do next (step 7).
+- Step 7 (2026-10-19, JVM only): dynamicValue write-back. `DynamicValueWriteBackTest` evaluates each action's
+  `text/cql-expression` dynamicValues from precompiled ELM (as in step 6, for the first scenario of the PlanDefinition
+  whose bundle loads), converts each CQL value to a kotlin-fhir type (String to a Kotlin string, Code to `Coding`,
+  Concept to `CodeableConcept`), and writes it into the request resource with kotlin-fhir-workflow's own write-back
+  code: `evaluatedValueToJson` and `DynamicValueApplier`, copied unchanged from ohs-foundation/kotlin-fhir-workflow
+  `main` at 214c56d (compiled here against kotlin-fhir rc04; that `main` uses rc03). The resource before write-back is built as that `main`'s `PlanDefinitionProcessor` builds it
+  for the ActivityDefinition's `kind`. Each result is then decoded as a kotlin-fhir resource. Of WHO's 329 actions
+  with such dynamicValues, none decodes as written; `status` and `intent` write correctly, and three paths don't
+  (see Findings). With those three rewritten by hand to the path contract stated in `DynamicValueApplier`'s KDoc,
+  all 329 decode, e.g. `"category":[{"coding":[{…,"code":"alert"}]}]`, `"priority":"routine"`,
+  `"medicationCodeableConcept":{…,"code":"DE1","display":"BCG vaccines"}`.
 
 ## Findings so far
 
@@ -117,6 +128,21 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   priority, `Concept { … }` for medication); none refers to a library definition or a `%` parameter. A wrapper still
   includes the PlanDefinition's library, as clinical-reasoning's does, so an expression could refer to one; no WHO
   expression exercises that.
+- **WHO's dynamicValue paths and kotlin-fhir-workflow's write-back.** Ran 2026-10-19 (step 7). Three of WHO's five
+  `text/cql-expression` paths don't decode after kotlin-fhir-workflow's `DynamicValueApplier` writes them:
+  - `CommunicationRequest.category.coding` (229): written as objects, `"category": {"coding": {…}}`, where kotlin-fhir
+    expects lists. The applier's KDoc asks for an explicit index on list segments (`category[0].coding[0]`).
+  - `MedicationRequest.medication` (100): written as `"medication"`, an unknown key; the applier's KDoc asks for the
+    concrete choice name (`medicationCodeableConcept`).
+  - `CommunicationRequest.priority` (229): WHO's value is a CQL `Code`, converted to a `Coding` and written as an
+    object into a FHIR `code`. The applier's contract doesn't cover this; something has to take the Coding's `code`.
+
+  FHIR R4 defines `ActivityDefinition.dynamicValue.path` as "a FHIRPath resolveable on the specified target type"
+  and says indexers are "allowed" (read, hl7.org/fhir/R4 activitydefinition-definitions, 2026-10-19), so WHO's
+  paths look valid; they fall outside the narrower contract in the applier's KDoc. How clinical-reasoning handles
+  these three was not checked. Also read on that `main`: `Expression.toProtocolExpression` routes only
+  `text/fhirpath` and `text/cql`, so WHO's `text/cql-expression` and `text/cql-identifier` dynamicValues would not
+  reach an evaluator there today.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
   twins cover Conditions. Date-range filtering in retrieve is not implemented and was not needed.
 
@@ -130,3 +156,6 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 - `fixtures/who-measles-tests/` and `fixtures/who-suite/`: test bundles, `.feature` file and scenario list from
   WorldHealthOrganization/smart-immunizations at 12ec2fc54, `input/testing/features/plandefinition/` (CC0-1.0).
   `fixtures/who-suite/` is written by `tools/build_who_suite.py`, which also writes the Condition twins.
+- `src/jvmTest/kotlin/dev/ohs/fhir/workflow/`: `FhirJson.kt`, `processor/DynamicValueApplier.kt` and
+  `processor/EvaluatedValueJson.kt`, copied unchanged from ohs-foundation/kotlin-fhir-workflow at 214c56d
+  (Apache License 2.0), for step 7.

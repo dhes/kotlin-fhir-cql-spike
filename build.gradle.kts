@@ -45,6 +45,8 @@ kotlin {
             implementation("org.cqframework:engine-fhir:$cqlVersion")
             implementation("ca.uhn.hapi.fhir:hapi-fhir-base:8.10.0")
             implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:8.10.0")
+            // For kotlin-fhir-workflow's dynamicValue write-back code, copied into jvmTest (fhir-path version of its main).
+            implementation("dev.ohs.fhir:fhir-path-r4:1.0.0-beta06")
         }
     }
 }
