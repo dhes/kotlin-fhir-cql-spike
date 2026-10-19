@@ -54,6 +54,19 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   With a local cqframework build that fixes the two causes (`main` at fb8055df plus the fix, published to mavenLocal
   as `5.5.0-elm-functions-fb8055df-SNAPSHOT`; run with `-PcqlVersion=<that version>`), all 280 load from ELM alone
   and the whole suite runs from ELM, with no CQL compiled, giving the recorded HAPI outcomes in every scenario.
+- Step 6 (2026-10-19, JVM only): precompiled `text/cql-expression` dynamicValues. These hold CQL text in the
+  PlanDefinition rather than naming a definition in a Library, so compiling the Libraries doesn't cover them.
+  `PrecompiledDynamicValueTest` wraps each of the 959 in its own library, as clinical-reasoning's `LibraryConstructor`
+  does at run time (`using FHIR`, `include FHIRHelpers`, an `include` for each library the PlanDefinition names,
+  `context Patient`, `define "return":` and the expression), but with a unique name instead of `expression`. It
+  compiles the wrappers and WHO's libraries to ELM JSON (about 4 s; 1.7 MB of wrapper ELM, in
+  `build/who-dynamic-values-elm-json` with each wrapper's CQL), then evaluates each scenario's dynamicValues twice:
+  from ELM alone, with no CQL source available, and from CQL source alone, compiled at run time as clinical-reasoning
+  does. Over the 1,098 scenarios (9,066 evaluations each way) the two give the same values, none null, and nothing is
+  compiled on the ELM side. Needs the local cqframework build of step 5 (`-PcqlVersion=`), because the wrappers
+  include libraries that define functions. Not covered: WHO's tests don't record these values, so they are compared
+  between the two routes, not with WHO's expected output; and turning the CQL values into kotlin-fhir fields at
+  each dynamicValue's `path`, which `$apply` would do next.
 
 ## Findings so far
 
@@ -98,7 +111,12 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   - IMMZIndicatorElements (one function, no overloads) passes that check, but loading throws a
     `NullPointerException`: the types of a function's operands are not resolved from the ELM. The exception is not
     caught, so this Library fails to load even when its CQL source is also available.
-  - Not checked: whether either is fixed after 5.4.0 (the loading code is unchanged on `main` at fb8055df).
+  - Filed as cqframework/clinical_quality_language#1873, with a fix proposed in #1874 (see step 5).
+- **WHO's inline dynamicValues are all constants.** Scan, 2026-10-19: the 959 `text/cql-expression` dynamicValues in
+  the 138 PlanDefinitions are 32 distinct literals (`'active'`, `'proposal'`, `'draft'`, `Code { … }` for category and
+  priority, `Concept { … }` for medication); none refers to a library definition or a `%` parameter. A wrapper still
+  includes the PlanDefinition's library, as clinical-reasoning's does, so an expression could refer to one; no WHO
+  expression exercises that.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
   twins cover Conditions. Date-range filtering in retrieve is not implemented and was not needed.
 
