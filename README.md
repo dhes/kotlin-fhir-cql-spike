@@ -46,6 +46,11 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   - The resource count is predicted as 1 (the RequestGroup) plus one resource per action whose applicability
     condition is true; every action in this package has exactly one condition, a CQL definition. Counting one
     resource per ActivityDefinition instead matches WHO less often (978 of 1,021 against 1,005).
+- Step 5 (2026-10-19, JVM only): precompiled ELM. `PrecompiledElmTest` compiles WHO's 279 libraries and FHIRHelpers
+  to ELM JSON with cql-to-elm 5.4.0 (each records `translatorVersion` 5.4.0 and its compiler options), appends it as
+  `application/elm+json` content to WHO's Library resources (written to `build/who-libraries-elm-json`), and loads
+  them back. 276 of the 280 load from ELM alone. With FHIRHelpers, IMMZCommon and WHOCommon compiled from CQL source,
+  the whole suite (1,098 scenarios) gives the recorded HAPI outcomes in every scenario. See Findings for the four.
 
 ## Findings so far
 
@@ -79,6 +84,18 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   the kotlin-fhir side. Not raised upstream.
 - **Contraindications recorded as Conditions** count in WHO's CQL only while `prevalenceInterval()` includes Today,
   so a Condition needs an onset. The twins take the Observation's effective time as onset.
+- **Precompiled ELM needs `EnableResultTypes`, and does not load for libraries that define functions.** Ran
+  2026-10-19 on the JVM, cqframework 5.4.0 (`PrecompiledElmTest`). cqframework's CQL engine uses precompiled ELM only
+  when every definition carries a result type (since cqframework #1830); without `EnableResultTypes` the compiler
+  leaves them out, and 3 of 280 libraries load. With it, 276 load. The four that don't are the four that define
+  functions:
+  - FHIRHelpers, IMMZCommon and WHOCommon have overloaded functions. The check for function signatures looks only at
+    definitions whose whole expression is a function call, finds none, and rejects the ELM; the CQL source is then
+    compiled instead.
+  - IMMZIndicatorElements (one function, no overloads) passes that check, but loading throws a
+    `NullPointerException`: the types of a function's operands are not resolved from the ELM. The exception is not
+    caught, so this Library fails to load even when its CQL source is also available.
+  - Not checked: whether either is fixed after 5.4.0 (the loading code is unchanged on `main` at fb8055df).
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
   twins cover Conditions. Date-range filtering in retrieve is not implemented and was not needed.
 
