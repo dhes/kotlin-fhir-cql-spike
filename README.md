@@ -51,6 +51,9 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   `application/elm+json` content to WHO's Library resources (written to `build/who-libraries-elm-json`), and loads
   them back. 276 of the 280 load from ELM alone. With FHIRHelpers, IMMZCommon and WHOCommon compiled from CQL source,
   the whole suite (1,098 scenarios) gives the recorded HAPI outcomes in every scenario. See Findings for the four.
+  With a local cqframework build that fixes the two causes (`main` at fb8055df plus the fix, published to mavenLocal
+  as `5.5.0-elm-functions-fb8055df-SNAPSHOT`; run with `-PcqlVersion=<that version>`), all 280 load from ELM alone
+  and the whole suite runs from ELM, with no CQL compiled, giving the recorded HAPI outcomes in every scenario.
 
 ## Findings so far
 

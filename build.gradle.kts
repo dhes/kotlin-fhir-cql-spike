@@ -5,7 +5,8 @@ plugins {
     kotlin("plugin.serialization") version "2.3.20"
 }
 
-val cqlVersion = "5.4.0"
+// ./gradlew -PcqlVersion=<version> uses that cqframework version, from mavenLocal if published there.
+val cqlVersion = (findProperty("cqlVersion") as String?) ?: "5.4.0"
 val kotlinFhirVersion = "1.0.0-rc04"
 
 kotlin {
