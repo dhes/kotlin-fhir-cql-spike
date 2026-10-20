@@ -136,6 +136,15 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
     concrete choice name (`medicationCodeableConcept`).
   - `CommunicationRequest.priority` (229): WHO's value is a CQL `Code`, converted to a `Coding` and written as an
     object into a FHIR `code`. The applier's contract doesn't cover this; something has to take the Coding's `code`.
+  - `CommunicationRequest.payload.contentString` (229, a `text/cql-identifier` dynamicValue, so not in step 7's
+    counts) fails the same way as `category.coding`: `"payload": {…}` where a list is expected.
+    `WhoDynamicValuePathsTest` (in `src/jvmTest/kotlin/dev/ohs/fhir/workflow/processor`) writes one value at each of
+    WHO's six paths, then at the four failing ones rewritten to the contract (`category[0].coding[0]`,
+    `payload[0].contentString`, `medicationCodeableConcept`, `priority` ← the code), which all decode.
+  - clinical-reasoning (read at d09f71d1, not run) handles all of these through HAPI's model definitions:
+    `BaseAdapter.setNestedValue` takes a segment without an index as the first list element, creating it;
+    `resolveChoiceProperty` finds a choice element by its name without the type; `getEnumValue` takes a Coding's
+    `code` for a code-valued target.
 
   FHIR R4 defines `ActivityDefinition.dynamicValue.path` as "a FHIRPath resolveable on the specified target type"
   and says indexers are "allowed" (read, hl7.org/fhir/R4 activitydefinition-definitions, 2026-10-19), so WHO's
