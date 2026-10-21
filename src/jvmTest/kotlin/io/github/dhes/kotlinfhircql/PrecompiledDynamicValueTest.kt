@@ -23,6 +23,7 @@ import org.opencds.cqf.cql.engine.runtime.Date
 class PrecompiledDynamicValueTest {
     @Test
     fun precompiledDynamicValues() {
+        whoPackageDir()
         val dynamicValues = WhoDynamicValues.all
         val librarySources = WhoDynamicValues.librarySources
         val wrappers = dynamicValues.associate { it.wrapper to WhoDynamicValues.wrapperCql(it) }

@@ -95,7 +95,7 @@ class PrecompiledElmTest {
 
     /** Copies each WHO Library resource with the ELM JSON appended to its content; returns the ELM read back. */
     private fun writeLibraries(elm: Map<String, String>): Map<String, String> {
-        val packageDir = File(System.getenv("WHO_PACKAGE_DIR") ?: DEFAULT_PACKAGE_DIR)
+        val packageDir = whoPackageDir()
         val outDir = File(PROJECT_DIR, "build/who-libraries-elm-json").apply { deleteRecursively(); mkdirs() }
         val readBack = mutableMapOf<String, String>()
         packageDir.listFiles { f -> f.name.startsWith("Library-") && f.name.endsWith(".json") }!!.sorted().forEach { file ->
@@ -121,6 +121,7 @@ class PrecompiledElmTest {
 
     @Test
     fun precompiledElm() {
+        whoPackageDir()
         // 1. With the spike's compiler options: ELM alone.
         val plain = compileToElmJson(options(resultTypes = false))
         val plainFailures = Loader(options(false), plain, emptyMap()).resolveAll(names)
@@ -181,9 +182,5 @@ class PrecompiledElmTest {
         println("Suite from ELM: $evaluated scenarios in ${suiteStart.elapsedNow()}; ${differences.size} differ from the recorded HAPI outcomes ${differences.take(10)}")
         println("Compiled from CQL source during the suite: ${loader.sourceRequests.sorted()}")
         assertTrue(differences.isEmpty())
-    }
-
-    private companion object {
-        const val DEFAULT_PACKAGE_DIR = "/Users/danheslinga/projects/km-probe/corpus-scan/smart-immunizations/package"
     }
 }

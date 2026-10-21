@@ -15,6 +15,17 @@ import org.cqframework.cql.cql2elm.LibrarySourceProvider
 import org.cqframework.cql.cql2elm.utils.asSource
 import org.cqframework.cql.elm.serializing.ElmJsonLibraryWriter
 import org.hl7.elm.r1.VersionedIdentifier
+import org.junit.Assume.assumeTrue
+
+/**
+ * WHO's package `smart.who.int.immunizations` 0.2.0, unpacked, from the environment variable `WHO_PACKAGE_DIR`; a
+ * test that calls this is skipped when the variable is not set.
+ */
+internal fun whoPackageDir(): File {
+    val dir = System.getenv("WHO_PACKAGE_DIR")
+    assumeTrue("WHO_PACKAGE_DIR is not set", dir != null)
+    return File(dir!!)
+}
 
 /** One `text/cql-expression` dynamicValue of a WHO PlanDefinition action, with the library that wraps it. */
 internal data class WhoDynamicValue(
@@ -29,7 +40,7 @@ internal data class WhoDynamicValue(
 
 /** WHO's inline dynamicValues, their wrapper libraries, and a library manager that serves ELM and CQL. */
 internal object WhoDynamicValues {
-    val packageDir = File(System.getenv("WHO_PACKAGE_DIR") ?: "/Users/danheslinga/projects/km-probe/corpus-scan/smart-immunizations/package")
+    val packageDir: File by lazy { whoPackageDir() }
 
     private val declaration = Regex("""^\s*library\s+"?([A-Za-z0-9_]+)"?""", RegexOption.MULTILINE)
     val librarySources = WhoSuite.librarySources.associateBy { declaration.find(it)!!.groupValues[1] }

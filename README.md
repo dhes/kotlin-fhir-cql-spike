@@ -22,6 +22,9 @@ expectations: the guidance text, the predicted `$apply` resource count and, for 
 
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
+The JVM tests of steps 5–7 also read WHO's package `smart.who.int.immunizations` 0.2.0, unpacked, from the directory
+named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
+
 ## Status
 
 - Step 1 (2026-10-15): `IMMZElements."Doses Administered to Patient"` agrees with the HAPI result on the JVM.
@@ -154,6 +157,11 @@ Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
   reach an evaluator there today.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
   twins cover Conditions. Date-range filtering in retrieve is not implemented and was not needed.
+
+## Licence
+
+The spike's own code is under the Apache License 2.0 (`LICENSE`). The third-party content below keeps its own
+licence.
 
 ## Third-party content
 

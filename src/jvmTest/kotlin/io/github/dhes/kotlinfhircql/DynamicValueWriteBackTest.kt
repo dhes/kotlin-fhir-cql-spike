@@ -128,6 +128,7 @@ class DynamicValueWriteBackTest {
 
     @Test
     fun dynamicValueWriteBack() {
+        whoPackageDir()
         val dynamicValues = WhoDynamicValues.all
         val wrappers = dynamicValues.associate { it.wrapper to WhoDynamicValues.wrapperCql(it) }
         val elm = WhoDynamicValues.compileToElmJson(wrappers)
