@@ -30,9 +30,9 @@ below.
 ## Follow-on questions (steps 5–7, JVM only)
 
 - **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** Yes, once a cqframework
-  defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874). Steps 5 and 6.
+  defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874). [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 5 and 6.
 - **Can the results be written back with kotlin-fhir-workflow's own code?** Not as it stands: for 4 of WHO's 8
-  dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). Step 7.
+  dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 7.
 
 ## Code
 
