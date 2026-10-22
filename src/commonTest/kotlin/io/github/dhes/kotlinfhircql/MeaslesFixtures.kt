@@ -80,25 +80,31 @@ object MeaslesFixtures {
         }.toMap()
 
     /** A comparable rendering of a result: resources by type and id; other values by their elements. */
-    fun render(value: Value?): String? = normalize(value)?.toString()
+    fun render(value: Value?): String? = normalize(value, full = false)?.toString()
 
-    private fun normalize(value: Value?): Any? =
+    /** A comparable rendering of a result with every element of every value, resources and extensions included. */
+    fun renderFull(value: Value?): String? = normalize(value, full = true)?.toString()
+
+    /** The structure [renderFull] prints: maps, lists, (type, elements) pairs and strings. */
+    fun normalizeFull(value: Value?): Any? = normalize(value, full = true)
+
+    private fun normalize(value: Value?, full: Boolean): Any? =
         when (value) {
             null -> null
-            is CqlList -> value.map(::normalize)
+            is CqlList -> value.map { normalize(it, full) }
             is ClassInstance -> {
                 val id = (value.elements["id"] as? ClassInstance)?.elements?.get("value") as? CqlString
-                if (id != null) {
+                if (id != null && !full) {
                     "${value.type.getLocalPart()}/${id.value}"
                 } else {
                     value.type.getLocalPart() to
                         value.elements
-                            .filterKeys { it != "extension" && it != "modifierExtension" }
-                            .mapValues { normalize(it.value) }
+                            .filterKeys { full || (it != "extension" && it != "modifierExtension") }
+                            .mapValues { normalize(it.value, full) }
                             .entries.sortedBy { it.key }.associate { it.key to it.value }
                 }
             }
-            is Tuple -> value.elements.mapValues { normalize(it.value) }.entries.sortedBy { it.key }.associate { it.key to it.value }
+            is Tuple -> value.elements.mapValues { normalize(it.value, full) }.entries.sortedBy { it.key }.associate { it.key to it.value }
             else -> value.toString()
         }
 }

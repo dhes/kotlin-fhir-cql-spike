@@ -43,6 +43,13 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     guidance matches WHO's expected text in all 634 that assert one, and the resource count `$apply` would return
     matches WHO's in 1,082. HAPI gives the same outcomes, so the 16 count differences do not come from kotlin-fhir.
     All 78 parseable Condition twins give the same outcome as their Observation originals.
+  - JVM, element by element (2026-10-21): the comparison above writes a resource in a result as its type and id,
+    and leaves out extensions. `whoSuiteAgreesWithHapiElementByElement` compares every element instead, resources
+    and extensions included; 15,770 of the 343,922 results hold something the short form leaves out. All agree, apart
+    from two differences that change no CQL value: where WHO's data has no `meta`, HAPI gives an empty `Meta` and
+    kotlin-fhir gives null (20,910 places), and HAPI names `Immunization.protocolApplied` by its Java class,
+    `ImmunizationProtocolAppliedComponent`, where the spike uses the model info's `Immunization.ProtocolApplied`
+    (10,406 places; the elements inside agree). The test fails on any other difference.
   - JS and wasmJs: the same outcomes as the recorded HAPI ones for every scenario, except 6 Typhoid Ty21a scenarios
     that reach CQL's `Split`, which cqframework does not implement on JS or Wasm (see Findings). 1,098 scenarios take
     about 7 s on the JVM, 42 s on wasmJs and 2 min 27 s on JS, compiling included.

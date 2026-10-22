@@ -70,6 +70,87 @@ class Step4Test {
         assertTrue(differences.isEmpty(), "${differences.size} results differ from HAPI")
     }
 
+    /**
+     * The same comparison with every element of every value, so a resource in a result is compared element by
+     * element instead of by type and id, and extensions are included. Differences are grouped by element path.
+     */
+    @Test
+    fun whoSuiteAgreesWithHapiElementByElement() {
+        val terminology = InMemoryTerminologyProvider(WhoSuite.valueSets)
+        val ours = FhirCqlEvaluator(WhoSuite.librarySources, MeaslesFixtures.modelInfoXml, terminology)
+        val hapiContext = FhirContext.forR4Cached()
+        val hapiResolver = R4FhirModelResolver(hapiContext)
+        val reference =
+            FhirCqlEvaluator(WhoSuite.librarySources, MeaslesFixtures.modelInfoXml, terminology, modelResolverFactory = { hapiResolver })
+
+        val differingResults = mutableListOf<String>()
+        val byPath = sortedMapOf<String, Int>()
+        val examples = mutableMapOf<String, String>()
+        var compared = 0
+        var newlyCovered = 0
+        for (scenario in WhoSuite.scenarios) {
+            val oursResources =
+                try {
+                    WhoSuite.kotlinFhirResources(scenario)
+                } catch (e: Exception) {
+                    continue
+                }
+            val hapiResources = hapiResources(scenario, hapiResolver, hapiContext)
+            val referenceResults = WhoSuite.evaluateClosureAs(reference, scenario, hapiResources, MeaslesFixtures::normalizeFull) { it }
+            val referenceShort = WhoSuite.evaluateClosure(reference, scenario, hapiResources)
+            val oursResults = WhoSuite.evaluateClosureAs(ours, scenario, oursResources, MeaslesFixtures::normalizeFull) { it }
+            for (key in (oursResults.keys + referenceResults.keys).sorted()) {
+                compared++
+                // Results whose short rendering leaves something out: a resource, or an extension.
+                if (referenceShort[key] != referenceResults[key]?.toString()) newlyCovered++
+                val paths = mutableListOf<Triple<String, Any?, Any?>>()
+                diff("", oursResults[key], referenceResults[key], paths)
+                if (paths.any { (path, o, h) -> !representationOnly(path, o, h) }) differingResults += "${scenario.id} $key"
+                for ((path, o, h) in paths) {
+                    val kind = "$path  kotlin-fhir: ${shape(o)}  HAPI: ${shape(h)}"
+                    byPath[kind] = (byPath[kind] ?: 0) + 1
+                    examples.getOrPut(kind) { "${scenario.id} $key: kotlin-fhir ${o.toString().take(200)} | HAPI ${h.toString().take(200)}" }
+                }
+            }
+        }
+        println("Element by element: $compared results compared, $newlyCovered of them holding a resource or an extension; ${differingResults.size} differ from HAPI beyond the two representation differences below")
+        byPath.entries.sortedByDescending { it.value }.forEach { (kind, n) -> println("  $n x $kind\n      e.g. ${examples[kind]}") }
+        differingResults.take(20).forEach { println("  differs: $it") }
+        assertTrue(differingResults.isEmpty(), "${differingResults.size} results differ from HAPI, element by element")
+    }
+
+    /**
+     * The two differences that change no CQL value: HAPI gives an element with no content (such as an empty `meta`
+     * that is not in the data) where kotlin-fhir gives null, and HAPI names a backbone element by its Java class.
+     */
+    private fun representationOnly(path: String, ours: Any?, hapi: Any?): Boolean =
+        (ours == null && hapi is Pair<*, *> && (hapi.second as? Map<*, *>)?.values?.all { it == null } == true) ||
+            (path.endsWith("(type name)") && hapi == (ours as? String)?.replace(".", "") + "Component")
+
+    /** Collects the paths where [ours] and [hapi] differ; list indexes are dropped from the path. */
+    private fun diff(path: String, ours: Any?, hapi: Any?, out: MutableList<Triple<String, Any?, Any?>>) {
+        when {
+            ours == hapi -> {}
+            ours is Pair<*, *> && hapi is Pair<*, *> -> {
+                if (ours.first != hapi.first) out += Triple("$path (type name)", ours.first, hapi.first)
+                diff("$path/${ours.first}", ours.second, hapi.second, out)
+            }
+            ours is Map<*, *> && hapi is Map<*, *> ->
+                (ours.keys + hapi.keys).forEach { k -> diff("$path.$k", ours[k], hapi[k], out) }
+            ours is List<*> && hapi is List<*> && ours.size == hapi.size ->
+                ours.indices.forEach { i -> diff("$path[]", ours[i], hapi[i], out) }
+            else -> out += Triple(path, ours, hapi)
+        }
+    }
+
+    private fun shape(v: Any?): String =
+        when (v) {
+            null -> "null"
+            is Pair<*, *> -> "(${v.first}${if ((v.second as? Map<*, *>)?.values?.all { it == null } == true) ", all elements null" else ""})"
+            is List<*> -> "list of ${v.size}"
+            else -> "'$v'"
+        }
+
     companion object {
         private val prettyJson = Json { prettyPrint = true }
 

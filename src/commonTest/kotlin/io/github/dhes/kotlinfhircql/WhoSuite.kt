@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 import org.opencds.cqf.cql.engine.runtime.ClassInstance
 import org.opencds.cqf.cql.engine.runtime.Date
 import org.opencds.cqf.cql.engine.runtime.TemporalHelper
+import org.opencds.cqf.cql.engine.runtime.Value
 import org.opencds.cqf.cql.engine.runtime.String as CqlString
 
 /** Noon in the system time zone on the given date. */
@@ -96,17 +97,30 @@ object WhoSuite {
         scenario.today.split("-").map(String::toInt).let { (y, m, d) -> noonOn(y, m, d) }
 
     /** Every definition of every library in the closure of the scenario's logic library. */
-    fun evaluateClosure(evaluator: FhirCqlEvaluator, scenario: WhoScenario, resources: List<ClassInstance>): Map<String, String?> {
+    fun evaluateClosure(
+        evaluator: FhirCqlEvaluator,
+        scenario: WhoScenario,
+        resources: List<ClassInstance>,
+    ): Map<String, String?> = evaluateClosureAs(evaluator, scenario, resources, MeaslesFixtures::render) { it }
+
+    /** As [evaluateClosure], with each value passed through [convert] and each library error through [error]. */
+    fun <T> evaluateClosureAs(
+        evaluator: FhirCqlEvaluator,
+        scenario: WhoScenario,
+        resources: List<ClassInstance>,
+        convert: (Value?) -> T,
+        error: (String) -> T,
+    ): Map<String, T> {
         val (y, m, d) = scenario.today.split("-").map(String::toInt)
         val parameters = mapOf("Today" to Date(y, m, d))
         val dateTime = evaluationDateTime(scenario)
         return closure(plans.getValue(scenario.planDefinition).library).flatMap { library ->
             try {
                 evaluator.evaluate(library, scenario.patient, resources, null, parameters, dateTime)
-                    .map { (name, value) -> "$library.$name" to MeaslesFixtures.render(value) }
+                    .map { (name, value) -> "$library.$name" to convert(value) }
             } catch (e: Throwable) {
                 // Throwable, not Exception: on JS and Wasm the engine's Split throws NotImplementedError.
-                listOf("$library (error)" to "${e::class.simpleName}: ${e.message}")
+                listOf("$library (error)" to error("${e::class.simpleName}: ${e.message}"))
             }
         }.toMap()
     }
