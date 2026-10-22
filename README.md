@@ -3,6 +3,12 @@
 A spike: can cqframework/clinical_quality_language 5.4.0 evaluate WHO CQL over
 ohs-foundation/kotlin-fhir R4 objects, with no HAPI, on the JVM and on a web target?
 
+Background: ohs-foundation/kotlin-fhir-workflow's
+[`docs/expression-support.md`](https://github.com/ohs-foundation/kotlin-fhir-workflow/blob/214c56d/docs/expression-support.md)
+(Elly Kitoto, #1) routes expressions through an `ExpressionEvaluator` seam, so that CQL can be added by plugging in
+an ELM evaluator, and defers CQL because the reference stack is JVM/HAPI-only. This spike tests the FHIR side of that
+route over kotlin-fhir.
+
 ## Answer
 
 Yes, on WHO's immunization test suite (`smart.who.int.immunizations` 0.2.0, 1,098 scenarios), with the conditions
