@@ -3,6 +3,33 @@
 A spike: can cqframework/clinical_quality_language 5.4.0 evaluate WHO CQL over
 ohs-foundation/kotlin-fhir R4 objects, with no HAPI, on the JVM and on a web target?
 
+## Answer
+
+Yes, on WHO's immunization test suite (`smart.who.int.immunizations` 0.2.0, 1,098 scenarios), with the conditions
+below.
+
+- **JVM:** for each of the 343,922 definition values (every definition in each scenario's library closure: its
+  logic library and every library it includes, directly or indirectly), the spike gives the same value as the run
+  with cqframework's HAPI-based `R4FhirModelResolver`, compared element by element, resources included. The only
+  differences change no CQL value: HAPI adds an empty `meta` that isn't in the data, and names one backbone element
+  by its Java class. The guidance text matches WHO's in all 634 scenarios that state one.
+- **JS and Wasm (under Node):** the same outcomes, except 6 scenarios that reach CQL's `Split`, which cqframework does
+  not implement there (cqframework/clinical_quality_language#1870).
+- **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
+  table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service
+  supplied by the caller (cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
+- **Not tested:** data from kotlin-fhir-engine, a terminology server, date-range filtering in retrieve, `$apply` end
+  to end, and precompiled ELM on JS and Wasm.
+
+## Follow-on questions (steps 5–7, JVM only)
+
+- **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** Yes, once a cqframework
+  defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874). Steps 5 and 6.
+- **Can the results be written back with kotlin-fhir-workflow's own code?** Not as it stands: for 4 of WHO's 8
+  dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). Step 7.
+
+## Code
+
 The pieces are in `src/commonMain`:
 
 - `KotlinFhirToCql`: converts kotlin-fhir resources to the engine's values, following the FHIR 4.0.1 model info.
