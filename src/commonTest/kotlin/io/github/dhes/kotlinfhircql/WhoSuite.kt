@@ -1,6 +1,7 @@
 package io.github.dhes.kotlinfhircql
 
 import dev.ohs.fhir.model.r4.Bundle
+import dev.ohs.fhir.model.r4.Library
 import dev.ohs.fhir.model.r4.Resource
 import dev.ohs.fhir.model.r4.ValueSet
 import kotlinx.io.files.Path
@@ -10,6 +11,7 @@ import org.opencds.cqf.cql.engine.runtime.ClassInstance
 import org.opencds.cqf.cql.engine.runtime.Date
 import org.opencds.cqf.cql.engine.runtime.TemporalHelper
 import org.opencds.cqf.cql.engine.runtime.Value
+import org.opencds.cqf.cql.engine.util.ZonedDateTime
 import org.opencds.cqf.cql.engine.runtime.String as CqlString
 
 /** Noon in the system time zone on the given date. */
@@ -87,10 +89,29 @@ object WhoSuite {
 
     fun bundleJson(scenario: WhoScenario) = read("fixtures/who-suite/data/${scenario.bundle}")
 
+    /** WHO's Library resources, with their CQL only (see tools/copy_who_libraries.py). */
+    val libraryResources: List<Library> by lazy {
+        val dir = "third_party/smart-immunizations-0.2.0/libraries"
+        SystemFileSystem.list(Path(PROJECT_DIR, dir)).map { it.name }.sorted().map {
+            json.decodeFromString<Resource>(read("$dir/$it")) as Library
+        }
+    }
+
+    val fhirHelpersSource: String by lazy { read("third_party/cqframework-quick-5.4.0/FHIRHelpers-4.0.1.cql") }
+
+    /** The canonical url of the scenario's logic library, as WHO's PlanDefinitions give it. */
+    fun libraryUrl(scenario: WhoScenario) =
+        "http://smart.who.int/immunizations/Library/${plans.getValue(scenario.planDefinition).library}"
+
+    fun bundleResources(scenario: WhoScenario): List<Resource> =
+        (json.decodeFromString<Resource>(bundleJson(scenario)) as Bundle).entry.mapNotNull { it.resource }
+
+    fun converter(scenario: WhoScenario) =
+        KotlinFhirToCql(TemporalHelper.zoneToOffset(evaluationDateTime(scenario).getOffset()))
+
     fun kotlinFhirResources(scenario: WhoScenario): List<ClassInstance> {
-        val bundle = json.decodeFromString<Resource>(bundleJson(scenario)) as Bundle
-        val converter = KotlinFhirToCql(TemporalHelper.zoneToOffset(evaluationDateTime(scenario).getOffset()))
-        return bundle.entry.mapNotNull { it.resource }.map { converter.convert(it) }
+        val converter = converter(scenario)
+        return bundleResources(scenario).map { converter.convert(it) }
     }
 
     fun evaluationDateTime(scenario: WhoScenario) =
@@ -110,14 +131,26 @@ object WhoSuite {
         resources: List<ClassInstance>,
         convert: (Value?) -> T,
         error: (String) -> T,
+    ): Map<String, T> =
+        evaluateLibrariesAs(scenario, closure(plans.getValue(scenario.planDefinition).library), convert, error) {
+            library, parameters, dateTime ->
+            evaluator.evaluate(library, scenario.patient, resources, null, parameters, dateTime)
+        }
+
+    /** Every definition of each of [libraries], evaluated by [evaluate] with the scenario's parameters. */
+    fun <T> evaluateLibrariesAs(
+        scenario: WhoScenario,
+        libraries: List<String>,
+        convert: (Value?) -> T,
+        error: (String) -> T,
+        evaluate: (library: String, parameters: Map<String, Value?>, dateTime: ZonedDateTime) -> Map<String, Value?>,
     ): Map<String, T> {
         val (y, m, d) = scenario.today.split("-").map(String::toInt)
         val parameters = mapOf("Today" to Date(y, m, d))
         val dateTime = evaluationDateTime(scenario)
-        return closure(plans.getValue(scenario.planDefinition).library).flatMap { library ->
+        return libraries.flatMap { library ->
             try {
-                evaluator.evaluate(library, scenario.patient, resources, null, parameters, dateTime)
-                    .map { (name, value) -> "$library.$name" to convert(value) }
+                evaluate(library, parameters, dateTime).map { (name, value) -> "$library.$name" to convert(value) }
             } catch (e: Throwable) {
                 // Throwable, not Exception: on JS and Wasm the engine's Split throws NotImplementedError.
                 listOf("$library (error)" to error("${e::class.simpleName}: ${e.message}"))

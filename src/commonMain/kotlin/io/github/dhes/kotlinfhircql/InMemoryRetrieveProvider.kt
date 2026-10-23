@@ -14,10 +14,14 @@ import org.opencds.cqf.cql.engine.runtime.String as CqlString
 /**
  * A [RetrieveProvider] over FHIR resources already converted to CQL values, filtering by type,
  * context, and codes or value set in memory.
+ *
+ * @param retrievableTypes when not null, the types [resources] holds all the needed resources of; a
+ *   retrieve of any other type fails
  */
 class InMemoryRetrieveProvider(
     private val resources: List<ClassInstance>,
     private val terminologyProvider: TerminologyProvider? = null,
+    private val retrievableTypes: Set<String>? = null,
 ) : RetrieveProvider {
 
     override fun retrieve(
@@ -35,6 +39,7 @@ class InMemoryRetrieveProvider(
         dateRange: Interval?,
     ): Iterable<Value?> {
         check(dateRange == null) { "Date filtering in retrieve is not implemented (dataType $dataType)" }
+        check(retrievableTypes == null || dataType in retrievableTypes) { "No $dataType resources were read for this retrieve" }
         return resources
             .filter { it.type.getLocalPart() == dataType }
             .filter { contextPath == null || contextValue == null || inContext(it, context, contextPath, contextValue) }

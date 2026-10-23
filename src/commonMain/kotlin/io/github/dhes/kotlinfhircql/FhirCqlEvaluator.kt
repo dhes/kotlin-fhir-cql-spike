@@ -26,13 +26,13 @@ import org.opencds.cqf.cql.engine.util.ZonedDateTime
  * Compiles CQL libraries from source against the FHIR 4.0.1 model info supplied by the caller, and
  * evaluates them in Patient context over resources the caller supplies.
  *
- * @param librarySources CQL source text of every library needed, FHIRHelpers included
+ * @param librarySource the CQL source text of the library with the given name, FHIRHelpers included
  * @param fhirModelInfoXml the text of fhir-modelinfo-4.0.1.xml
  * @param modelResolverFactory makes the FHIR model resolver; the default answers from the model info
  * @param ucumService the UCUM service; cqframework provides a default on the JVM only
  */
 class FhirCqlEvaluator(
-    librarySources: List<String>,
+    private val librarySource: (name: String) -> String?,
     fhirModelInfoXml: String,
     private val terminologyProvider: TerminologyProvider? = null,
     modelResolverFactory: (ModelManager) -> ModelResolver = { KotlinFhirModelResolver(it.resolveModel("FHIR", "4.0.1")) },
@@ -48,10 +48,14 @@ class FhirCqlEvaluator(
             )
         }
 
-    private val sourcesByName: Map<String, String> =
-        librarySources.associateBy { source ->
-            LIBRARY_DECLARATION.find(source)?.groupValues?.get(1) ?: error("No library declaration in source")
-        }
+    /** Uses [librarySources], the CQL source text of every library needed, FHIRHelpers included. */
+    constructor(
+        librarySources: List<String>,
+        fhirModelInfoXml: String,
+        terminologyProvider: TerminologyProvider? = null,
+        modelResolverFactory: (ModelManager) -> ModelResolver = { KotlinFhirModelResolver(it.resolveModel("FHIR", "4.0.1")) },
+        ucumService: Lazy<UcumService> = defaultLazyUcumService,
+    ) : this(librarySources.associateBy(::libraryName)::get, fhirModelInfoXml, terminologyProvider, modelResolverFactory, ucumService)
 
     val libraryManager =
         LibraryManager(
@@ -68,14 +72,18 @@ class FhirCqlEvaluator(
                 librarySourceLoader.registerProvider(
                     object : LibrarySourceProvider {
                         override fun getLibrarySource(libraryIdentifier: VersionedIdentifier) =
-                            sourcesByName[libraryIdentifier.id]?.asSource()
+                            libraryIdentifier.id?.let(librarySource)?.asSource()
                     }
                 )
             }
 
     val modelResolver: ModelResolver = modelResolverFactory(modelManager)
 
-    /** Evaluates [expressions] (all definitions when null) of [library] for one patient. */
+    /**
+     * Evaluates [expressions] (all definitions when null) of [library] for one patient.
+     *
+     * @param retrievableTypes when not null, a retrieve of any other type fails instead of returning nothing
+     */
     fun evaluate(
         library: String,
         patientId: String,
@@ -83,11 +91,13 @@ class FhirCqlEvaluator(
         expressions: List<String>? = null,
         parameters: Map<String, Value?>? = null,
         evaluationDateTime: ZonedDateTime? = null,
+        terminologyProvider: TerminologyProvider? = this.terminologyProvider,
+        retrievableTypes: Set<String>? = null,
     ): Map<String, Value?> {
         val environment = Environment(libraryManager, null, terminologyProvider)
         environment.registerDataProvider(
             FHIR_MODEL_URI,
-            CompositeDataProvider(modelResolver, InMemoryRetrieveProvider(resources, terminologyProvider)),
+            CompositeDataProvider(modelResolver, InMemoryRetrieveProvider(resources, terminologyProvider, retrievableTypes)),
         )
         val result =
             CqlEngine(environment)
@@ -101,7 +111,11 @@ class FhirCqlEvaluator(
         return result.expressionResults.mapValues { it.value.value }
     }
 
-    private companion object {
-        val LIBRARY_DECLARATION = Regex("""^\s*library\s+"?([A-Za-z0-9_]+)"?""", RegexOption.MULTILINE)
+    companion object {
+        private val LIBRARY_DECLARATION = Regex("""^\s*library\s+"?([A-Za-z0-9_]+)"?""", RegexOption.MULTILINE)
+
+        /** The name in the library declaration of CQL [source]. */
+        fun libraryName(source: String): String =
+            LIBRARY_DECLARATION.find(source)?.groupValues?.get(1) ?: error("No library declaration in source")
     }
 }

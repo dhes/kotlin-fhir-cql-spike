@@ -43,6 +43,9 @@ The pieces are in `src/commonMain`:
 - `KotlinFhirModelResolver`, `InMemoryRetrieveProvider`, `InMemoryTerminologyProvider`: implementations of the
   engine's `ModelResolver`, `RetrieveProvider` and `TerminologyProvider`.
 - `FhirCqlEvaluator`: compiles CQL from source and evaluates it in Patient context.
+- `WorkflowRepositoryCqlEvaluator` (step 8): reads the libraries, value sets and patient data a library needs from
+  kotlin-fhir-workflow's `WorkflowRepository` (`dev/ohs/fhir/workflow/WorkflowRepository.kt`, copied), then
+  evaluates with `FhirCqlEvaluator`.
 
 `src/jvmTest` checks each result against cqframework's HAPI-based `R4FhirModelResolver`, and records the HAPI
 results in `fixtures/expected/`. `src/commonTest` checks the same scenarios against those files and against WHO's
@@ -121,6 +124,26 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   (see Findings). With those three rewritten by hand to the path contract stated in `DynamicValueApplier`'s KDoc,
   all 329 decode, e.g. `"category":[{"coding":[{…,"code":"alert"}]}]`, `"priority":"routine"`,
   `"medicationCodeableConcept":{…,"code":"DE1","display":"BCG vaccines"}`.
+- Step 8 (2026-10-22): data read from kotlin-fhir-workflow's `WorkflowRepository`. `WorkflowRepositorySuiteTest`
+  puts WHO's 279 Library resources and 192 ValueSets in an in-memory `WorkflowRepository`, with one scenario's
+  bundle at a time. For each scenario, `WorkflowRepositoryCqlEvaluator` reads, before evaluating:
+  - the logic library by url, and every library it includes through the Libraries' `depends-on` entries (the same
+    closure as the CQL `include`s in all 279 libraries, FHIRHelpers aside, which is supplied as before);
+  - from each library's ELM, the FHIR types it retrieves and the value sets it declares, found with cqframework's
+    `BaseElmLibraryVisitor`;
+  - the Patient by id, each other retrieved type with a patient link by FHIR's `patient` search parameter, and the
+    value sets by url.
+
+  It then evaluates over what it read with the same providers as before. Reading first is needed because
+  cqframework's CQL engine retrieves synchronously, while `WorkflowRepository` is read with `suspend` calls, which
+  can't be waited on inside a retrieve on JS and Wasm. Result: on the JVM, JS and Wasm (under Node), the same outcomes as step 4 in all 1,098 scenarios: no differences
+  from the recorded HAPI outcomes on the JVM (343,922 results), and on JS and Wasm the same 6 scenarios reaching
+  `Split`. Every scenario reads Patient,
+  Immunization, Observation, Condition and MedicationRequest. Medication is retrieved too (in one IMMZCommon
+  function) but has no patient link, so it isn't read; a retrieve of it would fail, and no scenario reaches one.
+  Three declared value sets aren't in WHO's package (from IPS, WHO core and FHIR core) and none is used, as before.
+  The in-memory repository (`InMemoryWorkflowRepository`, in `src/commonTest`) searches only what this needs.
+  Not tested: kotlin-fhir-engine's implementation of `WorkflowRepository`.
 
 ## Findings so far
 
@@ -210,9 +233,15 @@ licence.
 - `third_party/smart-immunizations-0.2.0/cql/` and `valuesets/`: the CQL of all 279 Library resources and all 192
   ValueSet resources of the WHO SMART immunizations package `smart.who.int.immunizations` 0.2.0 (package licence
   CC0-1.0). The CQL is the same as in WorldHealthOrganization/smart-immunizations at 12ec2fc54, line endings aside.
+- `third_party/smart-immunizations-0.2.0/libraries/`: the same package's 279 Library resources with their CQL only,
+  written by `tools/copy_who_libraries.py`, which leaves out the ELM XML attachment and other elements and checks
+  the CQL against `cql/`.
 - `fixtures/who-measles-tests/` and `fixtures/who-suite/`: test bundles, `.feature` file and scenario list from
   WorldHealthOrganization/smart-immunizations at 12ec2fc54, `input/testing/features/plandefinition/` (CC0-1.0).
   `fixtures/who-suite/` is written by `tools/build_who_suite.py`, which also writes the Condition twins.
+- `src/commonMain/kotlin/dev/ohs/fhir/workflow/WorkflowRepository.kt`: copied unchanged from
+  ohs-foundation/kotlin-fhir-workflow at 214c56d (Apache License 2.0), for step 8. The published
+  `dev.ohs.fhir:fhir-workflow` 2.0.0-alpha01 has no JS build and depends on kotlin-fhir rc03.
 - `src/jvmTest/kotlin/dev/ohs/fhir/workflow/`: `FhirJson.kt`, `processor/DynamicValueApplier.kt` and
   `processor/EvaluatedValueJson.kt`, copied unchanged from ohs-foundation/kotlin-fhir-workflow at 214c56d
   (Apache License 2.0), for step 7.

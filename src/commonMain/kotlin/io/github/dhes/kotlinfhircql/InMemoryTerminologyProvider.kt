@@ -16,6 +16,9 @@ class InMemoryTerminologyProvider(valueSets: List<ValueSet>) : TerminologyProvid
     private val codesByUrl: Map<String, Lazy<List<Code>>> =
         valueSets.associate { vs -> (vs.url?.value ?: error("ValueSet ${vs.id} has no url")) to lazy { codesOf(vs) } }
 
+    /** The number of value sets this provider holds. */
+    val size: Int get() = codesByUrl.size
+
     override fun `in`(code: Code, valueSet: ValueSetInfo): Boolean =
         codes(valueSet).any { it.code == code.code && (code.system == null || it.system == code.system) }
 
