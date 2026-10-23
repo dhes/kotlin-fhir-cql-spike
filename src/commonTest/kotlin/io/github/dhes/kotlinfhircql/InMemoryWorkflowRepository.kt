@@ -15,7 +15,8 @@ import dev.ohs.fhir.workflow.WorkflowRepository
 /**
  * A [WorkflowRepository] in memory: knowledge resources that stay, and one scenario's patient data at a
  * time. Search covers what [WorkflowRepositoryCqlEvaluator] asks for: Library and ValueSet by `url`, and
- * the seven types with a patient link by `patient`.
+ * the seven types with a patient link by the parameters in
+ * [WorkflowRepositoryCqlEvaluator.PATIENT_SEARCH_PARAMETERS].
  */
 class InMemoryWorkflowRepository(knowledge: List<Resource>) : WorkflowRepository {
     private val knowledge: Map<String, List<Resource>> = knowledge.groupBy(::typeOf)
@@ -48,7 +49,8 @@ class InMemoryWorkflowRepository(knowledge: List<Resource>) : WorkflowRepository
 
     override suspend fun searchByReferenceParam(type: String, param: String, referenceValue: String): List<Resource> {
         count("searchByReferenceParam $type $param")
-        require(param == "patient") { "Only the patient search parameter is supported, not $param" }
+        val supported = WorkflowRepositoryCqlEvaluator.PATIENT_SEARCH_PARAMETERS[type]
+        require(param == supported) { "Only $type?$supported= is supported, not $param" }
         return ofType(type).filter { patientReference(it) == referenceValue }
     }
 

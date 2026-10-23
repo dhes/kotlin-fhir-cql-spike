@@ -24,7 +24,7 @@ below.
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service
   supplied by the caller (cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
-- **Not tested:** data from kotlin-fhir-engine, a terminology server, date-range filtering in retrieve, `$apply` end
+- **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, date-range filtering in retrieve, `$apply` end
   to end, and precompiled ELM on JS and Wasm.
 
 ## Follow-on questions
@@ -35,7 +35,8 @@ below.
   WHO's 8 dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 7.
 - **Can the libraries, value sets and patient data come from kotlin-fhir-workflow's `WorkflowRepository`, which is
   read with `suspend` calls?** Yes, by reading what the libraries need before evaluating: the same outcomes on the
-  JVM, JS and Wasm, with an in-memory repository. Not yet tried with kotlin-fhir-engine behind it. [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 8.
+  JVM, JS and Wasm, with an in-memory repository. With kotlin-fhir-engine behind it, on the JVM, the same values up to
+  list order, once two kotlin-fhir-engine behaviours are allowed for (see Findings). [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 8 and 9.
 
 ## Code
 
@@ -134,8 +135,9 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     closure as the CQL `include`s in all 279 libraries, FHIRHelpers aside, which is supplied as before);
   - from each library's ELM, the FHIR types it retrieves and the value sets it declares, found with cqframework's
     `BaseElmLibraryVisitor`;
-  - the Patient by id, each other retrieved type with a patient link by FHIR's `patient` search parameter, and the
-    value sets by url.
+  - the Patient by id, each other retrieved type with a patient link by an R4 search parameter on that link
+    (`patient` for Immunization, `subject` for Observation, Condition and MedicationRequest; see step 9 for why not
+    `patient` throughout), and the value sets by url.
 
   It then evaluates over what it read with the same providers as before. Reading first is needed because
   cqframework's CQL engine retrieves synchronously, while `WorkflowRepository` is read with `suspend` calls, which
@@ -146,7 +148,20 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   function) but has no patient link, so it isn't read; a retrieve of it would fail, and no scenario reaches one.
   Three declared value sets aren't in WHO's package (from IPS, WHO core and FHIR core) and none is used, as before.
   The in-memory repository (`InMemoryWorkflowRepository`, in `src/commonTest`) searches only what this needs.
-  Not tested: kotlin-fhir-engine's implementation of `WorkflowRepository`.
+- Step 9 (2026-10-22, JVM only): kotlin-fhir-engine behind the `WorkflowRepository`. `EngineWorkflowRepositorySuiteTest`
+  puts the same Libraries and ValueSets in kotlin-fhir-engine 2.0.0-alpha04's in-memory database, wrapped in
+  kotlin-fhir-workflow's `EngineWorkflowRepository` (copied from its demo app), loads one scenario's bundle at a time,
+  and compares each of the 343,922 values with the value from step 8's in-memory repository holding the same
+  resources. Result: no value differs except in list order. In 285, 288 and 295 scenarios over three runs, lists of
+  a patient's doses, such as `IMMZD2DTMeaslesElements."Measles Doses Administered to Patient"`, hold the same
+  Immunizations in a different order (see Findings). Two findings came out of it:
+  - kotlin-fhir-engine does not find Observations, Conditions or MedicationRequests by R4's `patient` search
+    parameter. Step 9 first ran with `patient` for every type, and 556 scenarios differed because those resources
+    were never read. `EnginePatientSearchTest` records this (see Findings). The spike now searches those three by
+    `subject`, which finds the same resources for a reference to a Patient.
+  - Its search results come back in no fixed order.
+
+  Not tested: kotlin-fhir-engine on JS and Wasm, where it runs SQLite in a web worker.
 
 ## Findings so far
 
@@ -221,6 +236,22 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   these three was not checked. Also read on that `main`: `Expression.toProtocolExpression` routes only
   `text/fhirpath` and `text/cql`, so WHO's `text/cql-expression` and `text/cql-identifier` dynamicValues would not
   reach an evaluator there today.
+- **kotlin-fhir-engine skips search parameters that use `resolve()`.** Ran 2026-10-22, kotlin-fhir-engine
+  2.0.0-alpha04 on the JVM (`EnginePatientSearchTest`), over every resource in WHO's test bundles: a `patient` search
+  finds 0 of 195 Observations, 0 of 78 Conditions and 0 of 78 MedicationRequests, while a `subject` search finds all
+  of them, and a `patient` search finds all 720 Immunizations. R4 defines `patient` on those three types as
+  `subject.where(resolve() is Patient)`, and on Immunization as `Immunization.patient`. The engine's
+  `ResourceIndexer` says why, in a comment (read, alpha04 and `main` at bde4b2b): kotlin-fhir-path doesn't implement
+  `resolve()`, and an expression it can't evaluate is skipped, with no error, so the parameter is never indexed. By
+  a scan of the engine's R4 search parameter file, `patient` is defined through `resolve()` on 42 types (Observation,
+  Condition, Encounter, Procedure, MedicationRequest, DiagnosticReport, CarePlan, ServiceRequest, Task and others),
+  and 8 more type/parameter pairs use it. A `patient` search on any of those finds nothing. No issue tracks this in
+  ohs-foundation/kotlin-fhir-engine or ohs-foundation/kotlin-fhirpath (searched 2026-10-22). Not raised upstream.
+- **kotlin-fhir-engine's search order varies.** Ran 2026-10-22 (step 9): for the same data, a search returns a
+  patient's Immunizations in an order that differs from the bundle's and from one run to the next. A CQL query with
+  no `sort` keeps its source's order, so lists such as "Measles Doses Administered to Patient" come out in that order
+  too. FHIR search defines no order without `_sort`, so this is allowed. No WHO value other than a list's order
+  changed: no `First`, `Last` or index over an unsorted list gave a different result in this suite.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
   twins cover Conditions. Date-range filtering in retrieve is not implemented and was not needed.
 
@@ -245,6 +276,8 @@ licence.
 - `src/commonMain/kotlin/dev/ohs/fhir/workflow/WorkflowRepository.kt`: copied unchanged from
   ohs-foundation/kotlin-fhir-workflow at 214c56d (Apache License 2.0), for step 8. The published
   `dev.ohs.fhir:fhir-workflow` 2.0.0-alpha01 has no JS build and depends on kotlin-fhir rc03.
+- `src/jvmTest/kotlin/dev/ohs/fhir/workflow/demo/data/EngineWorkflowRepository.kt`: copied unchanged from
+  ohs-foundation/kotlin-fhir-workflow's demo app (`workflow-demo`) at 214c56d (Apache License 2.0), for step 9.
 - `src/jvmTest/kotlin/dev/ohs/fhir/workflow/`: `FhirJson.kt`, `processor/DynamicValueApplier.kt` and
   `processor/EvaluatedValueJson.kt`, copied unchanged from ohs-foundation/kotlin-fhir-workflow at 214c56d
   (Apache License 2.0), for step 7.

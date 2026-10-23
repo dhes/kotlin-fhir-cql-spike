@@ -67,19 +67,20 @@ class WorkflowRepositoryCqlEvaluator(
 
     /**
      * Reads the patient data that [libraries] retrieve and the value sets they declare: the Patient by
-     * id, and resources of each other retrieved type that has a patient link, by FHIR's `patient` search
-     * parameter. Retrieved types without a patient link are not read, and a retrieve of one fails.
+     * id, and resources of each other retrieved type that has a patient link, by the search parameter in
+     * [PATIENT_SEARCH_PARAMETERS]. Retrieved types without a patient link are not read, and a retrieve of
+     * one fails.
      */
     suspend fun readData(libraries: List<String>, patientId: String, converter: KotlinFhirToCql): PatientData {
         val needed = libraries.map(::requirementsOf)
         val types = needed.flatMap { it.types }.toSet()
-        val readTypes = types.filter { it == "Patient" || it in KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS }.toSet()
+        val readTypes = types.filter { it == "Patient" || it in PATIENT_SEARCH_PARAMETERS }.toSet()
         val resources =
             readTypes.flatMap { type ->
                 if (type == "Patient") {
                     listOfNotNull(repository.read("Patient", patientId))
                 } else {
-                    repository.searchByReferenceParam(type, "patient", "Patient/$patientId")
+                    repository.searchByReferenceParam(type, PATIENT_SEARCH_PARAMETERS.getValue(type), "Patient/$patientId")
                 }
             }
         val valueSetIds = needed.flatMap { it.valueSets }.toSet()
@@ -121,6 +122,25 @@ class WorkflowRepositoryCqlEvaluator(
             ?: error("Library ${library.url?.value} has no single text/cql attachment")
         val data = cql.data?.value ?: error("Library ${library.url?.value} has no CQL data")
         return Base64.decode(data).decodeToString()
+    }
+
+    companion object {
+        /**
+         * The FHIR R4 search parameter on the element that links each type to its patient (the elements of
+         * [KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS]). It is `subject`, not `patient`, where R4 defines
+         * `patient` as `subject.where(resolve() is Patient)`: kotlin-fhir-engine 2.0.0-alpha04 does not index
+         * that, because kotlin-fhir-path does not implement `resolve()`.
+         */
+        val PATIENT_SEARCH_PARAMETERS =
+            mapOf(
+                "Immunization" to "patient",
+                "AllergyIntolerance" to "patient",
+                "Condition" to "subject",
+                "Observation" to "subject",
+                "MedicationRequest" to "subject",
+                "Encounter" to "subject",
+                "Procedure" to "subject",
+            )
     }
 
     /**

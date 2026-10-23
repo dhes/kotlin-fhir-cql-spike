@@ -48,6 +48,8 @@ kotlin {
             implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:8.10.0")
             // For kotlin-fhir-workflow's dynamicValue write-back code, copied into jvmTest (fhir-path version of its main).
             implementation("dev.ohs.fhir:fhir-path-r4:1.0.0-beta06")
+            // Step 9: kotlin-fhir-engine behind kotlin-fhir-workflow's WorkflowRepository.
+            implementation("dev.ohs.fhir:fhir-engine:2.0.0-alpha04")
         }
     }
 }
