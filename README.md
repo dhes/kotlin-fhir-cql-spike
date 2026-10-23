@@ -27,12 +27,15 @@ below.
 - **Not tested:** data from kotlin-fhir-engine, a terminology server, date-range filtering in retrieve, `$apply` end
   to end, and precompiled ELM on JS and Wasm.
 
-## Follow-on questions (steps 5–7, JVM only)
+## Follow-on questions
 
-- **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** Yes, once a cqframework
-  defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874). [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 5 and 6.
-- **Can the results be written back with kotlin-fhir-workflow's own code?** Not as it stands: for 4 of WHO's 8
-  dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 7.
+- **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** On the JVM, yes, once a
+  cqframework defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874). [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 5 and 6.
+- **Can the results be written back with kotlin-fhir-workflow's own code?** Not as it stands: on the JVM, for 4 of
+  WHO's 8 dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 7.
+- **Can the libraries, value sets and patient data come from kotlin-fhir-workflow's `WorkflowRepository`, which is
+  read with `suspend` calls?** Yes, by reading what the libraries need before evaluating: the same outcomes on the
+  JVM, JS and Wasm, with an in-memory repository. Not yet tried with kotlin-fhir-engine behind it. [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 8.
 
 ## Code
 
