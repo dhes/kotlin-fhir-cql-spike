@@ -14,6 +14,10 @@ dependencyResolutionManagement {
         if (providers.gradleProperty("cqlVersion").isPresent) {
             mavenLocal { content { includeGroup("org.cqframework") } }
         }
+        // Local kotlin-fhir-engine builds, used only when -PengineVersion is given.
+        if (providers.gradleProperty("engineVersion").isPresent) {
+            mavenLocal { content { includeModuleByRegex("dev\\.ohs\\.fhir", "fhir-engine.*") } }
+        }
     }
 }
 

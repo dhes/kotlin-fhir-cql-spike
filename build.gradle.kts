@@ -7,6 +7,8 @@ plugins {
 
 // ./gradlew -PcqlVersion=<version> uses that cqframework version, from mavenLocal if published there.
 val cqlVersion = (findProperty("cqlVersion") as String?) ?: "5.4.0"
+// ./gradlew -PengineVersion=<version> uses that kotlin-fhir-engine version, from mavenLocal if published there.
+val engineVersion = (findProperty("engineVersion") as String?) ?: "2.0.0-alpha04"
 val kotlinFhirVersion = "1.0.0-rc04"
 
 kotlin {
@@ -49,7 +51,7 @@ kotlin {
             // For kotlin-fhir-workflow's dynamicValue write-back code, copied into jvmTest (fhir-path version of its main).
             implementation("dev.ohs.fhir:fhir-path-r4:1.0.0-beta06")
             // Step 9: kotlin-fhir-engine behind kotlin-fhir-workflow's WorkflowRepository.
-            implementation("dev.ohs.fhir:fhir-engine:2.0.0-alpha04")
+            implementation("dev.ohs.fhir:fhir-engine:$engineVersion")
         }
     }
 }
