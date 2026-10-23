@@ -1,0 +1,195 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "ValueSet/single-system",
+      "resource": {
+        "resourceType": "ValueSet",
+        "id": "single-system",
+        "url": "http://example.org/fhir/ValueSet/single-system",
+        "status": "active",
+        "expansion": {
+          "timestamp": "2026-10-23T00:00:00Z",
+          "contains": [
+            {
+              "system": "http://loinc.org",
+              "code": "B",
+              "display": "Bee"
+            },
+            {
+              "system": "http://loinc.org",
+              "code": "A",
+              "display": "Ay"
+            },
+            {
+              "code": "no-system"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "ValueSet/multi-system",
+      "resource": {
+        "resourceType": "ValueSet",
+        "id": "multi-system",
+        "url": "http://example.org/fhir/ValueSet/multi-system",
+        "status": "active",
+        "expansion": {
+          "timestamp": "2026-10-23T00:00:00Z",
+          "contains": [
+            {
+              "system": "http://loinc.org",
+              "code": "1234"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "5678"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "9999"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "ValueSet/versioned-1",
+      "resource": {
+        "resourceType": "ValueSet",
+        "id": "versioned-1",
+        "url": "http://example.org/fhir/ValueSet/versioned",
+        "status": "active",
+        "version": "1",
+        "expansion": {
+          "timestamp": "2026-10-23T00:00:00Z",
+          "contains": [
+            {
+              "system": "http://loinc.org",
+              "code": "v1-only"
+            },
+            {
+              "system": "http://loinc.org",
+              "code": "both"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "ValueSet/versioned-2",
+      "resource": {
+        "resourceType": "ValueSet",
+        "id": "versioned-2",
+        "url": "http://example.org/fhir/ValueSet/versioned",
+        "status": "active",
+        "version": "2",
+        "expansion": {
+          "timestamp": "2026-10-23T00:00:00Z",
+          "contains": [
+            {
+              "system": "http://loinc.org",
+              "code": "v2-only"
+            },
+            {
+              "system": "http://loinc.org",
+              "code": "both"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "ValueSet/compose-only",
+      "resource": {
+        "resourceType": "ValueSet",
+        "id": "compose-only",
+        "url": "http://example.org/fhir/ValueSet/compose-only",
+        "status": "active",
+        "compose": {
+          "include": [
+            {
+              "system": "http://example.org/fhir/CodeSystem/colors",
+              "concept": [
+                {
+                  "code": "red",
+                  "display": "Red"
+                },
+                {
+                  "code": "blue"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "ValueSet/gender",
+      "resource": {
+        "resourceType": "ValueSet",
+        "id": "gender",
+        "url": "http://example.org/fhir/ValueSet/gender",
+        "status": "active",
+        "expansion": {
+          "timestamp": "2026-10-23T00:00:00Z",
+          "contains": [
+            {
+              "system": "http://hl7.org/fhir/administrative-gender",
+              "code": "female"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "CodeSystem/colors",
+      "resource": {
+        "resourceType": "CodeSystem",
+        "id": "colors",
+        "url": "http://example.org/fhir/CodeSystem/colors",
+        "version": "1.0.0",
+        "status": "active",
+        "content": "complete",
+        "concept": [
+          {
+            "code": "red",
+            "display": "Red"
+          },
+          {
+            "code": "green",
+            "display": "Green",
+            "concept": [
+              {
+                "code": "light-green",
+                "display": "Light green"
+              }
+            ]
+          },
+          {
+            "code": "blue",
+            "display": "Blue"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "CodeSystem/fragment",
+      "resource": {
+        "resourceType": "CodeSystem",
+        "id": "fragment",
+        "url": "http://example.org/fhir/CodeSystem/fragment",
+        "status": "active",
+        "content": "fragment",
+        "concept": [
+          {
+            "code": "listed",
+            "display": "Listed"
+          }
+        ]
+      }
+    }
+  ]
+}

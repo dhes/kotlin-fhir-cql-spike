@@ -1,0 +1,103 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "Patient/p1",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "p1",
+        "gender": "female"
+      }
+    },
+    {
+      "fullUrl": "Condition/c-loinc-a",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "c-loinc-a",
+        "subject": {
+          "reference": "Patient/p1"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "A"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "Condition/c-no-system-a",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "c-no-system-a",
+        "subject": {
+          "reference": "Patient/p1"
+        },
+        "code": {
+          "coding": [
+            {
+              "code": "A"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "Condition/c-sct-a",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "c-sct-a",
+        "subject": {
+          "reference": "Patient/p1"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "A"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "Condition/c-loinc-z",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "c-loinc-z",
+        "subject": {
+          "reference": "Patient/p1"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/o-no-system-1234",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "o-no-system-1234",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/p1"
+        },
+        "code": {
+          "coding": [
+            {
+              "code": "1234"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

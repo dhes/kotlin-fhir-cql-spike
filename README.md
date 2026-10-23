@@ -25,8 +25,8 @@ below.
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service
   supplied by the caller (cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
 - **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, `$apply` end to end, and
-  precompiled ELM on JS and Wasm. WHO's CQL never reaches date-range filtering in retrieve; step 10 tests it with
-  CQL of its own.
+  precompiled ELM on JS and Wasm. WHO's CQL never reaches date-range filtering in retrieve or code-system lookups;
+  steps 10 and 11 test them with CQL of the spike's own.
 
 ## Follow-on questions
 
@@ -42,6 +42,9 @@ below.
   as well, on the JVM, JS and Wasm, tested with CQL of the spike's own. A date range reaches a retrieve only through a
   compiler option that can drop a test's precision or choice type; in the spike's tests, 4 of the 10 retrieves given
   a date range can't match their where clause for that reason (see Findings). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 10.
+- **Does the terminology provider give the same answers as clinical-reasoning's?** Yes, on WHO's whole suite (all
+  343,922 values, JVM) and on CQL of the spike's own, except where the spike checks a code against a CodeSystem
+  resource it holds, which clinical-reasoning's provider doesn't. [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 11.
 
 ## Code
 
@@ -51,7 +54,8 @@ The pieces are in `src/commonMain`:
   Its per-type element table, `generated/R4Structures.kt`, is written by `tools/generate_elements.py`.
 - `KotlinFhirModelResolver`, `InMemoryRetrieveProvider`, `InMemoryTerminologyProvider`: implementations of the
   engine's `ModelResolver`, `RetrieveProvider` and `TerminologyProvider`. `InMemoryRetrieveProvider` filters by
-  context, codes or value set, date range, and (when asked) declared profile.
+  context, codes or value set, date range, and (when asked) declared profile. `InMemoryTerminologyProvider` answers
+  from ValueSet resources by url and version, and from CodeSystem resources when it holds them.
 - `FhirCqlEvaluator`: compiles CQL from source, with the compiler options given, and evaluates it in Patient context.
 - `WorkflowRepositoryCqlEvaluator` (step 8): reads the libraries, value sets and patient data a library needs from
   kotlin-fhir-workflow's `WorkflowRepository` (`dev/ohs/fhir/workflow/WorkflowRepository.kt`, copied), then
@@ -65,7 +69,8 @@ Both runs in `src/jvmTest` use the same `FhirCqlEvaluator`, `InMemoryRetrievePro
 `InMemoryTerminologyProvider`; only the converter and the model resolver differ. Agreement with HAPI therefore checks
 `KotlinFhirToCql` and `KotlinFhirModelResolver`. The retrieve and terminology providers are checked by WHO's
 expectations: the guidance text, the predicted `$apply` resource count and, for Conditions, the twins. The
-retrieve's date-range and profile filtering, which WHO's CQL doesn't reach, is checked by step 10.
+retrieve's date-range and profile filtering, which WHO's CQL doesn't reach, is checked by step 10, and the
+terminology provider against clinical-reasoning's by step 11.
 
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
@@ -192,6 +197,29 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     definition, both ways (`Step10Test`).
     The low and high date paths and the profile modes are tested by calling the retrieve directly
     (`InMemoryRetrieveProviderTest`).
+- Step 11 (2026-10-23): the rest of the `TerminologyProvider` interface, compared with clinical-reasoning's
+  `RepositoryTerminologyProvider` (cqf-fhir-cql 4.13.0, built on cqframework 5.4.0; on the JVM, over the same
+  resources read by HAPI 8.12.0 into its in-memory repository).
+  - **What changed in `InMemoryTerminologyProvider`:**
+    - `in` fails for a code with no system when the value set has codes from more than one system, as the
+      interface's KDoc requires; it used to match on the code alone;
+    - a value set is found by url and, when the CQL names one, version; an unknown version, or several versions with
+      none named, fails;
+    - codes with no system or no code are left out and the rest sorted by code, as clinical-reasoning does;
+    - a compose that includes other value sets is expanded from the value sets the provider holds (it used to fail);
+    - `lookup`, which CQL's `in` a code system uses, answers from a complete CodeSystem resource when the provider
+      holds one, filling in the display; otherwise it checks the code's system and version only, as
+      clinical-reasoning does for every code system. It used to return null always.
+  - **WHO (ran, JVM):** WHO's CQL names no value set version and never tests a code against a code system (scan),
+    so the change it can show is in `in` and `expand`. With clinical-reasoning's provider in place of the spike's,
+    all 343,922 values of the whole suite are the same (`Step11Test`). Of WHO's 192 value sets, 188 expand to the
+    same 1,825 codes, with the same versions, displays and order; the other four differ, and the suite reaches none
+    of them (see Findings).
+  - **The spike's own CQL** (`fixtures/terminology/TerminologyTests.cql`, 26 definitions, value sets with one system,
+    several systems, two versions, and only a compose; a complete and a fragment CodeSystem): the expected values
+    hold on the JVM, JS and Wasm (under Node) (`TerminologyTest`). With clinical-reasoning's provider, one value
+    differs, as intended: it finds `purple` in a complete code system that doesn't list it. `lookup`'s display is
+    tested directly (`InMemoryTerminologyProviderTest`).
 
 ## Findings so far
 
@@ -302,9 +330,20 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   `BaseRetrieveProvider.populateDateSearchParams` searches the element's date search parameter with `ge` the start
   and `le` the end, in every search mode. FHIR's date search compares ranges differently from CQL's `In` and
   `IncludedIn`, so that may not keep the same resources as the where clause; not checked.
+- **clinical-reasoning's terminology provider and four of WHO's value sets.** Ran 2026-10-23 (step 11),
+  cqf-fhir-cql 4.13.0:
+  - `IMMZD2DTVaricella1DoseVS` and `IMMZD2DTVaricella2DosesVS` have an expansion that lists no codes, and no compose.
+    clinical-reasoning's provider fails ("Failed to expand ValueSet"); the spike gives no codes.
+  - `IMMZ.Z.VS` and `IMMZ.D.DE19` have only a compose that includes other value sets. clinical-reasoning's provider
+    gives no codes, with no error; the spike gives the 453 codes of the value sets they include. Its naive expansion
+    reads only the concepts listed in a compose (read, `ValueSets.getCodesInCompose` at d09f71d1).
+  - WHO's suite reaches none of the four. Not raised upstream.
+- **clinical-reasoning's `lookup` doesn't check the code** (read at d09f71d1, and ran): it returns the code whenever
+  its system matches, logging "Unvalidated CodeSystem lookup", so CQL's `in` a code system is true for any code in
+  that system. Its KDoc says so.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
-  twins cover Conditions. WHO's CQL never reaches date-range filtering in retrieve or a profile; step 10 covers both
-  with CQL of its own.
+  twins cover Conditions. WHO's CQL never reaches date-range filtering in retrieve, a profile, a value set version or
+  a code-system test; steps 10 and 11 cover them with CQL of the spike's own.
 
 ## Licence
 

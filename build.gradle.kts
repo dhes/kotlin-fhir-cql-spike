@@ -44,14 +44,20 @@ kotlin {
             }
         }
         jvmTest.dependencies {
-            // The reference result: cqframework's HAPI-based R4 model resolver, JVM only.
+            // The reference result: cqframework's HAPI-based R4 model resolver, JVM only. HAPI 8.12.0 since step 11
+            // (clinical-reasoning 4.13.0 needs it); steps 1–10 ran on 8.10.0.
             implementation("org.cqframework:engine-fhir:$cqlVersion")
-            implementation("ca.uhn.hapi.fhir:hapi-fhir-base:8.10.0")
-            implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:8.10.0")
+            implementation("ca.uhn.hapi.fhir:hapi-fhir-base:8.12.0")
+            implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:8.12.0")
             // For kotlin-fhir-workflow's dynamicValue write-back code, copied into jvmTest (fhir-path version of its main).
             implementation("dev.ohs.fhir:fhir-path-r4:1.0.0-beta06")
             // Step 9: kotlin-fhir-engine behind kotlin-fhir-workflow's WorkflowRepository.
             implementation("dev.ohs.fhir:fhir-engine:$engineVersion")
+            // Step 11: clinical-reasoning's RepositoryTerminologyProvider as the reference (built on cqframework 5.4.0).
+            implementation("org.opencds.cqf.fhir:cqf-fhir-cql:4.13.0")
+            // HAPI's FHIRPath, which clinical-reasoning uses, needs its validation support.
+            implementation("ca.uhn.hapi.fhir:hapi-fhir-validation:8.12.0")
+            implementation("ca.uhn.hapi.fhir:hapi-fhir-caching-caffeine:8.12.0")
         }
     }
 }
