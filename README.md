@@ -242,10 +242,11 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   of them, and a `patient` search finds all 720 Immunizations. R4 defines `patient` on those three types as
   `subject.where(resolve() is Patient)`, and on Immunization as `Immunization.patient`. The engine's
   `ResourceIndexer` says why, in a comment (read, alpha04 and `main` at bde4b2b): kotlin-fhir-path doesn't implement
-  `resolve()`, and an expression it can't evaluate is skipped, with no error, so the parameter is never indexed. By
-  a scan of the engine's R4 search parameter file, `patient` is defined through `resolve()` on 42 types (Observation,
+  `resolve()`, and an expression it can't evaluate is skipped, with no error, so the parameter is never indexed. A
+  minimal case (`EnginePatientSearchReproTest`) shows the same for Encounter, and for `revInclude` by `patient`. By
+  a scan of the engine's R4 search parameter file, `patient` is defined through `resolve()` on 41 types (Observation,
   Condition, Encounter, Procedure, MedicationRequest, DiagnosticReport, CarePlan, ServiceRequest, Task and others),
-  and 8 more type/parameter pairs use it. A `patient` search on any of those finds nothing. No issue tracks this in
+  and 8 more type/parameter pairs use it; only the four types named here were run. No issue tracks this in
   ohs-foundation/kotlin-fhir-engine or ohs-foundation/kotlin-fhirpath (searched 2026-10-22). Not raised upstream.
 - **kotlin-fhir-engine's search order varies.** Ran 2026-10-22 (step 9): for the same data, a search returns a
   patient's Immunizations in an order that differs from the bundle's and from one run to the next. A CQL query with
