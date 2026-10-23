@@ -62,15 +62,20 @@ kotlin {
     }
 }
 
-// Tests on every platform read fixtures from the project directory by absolute path.
+// Tests on every platform read fixtures from the project directory by absolute path, and know the cqframework version.
 val generateTestPaths by tasks.registering {
     val outputDir = layout.buildDirectory.dir("generated/testPaths")
     val projectPath = projectDir.absolutePath
+    val version = cqlVersion
+    inputs.property("cqlVersion", version)
     outputs.dir(outputDir)
     doLast {
         val file = outputDir.get().file("ProjectDir.kt").asFile
         file.parentFile.mkdirs()
-        file.writeText("package io.github.dhes.kotlinfhircql\n\nconst val PROJECT_DIR = \"$projectPath\"\n")
+        file.writeText(
+            "package io.github.dhes.kotlinfhircql\n\nconst val PROJECT_DIR = \"$projectPath\"\n\n" +
+                "/** The cqframework version the tests run against (-PcqlVersion). */\nconst val CQL_VERSION = \"$version\"\n"
+        )
     }
 }
 

@@ -1,10 +1,11 @@
 package io.github.dhes.kotlinfhircql
 
-import dev.ohs.fhir.model.r4.Library
 import dev.ohs.fhir.model.r4.ValueSet
-import dev.ohs.fhir.model.r4.terminologies.RelatedArtifactType
 import dev.ohs.fhir.workflow.WorkflowRepository
-import kotlin.io.encoding.Base64
+import org.cqframework.cql.cql2elm.CqlCompilerOptions
+import org.cqframework.cql.cql2elm.LibraryContentType
+import org.cqframework.cql.cql2elm.LibrarySourceProvider
+import org.cqframework.cql.cql2elm.utils.asSource
 import org.cqframework.cql.cql2elm.ucum.UcumService
 import org.cqframework.cql.cql2elm.ucum.defaultLazyUcumService
 import org.cqframework.cql.elm.visiting.BaseElmLibraryVisitor
@@ -21,49 +22,44 @@ import org.opencds.cqf.cql.engine.util.ZonedDateTime
  * Evaluates CQL libraries held as FHIR Library resources in a [WorkflowRepository], for one patient,
  * reading the libraries, value sets and patient data they need from the repository before evaluating,
  * because cqframework's CQL engine retrieves synchronously and the repository is read with `suspend` calls.
+ * Each library is loaded from its ELM when cqframework can use it, and compiled from its CQL otherwise.
  *
  * @param otherLibrarySources CQL source text of libraries that are not in the repository, such as FHIRHelpers
+ * @param compilerOptions the CQL compiler options, which ELM in the repository must have been compiled with
  */
 class WorkflowRepositoryCqlEvaluator(
     private val repository: WorkflowRepository,
     fhirModelInfoXml: String,
     otherLibrarySources: List<String> = emptyList(),
     ucumService: Lazy<UcumService> = defaultLazyUcumService,
+    compilerOptions: CqlCompilerOptions = FhirCqlEvaluator.compilerOptions(),
 ) {
-    private val sources: MutableMap<String, String> =
-        otherLibrarySources.associateByTo(mutableMapOf(), FhirCqlEvaluator::libraryName)
-    private val closures = mutableMapOf<String, List<String>>()
+    private val otherSources = otherLibrarySources.associateBy(FhirCqlEvaluator::libraryName)
     private val requirements = mutableMapOf<String, Requirements>()
 
-    val evaluator = FhirCqlEvaluator(sources::get, fhirModelInfoXml, ucumService = ucumService)
+    /** The Library resources read from the repository, served to cqframework's compiler. */
+    val libraries = WorkflowRepositoryLibrarySourceProvider(repository)
+
+    val evaluator =
+        FhirCqlEvaluator(
+            object : LibrarySourceProvider {
+                override fun getLibrarySource(libraryIdentifier: VersionedIdentifier) =
+                    getLibraryContent(libraryIdentifier, LibraryContentType.CQL)
+
+                override fun getLibraryContent(libraryIdentifier: VersionedIdentifier, type: LibraryContentType) =
+                    libraries.getLibraryContent(libraryIdentifier, type)
+                        ?: otherSources[libraryIdentifier.id]?.takeIf { type == LibraryContentType.CQL }?.asSource()
+            },
+            fhirModelInfoXml,
+            ucumService = ucumService,
+            compilerOptions = compilerOptions,
+        )
 
     /**
      * Reads the Library with canonical [url] and, through its `depends-on` related artifacts, every
      * library it includes, directly or not, and returns their names.
      */
-    suspend fun loadLibraries(url: String): List<String> {
-        closures[url]?.let { return it }
-        val names = linkedSetOf<String>()
-        val seen = mutableSetOf<String>()
-        suspend fun visit(canonical: String) {
-            val libraryUrl = canonical.substringBefore("|")
-            if (!seen.add(libraryUrl)) return
-            val library =
-                repository.searchByUri("Library", "url", libraryUrl).singleOrNull() as? Library
-                    ?: error("No single Library with url $libraryUrl")
-            val source = cqlOf(library)
-            val name = FhirCqlEvaluator.libraryName(source)
-            sources[name] = source
-            names += name
-            library.relatedArtifact
-                .filter { it.type.value == RelatedArtifactType.Depends_On }
-                .mapNotNull { it.resource?.value }
-                .filter { "/Library/" in it }
-                .forEach { visit(it) }
-        }
-        visit(url)
-        return names.sorted().also { closures[url] = it }
-    }
+    suspend fun loadLibraries(url: String): List<String> = libraries.load(url).map { it.id!! }.sorted()
 
     /**
      * Reads the patient data that [libraries] retrieve and the value sets they declare: the Patient by
@@ -116,13 +112,6 @@ class WorkflowRepositoryCqlEvaluator(
             val elm = evaluator.libraryManager.resolveLibrary(VersionedIdentifier().withId(library)).library!!
             Requirements(mutableSetOf(), mutableSetOf()).also { RequirementsVisitor.visitLibrary(elm, it) }
         }
-
-    private fun cqlOf(library: Library): String {
-        val cql = library.content.singleOrNull { it.contentType?.value == "text/cql" }
-            ?: error("Library ${library.url?.value} has no single text/cql attachment")
-        val data = cql.data?.value ?: error("Library ${library.url?.value} has no CQL data")
-        return Base64.decode(data).decodeToString()
-    }
 
     companion object {
         /**

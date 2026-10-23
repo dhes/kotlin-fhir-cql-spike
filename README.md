@@ -24,14 +24,15 @@ below.
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service
   supplied by the caller (cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
-- **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, `$apply` end to end, and
-  precompiled ELM on JS and Wasm. WHO's CQL never reaches date-range filtering in retrieve or code-system lookups;
+- **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, and `$apply` end to end. WHO's CQL never reaches date-range filtering in retrieve or code-system lookups;
   steps 10 and 11 test them with CQL of the spike's own.
 
 ## Follow-on questions
 
-- **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** On the JVM, yes, once a
-  cqframework defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874). [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 5 and 6.
+- **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** Yes, once a cqframework
+  defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874): the libraries on the JVM, JS and
+  Wasm, read as ELM from Library resources in a `WorkflowRepository`; the inline dynamicValues on the JVM.
+  [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 5, 6 and 12.
 - **Can the results be written back with kotlin-fhir-workflow's own code?** Not as it stands: on the JVM, for 4 of
   WHO's 8 dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 7.
 - **Can the libraries, value sets and patient data come from kotlin-fhir-workflow's `WorkflowRepository`, which is
@@ -56,10 +57,13 @@ The pieces are in `src/commonMain`:
   engine's `ModelResolver`, `RetrieveProvider` and `TerminologyProvider`. `InMemoryRetrieveProvider` filters by
   context, codes or value set, date range, and (when asked) declared profile. `InMemoryTerminologyProvider` answers
   from ValueSet resources by url and version, and from CodeSystem resources when it holds them.
-- `FhirCqlEvaluator`: compiles CQL from source, with the compiler options given, and evaluates it in Patient context.
-- `WorkflowRepositoryCqlEvaluator` (step 8): reads the libraries, value sets and patient data a library needs from
-  kotlin-fhir-workflow's `WorkflowRepository` (`dev/ohs/fhir/workflow/WorkflowRepository.kt`, copied), then
-  evaluates with `FhirCqlEvaluator`.
+- `FhirCqlEvaluator`: loads libraries from a `LibrarySourceProvider`, as ELM or compiled from CQL with the compiler
+  options given, and evaluates them in Patient context.
+- `WorkflowRepositoryLibrarySourceProvider` (step 12): cqframework's `LibrarySourceProvider` over Library resources
+  read from kotlin-fhir-workflow's `WorkflowRepository` (`dev/ohs/fhir/workflow/WorkflowRepository.kt`, copied),
+  serving their CQL, ELM JSON or ELM XML.
+- `WorkflowRepositoryCqlEvaluator` (step 8): reads the libraries (through `WorkflowRepositoryLibrarySourceProvider`),
+  value sets and patient data a library needs from the `WorkflowRepository`, then evaluates with `FhirCqlEvaluator`.
 
 `src/jvmTest` checks each result against cqframework's HAPI-based `R4FhirModelResolver`, and records the HAPI
 results in `fixtures/expected/`. `src/commonTest` checks the same scenarios against those files and against WHO's
@@ -220,6 +224,28 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     hold on the JVM, JS and Wasm (under Node) (`TerminologyTest`). With clinical-reasoning's provider, one value
     differs, as intended: it finds `purple` in a complete code system that doesn't list it. `lookup`'s display is
     tested directly (`InMemoryTerminologyProviderTest`).
+- Step 12 (2026-10-23): library loading through cqframework's `LibrarySourceProvider`, and precompiled ELM on JS
+  and Wasm.
+  - **What changed:** `WorkflowRepositoryLibrarySourceProvider` reads a Library and, through its `depends-on`
+    entries, every Library it depends on, from the `WorkflowRepository` before evaluation, as step 8 did; it then
+    serves each one's CQL, ELM JSON or ELM XML attachment through `getLibraryContent`, by the Library's `name` and
+    `version`. cqframework asks for ELM first and compiles the CQL only when there's no ELM it can use.
+    `WorkflowRepositoryCqlEvaluator` and `FhirCqlEvaluator` now load libraries only this way; the spike's own
+    lookup of CQL attachments is gone.
+  - **When cqframework uses ELM** (read, cql-to-elm 5.4.0 `LibraryManager`): only when the ELM records the running
+    compiler's version and exactly the compiler options in use, and, for a library with overloaded functions,
+    signatures. WHO's published ELM records no compiler version, so it is never used (also in Dan's cqframework
+    hub, `plan-ohs-cql.md`). The test therefore compiles the ELM itself.
+  - **Test** (`ElmFromRepositoryTest`, ran on the JVM, JS and Wasm under Node): on each target, WHO's 279 libraries
+    and FHIRHelpers are compiled to ELM JSON with the spike's options plus `EnableResultTypes` (2–5 s); the ELM is
+    added to each Library resource beside its CQL, and FHIRHelpers is put in the repository as a Library too. WHO's
+    whole suite, read through the repository, then gives the recorded HAPI outcomes in all 1,098 scenarios on all
+    three targets. It needs 237 libraries. With cqframework 5.4.0, 234 load from ELM, and FHIRHelpers, IMMZCommon
+    and WHOCommon are compiled from CQL, as in step 5 (cqframework/clinical_quality_language#1873). With the local
+    cqframework build of step 5 that carries the fix (`-PcqlVersion=5.5.0-elm-functions-fb8055df-SNAPSHOT`), all 237
+    load from ELM and no CQL is compiled, on all three targets. The suite takes about 8 s on the JVM, 41 s on Wasm
+    and 2 min 40 s on JS.
+  - The ELM is compiled on the target that loads it; ELM compiled on one target and loaded on another wasn't tried.
 
 ## Findings so far
 

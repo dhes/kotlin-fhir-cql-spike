@@ -4,6 +4,7 @@ import org.cqframework.cql.cql2elm.CqlCompilerException
 import org.cqframework.cql.cql2elm.CqlCompilerOptions
 import org.cqframework.cql.cql2elm.LibraryManager
 import org.cqframework.cql.cql2elm.LibrarySourceProvider
+import org.cqframework.cql.cql2elm.createLibrarySourceProvider
 import org.cqframework.cql.cql2elm.ModelManager
 import org.hl7.cql.model.NamespaceManager
 import org.cqframework.cql.cql2elm.createModelInfoProvider
@@ -12,7 +13,6 @@ import org.cqframework.cql.cql2elm.ucum.defaultLazyUcumService
 import org.cqframework.cql.cql2elm.utils.asSource
 import org.hl7.cql.model.SystemModelInfoProvider
 import org.cqframework.cql.cql2elm.LibraryBuilder.SignatureLevel
-import org.hl7.elm.r1.VersionedIdentifier
 import org.opencds.cqf.cql.engine.data.CompositeDataProvider
 import org.opencds.cqf.cql.engine.execution.CqlEngine
 import org.opencds.cqf.cql.engine.execution.Environment
@@ -23,17 +23,18 @@ import org.opencds.cqf.cql.engine.terminology.TerminologyProvider
 import org.opencds.cqf.cql.engine.util.ZonedDateTime
 
 /**
- * Compiles CQL libraries from source against the FHIR 4.0.1 model info supplied by the caller, and
- * evaluates them in Patient context over resources the caller supplies.
+ * Loads CQL libraries, as ELM or compiled from CQL source against the FHIR 4.0.1 model info supplied by the caller,
+ * and evaluates them in Patient context over resources the caller supplies.
  *
- * @param librarySource the CQL source text of the library with the given name, FHIRHelpers included
+ * @param librarySourceProvider serves each library's ELM or CQL source, FHIRHelpers included; cqframework uses the
+ *   ELM only when it was compiled by the same cql-to-elm version with the same [compilerOptions]
  * @param fhirModelInfoXml the text of fhir-modelinfo-4.0.1.xml
  * @param modelResolverFactory makes the FHIR model resolver; the default answers from the model info
  * @param ucumService the UCUM service; cqframework provides a default on the JVM only
  * @param compilerOptions the CQL compiler options; `EnableDateRangeOptimization` moves date tests into retrieves
  */
 class FhirCqlEvaluator(
-    private val librarySource: (name: String) -> String?,
+    librarySourceProvider: LibrarySourceProvider,
     fhirModelInfoXml: String,
     private val terminologyProvider: TerminologyProvider? = null,
     modelResolverFactory: (ModelManager) -> ModelResolver = { KotlinFhirModelResolver(it.resolveModel("FHIR", "4.0.1")) },
@@ -50,6 +51,19 @@ class FhirCqlEvaluator(
             )
         }
 
+    /** Uses [librarySource], the CQL source text of the library with the given name, FHIRHelpers included. */
+    constructor(
+        librarySource: (name: String) -> String?,
+        fhirModelInfoXml: String,
+        terminologyProvider: TerminologyProvider? = null,
+        modelResolverFactory: (ModelManager) -> ModelResolver = { KotlinFhirModelResolver(it.resolveModel("FHIR", "4.0.1")) },
+        ucumService: Lazy<UcumService> = defaultLazyUcumService,
+        compilerOptions: CqlCompilerOptions = compilerOptions(),
+    ) : this(
+        createLibrarySourceProvider { id, _, _ -> librarySource(id)?.asSource() },
+        fhirModelInfoXml, terminologyProvider, modelResolverFactory, ucumService, compilerOptions,
+    )
+
     /** Uses [librarySources], the CQL source text of every library needed, FHIRHelpers included. */
     constructor(
         librarySources: List<String>,
@@ -62,14 +76,7 @@ class FhirCqlEvaluator(
 
     val libraryManager =
         LibraryManager(modelManager, compilerOptions, lazyUcumService = ucumService)
-            .apply {
-                librarySourceLoader.registerProvider(
-                    object : LibrarySourceProvider {
-                        override fun getLibrarySource(libraryIdentifier: VersionedIdentifier) =
-                            libraryIdentifier.id?.let(librarySource)?.asSource()
-                    }
-                )
-            }
+            .apply { librarySourceLoader.registerProvider(librarySourceProvider) }
 
     val modelResolver: ModelResolver = modelResolverFactory(modelManager)
 

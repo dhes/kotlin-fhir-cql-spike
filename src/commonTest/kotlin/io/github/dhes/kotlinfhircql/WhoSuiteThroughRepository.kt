@@ -9,21 +9,21 @@ import kotlin.time.TimeSource
  * Runs WHO's immunization test suite with the libraries, value sets and patient data read from [repository]
  * before evaluation, and returns the scenarios whose outcome differs from the HAPI outcome recorded on the JVM
  * by [Step4Test]. The repository must hold WHO's Library and ValueSet resources; [loadBundle] puts one
- * scenario's bundle in it in place of the previous one.
+ * scenario's bundle in it in place of the previous one. [cql] evaluates; by default it compiles from CQL source.
  */
 suspend fun whoSuiteThroughRepository(
     repository: WorkflowRepository,
-    loadBundle: suspend (List<Resource>) -> Unit,
-): List<String> {
-    val expected: Map<String, WhoOutcome> = MeaslesFixtures.json.decodeFromString(MeaslesFixtures.readText(WhoSuite.EXPECTED))
-    val start = TimeSource.Monotonic.markNow()
-    val cql =
+    cql: WorkflowRepositoryCqlEvaluator =
         WorkflowRepositoryCqlEvaluator(
             repository,
             MeaslesFixtures.modelInfoXml,
             listOf(WhoSuite.fhirHelpersSource),
             platformUcumService(),
-        )
+        ),
+    loadBundle: suspend (List<Resource>) -> Unit,
+): List<String> {
+    val expected: Map<String, WhoOutcome> = MeaslesFixtures.json.decodeFromString(MeaslesFixtures.readText(WhoSuite.EXPECTED))
+    val start = TimeSource.Monotonic.markNow()
     val outcomes = mutableMapOf<String, WhoOutcome>()
     val differences = mutableListOf<String>()
     val rejected = mutableListOf<String>()
