@@ -24,8 +24,9 @@ below.
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service
   supplied by the caller (cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
-- **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, date-range filtering in retrieve, `$apply` end
-  to end, and precompiled ELM on JS and Wasm.
+- **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, `$apply` end to end, and
+  precompiled ELM on JS and Wasm. WHO's CQL never reaches date-range filtering in retrieve; step 10 tests it with
+  CQL of its own.
 
 ## Follow-on questions
 
@@ -37,6 +38,10 @@ below.
   read with `suspend` calls?** Yes, by reading what the libraries need before evaluating: the same outcomes on the
   JVM, JS and Wasm, with an in-memory repository. With kotlin-fhir-engine behind it, on the JVM, the same values up to
   list order, once two kotlin-fhir-engine behaviours are allowed for (see Findings). [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 8 and 9.
+- **Does the retrieve provider cover all of cqframework's `RetrieveProvider` interface?** Yes: date range and profile
+  as well, on the JVM, JS and Wasm, tested with CQL of the spike's own. A date range reaches a retrieve only through a
+  compiler option that can drop a test's precision or choice type; in the spike's tests, 4 of the 10 retrieves given
+  a date range can't match their where clause for that reason (see Findings). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 10.
 
 ## Code
 
@@ -45,8 +50,9 @@ The pieces are in `src/commonMain`:
 - `KotlinFhirToCql`: converts kotlin-fhir resources to the engine's values, following the FHIR 4.0.1 model info.
   Its per-type element table, `generated/R4Structures.kt`, is written by `tools/generate_elements.py`.
 - `KotlinFhirModelResolver`, `InMemoryRetrieveProvider`, `InMemoryTerminologyProvider`: implementations of the
-  engine's `ModelResolver`, `RetrieveProvider` and `TerminologyProvider`.
-- `FhirCqlEvaluator`: compiles CQL from source and evaluates it in Patient context.
+  engine's `ModelResolver`, `RetrieveProvider` and `TerminologyProvider`. `InMemoryRetrieveProvider` filters by
+  context, codes or value set, date range, and (when asked) declared profile.
+- `FhirCqlEvaluator`: compiles CQL from source, with the compiler options given, and evaluates it in Patient context.
 - `WorkflowRepositoryCqlEvaluator` (step 8): reads the libraries, value sets and patient data a library needs from
   kotlin-fhir-workflow's `WorkflowRepository` (`dev/ohs/fhir/workflow/WorkflowRepository.kt`, copied), then
   evaluates with `FhirCqlEvaluator`.
@@ -57,8 +63,9 @@ expectations on every target.
 
 Both runs in `src/jvmTest` use the same `FhirCqlEvaluator`, `InMemoryRetrieveProvider` and
 `InMemoryTerminologyProvider`; only the converter and the model resolver differ. Agreement with HAPI therefore checks
-`KotlinFhirToCql` and `KotlinFhirModelResolver`. The retrieve and terminology providers are checked only by WHO's
-expectations: the guidance text, the predicted `$apply` resource count and, for Conditions, the twins.
+`KotlinFhirToCql` and `KotlinFhirModelResolver`. The retrieve and terminology providers are checked by WHO's
+expectations: the guidance text, the predicted `$apply` resource count and, for Conditions, the twins. The
+retrieve's date-range and profile filtering, which WHO's CQL doesn't reach, is checked by step 10.
 
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
@@ -162,6 +169,29 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - Its search results come back in no fixed order.
 
   Not tested: kotlin-fhir-engine on JS and Wasm, where it runs SQLite in a web worker.
+- Step 10 (2026-10-23): the rest of the `RetrieveProvider` interface: date range and profile (`templateId`).
+  - **When the date-range arguments are filled in** (read, cql-to-elm 5.4.0 `Cql2ElmVisitor`): only with the
+    compiler option `EnableDateRangeOptimization`. The compiler then takes a `during` or `in` test on an element of
+    the retrieved resource out of the query's where clause and puts the element's path and the interval into the
+    retrieve, so the retrieve provider must apply the test the where clause would have applied. It never fills in
+    the separate low and high date paths. Compiled with that option, none of the 321 retrieves in WHO's libraries
+    gets a date range, and every `templateId` is the base type's (ran, `Step10Test`).
+  - **What the spike does:** `InMemoryRetrieveProvider` applies the test with cqframework's own `In` (for a FHIR
+    dateTime or instant, or a date, which no test reaches) and `IncludedIn` (for a Period, converted as FHIRHelpers 4.0.1's `ToInterval` does,
+    or for the interval between the low and high date paths); a null result excludes the resource. For a profile it
+    follows clinical-reasoning's `RetrieveSettings.PROFILE_MODE`: by default the profile is ignored; `DECLARED` keeps
+    resources whose `meta.profile` names it, and `OPTIONAL` also keeps those that name none.
+  - **Test:** `fixtures/retrieve/DateRangeTests.cql` has 11 definitions, each a retrieve with a date test in its
+    where clause, over one patient's 24 resources (dates inside and outside the period, on its boundaries, in another
+    time zone, at year, month and day precision, missing; Periods with no start or no end; choice elements holding a
+    dateTime, a Period, an instant or a string). Each definition is evaluated compiled with and without the option,
+    and the results compared (`RetrieveDateRangeTest`). The compiler gives 10 of the 11 a date range; it leaves a
+    test on a computed date (`recordedDate + 1 day`) in the where clause. On the JVM, JS and Wasm (under Node), 6 of
+    those 10 return the same resources both ways; the other 4 can't, because the compiler drops part of the test
+    (see Findings). On the JVM, cqframework's HAPI-based resolver gives the same results as kotlin-fhir for every
+    definition, both ways (`Step10Test`).
+    The low and high date paths and the profile modes are tested by calling the retrieve directly
+    (`InMemoryRetrieveProviderTest`).
 
 ## Findings so far
 
@@ -253,8 +283,28 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   no `sort` keeps its source's order, so lists such as "Measles Doses Administered to Patient" come out in that order
   too. FHIR search defines no order without `_sort`, so this is allowed. No WHO value other than a list's order
   changed: no `First`, `Last` or index over an unsorted list gave a different result in this suite.
+- **The compiler's date-range option drops part of the test it moves.** Ran 2026-10-23 (step 10), cql-to-elm 5.4.0
+  with `EnableDateRangeOptimization`. The compiled retrieve has only the element's path and the interval, and the
+  where clause is gone, so two kinds of test can't be reproduced by any retrieve provider:
+  - a precision: `C.recordedDate during day of "Measurement Period"` becomes a test at full precision, which drops
+    3 of the 5 Conditions the where clause keeps;
+  - the type chosen from a choice element: `(O.effective as dateTime) during "Measurement Period"` becomes a test on
+    `effective`, which also keeps Observations whose effective time is a Period or an instant in the period; `as
+    Period` likewise keeps dateTimes and instants.
+
+  Tests without a precision, on elements that aren't choices, or on a choice whose other types aren't dates, come
+  out the same. WHO's CQL is not affected: none of its retrieves gets a date range. Already known in general (read,
+  2026-10-23): cqframework/clinical_quality_language#544 (2020) reported that the option removes the where clause and
+  asked that it be kept; it was closed in 2021 as addressed by the `DataRequirementsProcessor` (1.5.4), which reports
+  date ranges for query planning without removing anything. Choice types were brought into the option in 1.4.9
+  (#486). Neither issue mentions precision or the lost choice type. Not raised upstream.
+- **clinical-reasoning's retrieve turns a date range into FHIR search parameters** (read at d09f71d1, not run):
+  `BaseRetrieveProvider.populateDateSearchParams` searches the element's date search parameter with `ge` the start
+  and `le` the end, in every search mode. FHIR's date search compares ranges differently from CQL's `In` and
+  `IncludedIn`, so that may not keep the same resources as the where clause; not checked.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
-  twins cover Conditions. Date-range filtering in retrieve is not implemented and was not needed.
+  twins cover Conditions. WHO's CQL never reaches date-range filtering in retrieve or a profile; step 10 covers both
+  with CQL of its own.
 
 ## Licence
 

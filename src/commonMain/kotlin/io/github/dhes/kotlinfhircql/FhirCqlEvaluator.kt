@@ -30,6 +30,7 @@ import org.opencds.cqf.cql.engine.util.ZonedDateTime
  * @param fhirModelInfoXml the text of fhir-modelinfo-4.0.1.xml
  * @param modelResolverFactory makes the FHIR model resolver; the default answers from the model info
  * @param ucumService the UCUM service; cqframework provides a default on the JVM only
+ * @param compilerOptions the CQL compiler options; `EnableDateRangeOptimization` moves date tests into retrieves
  */
 class FhirCqlEvaluator(
     private val librarySource: (name: String) -> String?,
@@ -37,6 +38,7 @@ class FhirCqlEvaluator(
     private val terminologyProvider: TerminologyProvider? = null,
     modelResolverFactory: (ModelManager) -> ModelResolver = { KotlinFhirModelResolver(it.resolveModel("FHIR", "4.0.1")) },
     ucumService: Lazy<UcumService> = defaultLazyUcumService,
+    compilerOptions: CqlCompilerOptions = compilerOptions(),
 ) {
     val modelManager =
         ModelManager(NamespaceManager(), false).apply {
@@ -55,19 +57,11 @@ class FhirCqlEvaluator(
         terminologyProvider: TerminologyProvider? = null,
         modelResolverFactory: (ModelManager) -> ModelResolver = { KotlinFhirModelResolver(it.resolveModel("FHIR", "4.0.1")) },
         ucumService: Lazy<UcumService> = defaultLazyUcumService,
-    ) : this(librarySources.associateBy(::libraryName)::get, fhirModelInfoXml, terminologyProvider, modelResolverFactory, ucumService)
+        compilerOptions: CqlCompilerOptions = compilerOptions(),
+    ) : this(librarySources.associateBy(::libraryName)::get, fhirModelInfoXml, terminologyProvider, modelResolverFactory, ucumService, compilerOptions)
 
     val libraryManager =
-        LibraryManager(
-                modelManager,
-                CqlCompilerOptions(
-                    CqlCompilerException.ErrorSeverity.Info,
-                    SignatureLevel.Overloads,
-                    CqlCompilerOptions.Options.DisableListDemotion,
-                    CqlCompilerOptions.Options.DisableListPromotion,
-                ),
-                lazyUcumService = ucumService,
-            )
+        LibraryManager(modelManager, compilerOptions, lazyUcumService = ucumService)
             .apply {
                 librarySourceLoader.registerProvider(
                     object : LibrarySourceProvider {
@@ -112,6 +106,16 @@ class FhirCqlEvaluator(
     }
 
     companion object {
+        /** The spike's compiler options, plus [extra]. */
+        fun compilerOptions(vararg extra: CqlCompilerOptions.Options) =
+            CqlCompilerOptions(
+                CqlCompilerException.ErrorSeverity.Info,
+                SignatureLevel.Overloads,
+                CqlCompilerOptions.Options.DisableListDemotion,
+                CqlCompilerOptions.Options.DisableListPromotion,
+                *extra,
+            )
+
         private val LIBRARY_DECLARATION = Regex("""^\s*library\s+"?([A-Za-z0-9_]+)"?""", RegexOption.MULTILINE)
 
         /** The name in the library declaration of CQL [source]. */
