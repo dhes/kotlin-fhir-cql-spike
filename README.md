@@ -69,7 +69,12 @@ PlanDefinition, its logic library, the patient, the bundle, Today, the expected 
    model resolver. Every one of the 343,922 values must be equal, compared element by element. The JVM records the
    HAPI values in `fixtures/expected/`, so JS and Wasm are checked against the same files.
 2. **Guidance against WHO.** The logic library's `Guidance` definition must equal WHO's expected text. 634 scenarios
-   assert one, and all 634 match.
+   assert one, and all 634 match. All of them are decision-table scenarios (`IMMZD2DT…` and `IMMZD5DT…`, twins
+   included), which state the whole text in the scenario. The 464 schedule scenarios (`IMMZD18S…`) aren't in this
+   check. Their libraries have no `Guidance` definition: the text comes from a `… Create` definition, such as
+   `"MCV2 Create"`, and ends with a due date. Their feature files give only its start, in the Background
+   (`resultContent[22] = "The client is due for MCV2 if the client is at least 15 months."`), which the spike doesn't
+   read. Check 1 still compares those definitions with HAPI.
 3. **Resource count against WHO.** The spike predicts what `$apply` would return: 1 (the RequestGroup) plus one
    resource per PlanDefinition action whose condition is true. That prediction matches WHO's count in 1,082
    scenarios. The other 16 differ from WHO for HAPI too, so they don't come from kotlin-fhir.
