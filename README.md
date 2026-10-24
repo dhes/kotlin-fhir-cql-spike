@@ -20,10 +20,12 @@ below.
   differences change no CQL value: HAPI adds an empty `meta` that isn't in the data, and names one backbone element
   by its Java class. The guidance text matches WHO's in all 634 scenarios that state one.
 - **JS and Wasm (under Node):** the same outcomes, except 6 scenarios that reach CQL's `Split`, which cqframework does
-  not implement there (cqframework/clinical_quality_language#1870).
+  not implement there (cqframework/clinical_quality_language#1870). Outside WHO's content, cqframework's decimal
+  multiplication, division, `mod`, `div` and equivalence give wrong values or fail there (step 14, Findings).
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
-  table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service
-  supplied by the caller (cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
+  table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service,
+  which the spike supplies over the `@lhncbc/ucum-lhc` npm package (step 14; see also
+  cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
 - **Not tested:** a browser (JS and Wasm ran under Node only, so kotlin-fhir-engine's browser storage wasn't tried
   either), a terminology server, and `$apply` end to end. WHO's CQL never reaches date-range filtering in retrieve or
   code-system lookups; steps 10 and 11 test them with CQL of the spike's own.
@@ -157,6 +159,10 @@ The pieces are in `src/commonMain`:
   serving their CQL, ELM JSON or ELM XML.
 - `WorkflowRepositoryCqlEvaluator` (step 8): reads the libraries (through `WorkflowRepositoryLibrarySourceProvider`),
   value sets and patient data a library needs from the `WorkflowRepository`, then evaluates with `FhirCqlEvaluator`.
+
+In `src/webMain`, for JS and Wasm only:
+
+- `UcumLhcService` (step 14): cqframework's `UcumService` over the `@lhncbc/ucum-lhc` npm package.
 
 `src/jvmTest` checks each result against cqframework's HAPI-based `R4FhirModelResolver`, and records the HAPI
 results in `fixtures/expected/`. `src/commonTest` checks the same scenarios against those files and against WHO's
@@ -388,15 +394,84 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - Not tested: a browser, and so kotlin-fhir-engine's browser storage (OPFS, which its README says needs the page
     served with cross-origin isolation headers); under Node only the in-memory database can run.
 
+- Step 14 (2026-10-24): a UCUM service on JS and Wasm, `UcumLhcService` in `src/webMain`, in place of the stand-in
+  the tests used until now.
+  - **What ucum-lhc offers** (read, 7.1.10, the latest release more than two weeks old): unit validation
+    (`validateUnitString`), conversion (`convertUnitTo`) and conversion to base units (`convertToBaseUnits`), all
+    computed with JS numbers. It has no multiplication or division of quantities. cqframework's playground uses it
+    only to validate units; its UCUM service there converts nothing (read, `playground/cql`, v5.5.0).
+  - **What the service does:**
+    - `validate` and `convert` call ucum-lhc.
+    - `multiply` and `divideBy` take each unit to base units, combine the values and exponents, and give the result
+      in base units, sorted, as the JVM's fhir-ucum does: `2 'cm' * 3 'cm'` gives `0.0006 'm2'`, `10 'mg' / 2 'mL'`
+      gives `5000 'g.m-3'`.
+    - The values are multiplied and divided as integers, because cqframework's `BigDecimal` on JS and Wasm rounds a
+      product or quotient to the scale of an operand (see Findings). A quotient is cut off 20 decimal places beyond
+      the dividend's; cqframework then rounds it to 8.
+  - **The test cases:**
+    - 142 cases from cqframework's copy of the CQL test suite (`engine-fhir/src/jvmTest/resources/org/hl7/fhirpath/cql`
+      at v5.4.0): every test whose expression has a number followed by a quoted unit, or calls `ConvertQuantity` or
+      `CanConvertQuantity`. `tools/extract_quantity_cases.py` writes them to
+      `third_party/cqframework-cql-tests-5.4.0/quantity-cases.json`. Only a few reach UCUM arithmetic or conversion.
+    - 52 cases of the spike's own (`fixtures/ucum/spike-quantity-cases.json`): conversions, comparisons across units,
+      multiplication, division, invalid units, and five plain decimal expressions.
+    - `Step14Test` records each case's value on the JVM, with cqframework's `DefaultUcumService`, in
+      `fixtures/expected/quantity-results.json`. `QuantityCasesTest` evaluates the same cases on each target and
+      compares, each case as its own library.
+  - **Result** (ran):
+
+    | Of 194 cases | JS | Wasm |
+    |---|---|---|
+    | The same as on the JVM | 149 | 147 |
+    | The same when rounded to CQL's 8 decimal places | 21 | 23 |
+    | An error on both, with a different message | 3 | 3 |
+    | Different | 21 | 21 |
+
+    - **Rounded to 8 places:** trailing zeros (`0.0050 'g'` on the JVM, `0.005 'g'` here) and the noise of JS
+      numbers (`5.000000000000001 '10*3/uL'`; `154.3235835294143 '[lb_av]'` against the JVM's
+      `154.323583529414306506082`).
+    - **Errors on both:** the two invalid units, whose messages come from different UCUM libraries, and `Message`.
+    - **The 21 differences**, each listed in `QuantityCasesTest` with its reason. 4 come from the UCUM libraries:
+      - 3 conversions between `Cel`, `[degF]` and `K`: ucum-lhc converts them (`37 'Cel'` gives
+        `98.59999999999997 '[degF]'`), while the JVM's fhir-ucum throws "Not handled yet (special unit with offset
+        from 0 at intersect)" and cqframework returns null.
+      - `2.5589 '{eskimo kisses}'`: ucum-lhc rejects the space in the annotation, and fhir-ucum accepts it.
+
+      The other 17 are cqframework's on JS and Wasm, and need no UCUM service: 6 from its `BigDecimal` arithmetic
+      (Wasm and JS), 10 on JS and 11 on Wasm from equivalence (`~`), and 1 on JS only from `Matches` (see Findings).
+  - **WHO's suite with the new service** (ran): the same outcomes as step 13 on JS and Wasm. WHO's CQL needs no unit
+    conversion.
+  - **Not done:** the roadmap's check of `divideBy` in cqframework's Wasm export `createUcumService`, which calls the
+    caller's `multiply` (read, v5.5.0 and `main`). Calling the export from the spike's Kotlin Wasm tests crashes
+    the Kotlin 2.3.20 compiler (`ArrayIndexOutOfBoundsException` in `WasmIrFileMetadata.fromByteArray`), so this
+    is still unconfirmed.
+
 ## Findings so far
 
 - **UCUM service on JS and Wasm.** On JS and Wasm the caller must supply a UCUM service, by design: cqframework's
-  default there throws "No default UCUM service available", and its playground supplies one by wrapping the
-  `@lhncbc/ucum-lhc` npm package with `createUcumService`. cqframework has no multiplatform UCUM implementation (its
-  `ucum` module is JVM only), so a Kotlin consumer on a web target has nothing to plug in short of wrapping
-  `ucum-lhc` through JS interop. The tests use `UnvalidatedUcumService` there, which accepts every unit and converts
-  only between identical units. That is exact for this content: the closure's quantity literals use only calendar
-  units (`months` 160 times, `weeks` 70, `year` 4).
+  default there throws "No default UCUM service available". cqframework has no multiplatform UCUM implementation (its
+  `ucum` module is JVM only), and its playground's service only validates units with the `@lhncbc/ucum-lhc` npm
+  package. Until step 14 the tests used a stand-in that accepted every unit and converted only between identical
+  units. That was exact for WHO's content: the closure's quantity literals use only calendar units (`months` 160
+  times, `weeks` 70, `year` 4). Step 14 replaces it with `UcumLhcService`.
+- **cqframework's decimal arithmetic on JS and Wasm** (ran, cqframework 5.4.0, under Node):
+
+  | CQL | JVM | JS and Wasm |
+  |---|---|---|
+  | `0.02 * 0.03` | `0.0006` | `0.00` |
+  | `1.0 / 3.0` | `0.33333333` | `0.3` |
+  | `10.0 mod 3.0` | `1.00000000` | `0.10000000` |
+  | `10.1 div -3.1` | `-3` | `-3.2` |
+  | `1.0 ~ 1.00` | `true` | `NotImplementedError` |
+
+  - **The cause** (read, `shared/.../BigDecimalJs.kt`, unchanged from v5.4.0 to `main` on 2026-10-23): its
+    `BigDecimal` parses a string with a `DecimalMode` whose scale is the string's, and a product or quotient keeps
+    that mode, so `0.02 * 0.03` is rounded to 2 places. `stripTrailingZeros()` is `TODO()`, and cqframework's
+    decimal equivalence reaches it; quantities and ratios compared with `~` fail the same way.
+  - **Scope:** WHO's suite gives the same outcomes on JS, Wasm and the JVM, so its CQL does not reach these or is not
+    changed by them. No cqframework issue found (searched 2026-10-24).
+- **`Matches` with `\d` on JS.** `Matches('Not all who wander are lost - circa 2017', '.*\\d+')`, a case of
+  cqframework's CQL test suite, is `true` on the JVM and Wasm and `false` on JS (ran, step 14). Not investigated.
 - **Calendar-only CQL needs a UCUM service since cqframework 5.2.0.** Ran 2026-10-15: `define X: 4 weeks` compiles
   with no UCUM service under cql-to-elm 5.1.0 and fails under 5.2.0 and 5.4.0, on JS, Wasm and the JVM; `4 'mg'`
   fails in all three versions. The change is consistent with cqframework #1819 (first released in 5.2.0), whose
@@ -539,6 +614,12 @@ licence.
 - `src/webTest/npm/sqlite-wasm-worker/worker.js` and `package.json`: copied unchanged from
   ohs-foundation/kotlin-fhir-engine's `engine-app/src/webMain/npm/sqlite-wasm-worker/` at v2.0.0-alpha04 (Apache
   License 2.0), for step 13. `node-worker.mjs` and `web-worker.cjs` beside them are the spike's own.
+- `third_party/cqframework-cql-tests-5.4.0/quantity-cases.json`: test cases extracted from the CQL test suite files
+  in cqframework/clinical_quality_language at v5.4.0, `engine-fhir/src/jvmTest/resources/org/hl7/fhirpath/cql/`
+  (Apache License 2.0), by `tools/extract_quantity_cases.py`, for step 14.
+- `@lhncbc/ucum-lhc` 7.1.10, an npm dependency of the JS and Wasm builds (step 14), is not in the repository. Its
+  licence is NLM's, with the UCUM table's terms from Regenstrief Institute and the UCUM Organization (its
+  `LICENSE.md`).
 - `src/jvmTest/kotlin/dev/ohs/fhir/workflow/`: `FhirJson.kt`, `processor/DynamicValueApplier.kt` and
   `processor/EvaluatedValueJson.kt`, copied unchanged from ohs-foundation/kotlin-fhir-workflow at 214c56d
   (Apache License 2.0), for step 7.

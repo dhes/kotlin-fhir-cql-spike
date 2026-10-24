@@ -1,0 +1,1420 @@
+[
+ {
+  "file": "CqlAggregateFunctionsTest",
+  "group": "Sum",
+  "name": "SumTestQuantity",
+  "expression": "Sum({1 'ml',2 'ml',3 'ml',4 'ml',5 'ml'})",
+  "invalid": null,
+  "expected": [
+   "15 'ml'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Abs",
+  "name": "Abs1cm",
+  "expression": "Abs(-1.0'cm')",
+  "invalid": null,
+  "expected": [
+   "1.0'cm'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Add",
+  "name": "Add1Q1Q",
+  "expression": "1'g/cm3' + 1'g/cm3'",
+  "invalid": null,
+  "expected": [
+   "2.0'g/cm3'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Add",
+  "name": "Add1Q1QDifferentUnits",
+  "expression": "1'kg/m3' + 1'g/cm3'",
+  "invalid": null,
+  "expected": [
+   "1001.0'kg/m3'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Divide",
+  "name": "Divide1Q1",
+  "expression": "1'g/cm3' / 1.0",
+  "invalid": null,
+  "expected": [
+   "1.0'g/cm3'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Divide",
+  "name": "Divide1Q1Q",
+  "expression": "1'g/cm3' / 1'g/cm3'",
+  "invalid": null,
+  "expected": [
+   "1.0'1'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Divide",
+  "name": "Divide10Q5I",
+  "expression": "10.0 'g' / 5",
+  "invalid": null,
+  "expected": [
+   "2.0'g'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Divide",
+  "name": "Divide10Q0I",
+  "expression": "10.0 'g' / 0",
+  "invalid": null,
+  "expected": [
+   "null"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Modulo",
+  "name": "ModuloQuantity",
+  "expression": "3.5 'cm' mod 3 'cm'",
+  "invalid": null,
+  "expected": [
+   "0.5 'cm'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Modulo",
+  "name": "Modulo10By3Quantity",
+  "expression": "10.0 'g' mod 3.0 'g'",
+  "invalid": null,
+  "expected": [
+   "1.0 'g'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Modulo",
+  "name": "Modulo10By0Quantity",
+  "expression": "10.0 'g' mod 0.0 'g'",
+  "invalid": null,
+  "expected": [
+   "null"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Multiply",
+  "name": "Multiply1CMBy2CM",
+  "expression": "1.0 'cm' * 2.0 'cm'",
+  "invalid": null,
+  "expected": [
+   "2.0'cm2'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Negate",
+  "name": "Negate1CM",
+  "expression": "-(1'cm')",
+  "invalid": null,
+  "expected": [
+   "-1.0'cm'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Predecessor",
+  "name": "PredecessorOf1QCM",
+  "expression": "predecessor of 1.0 'cm'",
+  "invalid": null,
+  "expected": [
+   "0.99999999'cm'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Subtract",
+  "name": "Subtract1CMAnd2CM",
+  "expression": "1.0 'cm' - 2.0 'cm'",
+  "invalid": null,
+  "expected": [
+   "-1.0'cm'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Truncated Divide",
+  "name": "TruncatedDivide10d1ByNeg3D1Quantity",
+  "expression": "10.1 'cm' div -3.1 'cm'",
+  "invalid": null,
+  "expected": [
+   "-3.0 'cm'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Truncated Divide",
+  "name": "TruncatedDivide10By5DQuantity",
+  "expression": "10.0 'g' div 5.0 'g'",
+  "invalid": null,
+  "expected": [
+   "2.0 'g'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Truncated Divide",
+  "name": "TruncatedDivide414By206DQuantity",
+  "expression": "4.14 'm' div 2.06 'm'",
+  "invalid": null,
+  "expected": [
+   "2.0 'm'"
+  ]
+ },
+ {
+  "file": "CqlArithmeticFunctionsTest",
+  "group": "Truncated Divide",
+  "name": "TruncatedDivide10By0DQuantity",
+  "expression": "10.0 'g' div 0.0 'g'",
+  "invalid": null,
+  "expected": [
+   "null"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equal",
+  "name": "QuantityEqCM1CM1",
+  "expression": "1'cm' = 1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equal",
+  "name": "QuantityEqCM1M01",
+  "expression": "1'cm' = 0.01'm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equal",
+  "name": "QuantityEqDiffPrecision",
+  "expression": "2.0'cm' = 2.00'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equal",
+  "name": "QuantityEqNotComparable",
+  "expression": "1'm' = 1's'",
+  "invalid": null,
+  "expected": [
+   "null"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equal",
+  "name": "RatioEqual",
+  "expression": "1'cm':2'cm' = 1'cm':2'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equal",
+  "name": "RatioNotEqual",
+  "expression": "1'cm':2'cm' = 1.1'cm':2'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equal",
+  "name": "RatioNotEqual2",
+  "expression": "1'cm':2'cm' = 2'cm':4'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater",
+  "name": "GreaterCM0CM0",
+  "expression": "0'cm' > 0'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater",
+  "name": "GreaterCM0CM1",
+  "expression": "0'cm' > 1'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater",
+  "name": "GreaterCM0NegCM1",
+  "expression": "0'cm' > -1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater",
+  "name": "GreaterM1CM1",
+  "expression": "1'm' > 1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater",
+  "name": "GreaterM1CM10",
+  "expression": "1'm' > 10'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater Or Equal",
+  "name": "GreaterOrEqualCM0CM0",
+  "expression": "0'cm' >= 0'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater Or Equal",
+  "name": "GreaterOrEqualCM0CM1",
+  "expression": "0'cm' >= 1'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater Or Equal",
+  "name": "GreaterOrEqualCM0NegCM1",
+  "expression": "0'cm' >= -1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater Or Equal",
+  "name": "GreaterOrEqualM1CM1",
+  "expression": "1'm' >= 1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Greater Or Equal",
+  "name": "GreaterOrEqualM1CM10",
+  "expression": "1'm' >= 10'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less",
+  "name": "LessCM0CM0",
+  "expression": "0'cm' < 0'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less",
+  "name": "LessCM0CM1",
+  "expression": "0'cm' < 1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less",
+  "name": "LessCM0NegCM1",
+  "expression": "0'cm' < -1'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less",
+  "name": "LessM1CM1",
+  "expression": "1'm' < 1'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less",
+  "name": "LessM1CM10",
+  "expression": "1'm' < 10'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less Or Equal",
+  "name": "LessOrEqualCM0CM0",
+  "expression": "0'cm' <= 0'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less Or Equal",
+  "name": "LessOrEqualCM0CM1",
+  "expression": "0'cm' <= 1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less Or Equal",
+  "name": "LessOrEqualCM0NegCM1",
+  "expression": "0'cm' <= -1'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less Or Equal",
+  "name": "LessOrEqualM1CM1",
+  "expression": "1'm' <= 1'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Less Or Equal",
+  "name": "LessOrEqualM1CM10",
+  "expression": "1'm' <= 10'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "EquivQuantityCM1CM1",
+  "expression": "1'cm' ~ 1'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "EquivQuantityCM1M01",
+  "expression": "1'cm' ~ 0.01'm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "EquivQuantityNotComparable",
+  "expression": "1'm' ~ 1's'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "RatioEquivalent",
+  "expression": "1'cm':2'cm' ~ 1'cm':2'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "RatioEquivalent2",
+  "expression": "1'cm':2'cm' ~ 2'cm':4'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "RatioEquivalent3",
+  "expression": "1'cm':0'cm' ~ 2'cm':0'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "RatioNotEquivalent",
+  "expression": "1'cm':2'cm' ~ 1'cm':3'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "RatioEquivalentWithDifferentUnits",
+  "expression": "1'cm':0.02'm' ~ 30'mm':6'cm'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "RatioNotEquivalentWithDifferentUnits",
+  "expression": "1'cm':0.02'm' ~ 10'mm':3'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "EquivFhirPatientSameNameId",
+  "expression": "FHIR.Patient {\n\t\t\t\t\tid: FHIR.id { value: '123' },\n\t\t\t\t\tname: {\n\t\t\t\t\t\tFHIR.HumanName {\n\t\t\t\t\t\t\tgiven: FHIR.string { value: 'John' }\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t} ~ FHIR.Patient {\n\t\t\t\t\tid: FHIR.id { value: '123' },\n\t\t\t\t\tname: {\n\t\t\t\t\t\tFHIR.HumanName {\n\t\t\t\t\t\t\tgiven: FHIR.string { value: 'John' }\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "EquivFhirPatientSameNameDifferentId",
+  "expression": "FHIR.Patient {\n\t\t\t\t\tid: FHIR.id { value: '123' },\n\t\t\t\t\tname: {\n\t\t\t\t\t\tFHIR.HumanName {\n\t\t\t\t\t\t\tgiven: FHIR.string { value: 'John' }\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t} ~ FHIR.Patient {\n\t\t\t\t\tid: FHIR.id { value: '456' },\n\t\t\t\t\tname: {\n\t\t\t\t\t\tFHIR.HumanName {\n\t\t\t\t\t\t\tgiven: FHIR.string { value: 'John' }\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "EquivFhirStringSameValueId",
+  "expression": "FHIR.string {\n\t\t\t\t\tid: '123',\n\t\t\t\t\tvalue: 'John'\n\t\t\t\t} ~ FHIR.string {\n\t\t\t\t\tid: '123',\n\t\t\t\t\tvalue: 'John'\n\t\t\t\t}",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Equivalent",
+  "name": "EquivFhirStringSameValueDifferentId",
+  "expression": "FHIR.string {\n\t\t\t\t\tid: '123',\n\t\t\t\t\tvalue: 'John'\n\t\t\t\t} ~ FHIR.string {\n\t\t\t\t\tid: '456',\n\t\t\t\t\tvalue: 'John'\n\t\t\t\t}",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Not Equal",
+  "name": "QuantityNotEqCM1CM1",
+  "expression": "1'cm' != 1'cm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlComparisonOperatorsTest",
+  "group": "Not Equal",
+  "name": "QuantityNotEqCM1M01",
+  "expression": "1'cm' != 0.01'm'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlErrorsAndMessagingOperatorsTest",
+  "group": null,
+  "name": "TestMessageInfo",
+  "expression": "Message(1, true, '100', 'Message', 'Test Message')",
+  "invalid": null,
+  "expected": [
+   "1"
+  ]
+ },
+ {
+  "file": "CqlErrorsAndMessagingOperatorsTest",
+  "group": null,
+  "name": "TestMessageWarn",
+  "expression": "Message(2, true, '200', 'Warning', 'You have been warned!')",
+  "invalid": null,
+  "expected": [
+   "2"
+  ]
+ },
+ {
+  "file": "CqlErrorsAndMessagingOperatorsTest",
+  "group": null,
+  "name": "TestMessageTrace",
+  "expression": "Message({3, 4, 5}, true, '300', 'Trace', 'This is a trace')",
+  "invalid": null,
+  "expected": [
+   "{3, 4, 5}"
+  ]
+ },
+ {
+  "file": "CqlErrorsAndMessagingOperatorsTest",
+  "group": null,
+  "name": "TestMessageError",
+  "expression": "Message(3 + 1, true, '400', 'Error', 'This is an error!')",
+  "invalid": "true",
+  "expected": []
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "After",
+  "name": "QuantityIntervalAfterTrue",
+  "expression": "Interval[11.0 'g', 20.0 'g'] after Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "After",
+  "name": "QuantityIntervalAfterFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] after Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "After",
+  "name": "QuantityIntervalPointAfterTrue",
+  "expression": "12.0'g' after Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "After",
+  "name": "QuantityIntervalPointAfterFalse",
+  "expression": "9.0'g' after Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "After",
+  "name": "QuantityIntervalAfterPointTrue",
+  "expression": "Interval[11.0 'g', 20.0 'g'] after 5.0'g'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "After",
+  "name": "QuantityIntervalAfterPointFalse",
+  "expression": "Interval[11.0 'g', 20.0 'g'] after 12.0'g'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Before",
+  "name": "QuantityIntervalBeforeTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] before Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Before",
+  "name": "QuantityIntervalBeforeFalse",
+  "expression": "Interval[11.0 'g', 20.0 'g'] before Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Before",
+  "name": "QuantityIntervalPointBeforeTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] before 12.0'g'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Before",
+  "name": "QuantityIntervalPointBeforeFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] before 9.0'g'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Before",
+  "name": "QuantityIntervalBeforePointTrue",
+  "expression": "5.0'g' before Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Before",
+  "name": "QuantityIntervalBeforePointFalse",
+  "expression": "12.0'g' before Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Collapse",
+  "name": "QuantityIntervalCollapse",
+  "expression": "collapse { Interval[1.0 'g',5.0 'g'], Interval[3.0 'g',7.0 'g'], Interval[12.0 'g',19.0 'g'], Interval[7.0 'g',10.0 'g'] }",
+  "invalid": null,
+  "expected": [
+   "{Interval [ 1.0 'g', 10.0 'g' ], Interval [ 12.0 'g', 19.0 'g' ]}"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Contains",
+  "name": "QuantityIntervalContainsTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] contains 2.0 'g'",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Contains",
+  "name": "QuantityIntervalContainsFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] contains 100.0 'g'",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "End",
+  "name": "QuantityIntervalEnd",
+  "expression": "end of Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "10.0'g'"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Ends",
+  "name": "QuantityIntervalEndsTrue",
+  "expression": "Interval[5.0 'g', 10.0 'g'] ends Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Ends",
+  "name": "QuantityIntervalEndsFalse",
+  "expression": "Interval[11.0 'g', 20.0 'g'] ends Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Equal",
+  "name": "QuantityIntervalEqualTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] = Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Equal",
+  "name": "QuantityIntervalEqualFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] = Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Except",
+  "name": "QuantityIntervalExcept1to4",
+  "expression": "Interval[1.0 'g', 10.0 'g'] except Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval [ 1.0 'g', 4.99999999 'g' ]"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "In",
+  "name": "QuantityIntervalInTrue",
+  "expression": "1.0 'g' in Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "In",
+  "name": "QuantityIntervalInFalse",
+  "expression": "55.0 'g' in Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Includes",
+  "name": "QuantityIntervalIncludesTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] includes Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Includes",
+  "name": "QuantityIntervalIncludesFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] includes Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Included In",
+  "name": "QuantityIntervalIncludedInTrue",
+  "expression": "Interval[5.0 'g', 10.0 'g'] included in Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Included In",
+  "name": "QuantityIntervalIncludedInFalse",
+  "expression": "Interval[11.0 'g', 20.0 'g'] included in Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Intersect",
+  "name": "QuantityIntervalIntersectTest5to10",
+  "expression": "Interval[1.0 'g', 10.0 'g'] intersect Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval [ 5.0 'g', 10.0 'g' ]"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Intersect",
+  "name": "QuantityIntervalIntersectTestNull",
+  "expression": "Interval[1.0 'g', 10.0 'g'] intersect Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "null"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Equivalent",
+  "name": "QuantityIntervalEquivalentTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] ~ Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Equivalent",
+  "name": "QuantityIntervalEquivalentFalse",
+  "expression": "Interval[11.0 'g', 20.0 'g'] ~ Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Meets",
+  "name": "QuantityIntervalMeetsTrue",
+  "expression": "Interval[3.01 'g', 5.00000001 'g'] meets Interval[5.00000002 'g', 8.50 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Meets",
+  "name": "QuantityIntervalMeetsFalse",
+  "expression": "Interval[3.01 'g', 5.00000001 'g'] meets Interval[5.5 'g', 8.50 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "MeetsBefore",
+  "name": "QuantityIntervalMeetsBeforeTrue",
+  "expression": "Interval[3.50000001 'g', 5.00000011 'g'] meets before Interval[5.00000012 'g', 8.50 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "MeetsBefore",
+  "name": "QuantityIntervalMeetsBeforeFalse",
+  "expression": "Interval[8.01 'g', 15.00000001 'g'] meets before Interval[15.00000000 'g', 18.50 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "MeetsAfter",
+  "name": "QuantityIntervalMeetsAfterTrue",
+  "expression": "Interval[55.00000123 'g', 128.032156 'g'] meets after Interval[12.00258 'g', 55.00000122 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "MeetsAfter",
+  "name": "QuantityIntervalMeetsAfterFalse",
+  "expression": "Interval[55.00000124 'g', 150.222222 'g'] meets after Interval[12.00258 'g', 55.00000122 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "NotEqual",
+  "name": "QuantityIntervalNotEqualTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] != Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "NotEqual",
+  "name": "QuantityIntervalNotEqualFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] != Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "OnOrAfter",
+  "name": "TestOnOrAfterQuantityTrue",
+  "expression": "2.5 'mg' on or after Interval[1.666 'mg', 2.50000000 'mg']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "OnOrBefore",
+  "name": "TestOnOrBeforeQuantityTrue",
+  "expression": "1.666 'mg' on or before Interval[1.666 'mg', 2.50000000 'mg']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Overlaps",
+  "name": "QuantityIntervalOverlapsTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] overlaps Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Overlaps",
+  "name": "QuantityIntervalOverlapsFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] overlaps Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "OverlapsBefore",
+  "name": "QuantityIntervalOverlapsBeforeTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] overlaps before Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "OverlapsBefore",
+  "name": "QuantityIntervalOverlapsBeforeFalse",
+  "expression": "Interval[5.0 'g', 10.0 'g'] overlaps before Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "OverlapsAfter",
+  "name": "QuantityIntervalOverlapsAfterTrue",
+  "expression": "Interval[5.0 'g', 15.0 'g'] overlaps after Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "OverlapsAfter",
+  "name": "QuantityIntervalOverlapsAfterFalse",
+  "expression": "Interval[5.0 'g', 10.0 'g'] overlaps after Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "PointFrom",
+  "name": "TestPointFromQuantity",
+  "expression": "point from Interval[1.0 'cm', 1.0 'cm']",
+  "invalid": null,
+  "expected": [
+   "1.0'cm'"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "ProperlyIncludes",
+  "name": "QuantityIntervalProperlyIncludesTrue",
+  "expression": "Interval[1.0 'g', 10.0 'g'] properly includes Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "ProperlyIncludes",
+  "name": "QuantityIntervalProperlyIncludesFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] properly includes Interval[5.0 'g', 15.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "ProperlyIncludedIn",
+  "name": "QuantityIntervalProperlyIncludedInTrue",
+  "expression": "Interval[5.0 'g', 10.0 'g'] properly included in Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "ProperlyIncludedIn",
+  "name": "QuantityIntervalProperlyIncludedInFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] properly included in Interval[5.0 'g', 15.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Start",
+  "name": "QuantityIntervalStart",
+  "expression": "start of Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "1.0'g'"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Starts",
+  "name": "QuantityIntervalStartsTrue",
+  "expression": "Interval[5.0 'g', 10.0 'g'] starts Interval[5.0 'g', 15.0 'g']",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Starts",
+  "name": "QuantityIntervalStartsFalse",
+  "expression": "Interval[1.0 'g', 10.0 'g'] starts Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Union",
+  "name": "QuantityIntervalUnion1To15",
+  "expression": "Interval[1.0 'g', 10.0 'g'] union Interval[5.0 'g', 15.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval [ 1.0 'g', 15.0 'g' ]"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Union",
+  "name": "QuantityIntervalUnionNull",
+  "expression": "Interval[1.0 'g', 10.0 'g'] union Interval[14.0 'g', 15.0 'g']",
+  "invalid": null,
+  "expected": [
+   "null"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Width",
+  "name": "QuantityIntervalTestWidth5",
+  "expression": "width of Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "5.0'g'"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Interval",
+  "name": "QuantityIntervalTest",
+  "expression": "Interval[1.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval[1.0 'g', 10.0 'g']"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Interval",
+  "name": "QuantityIntervalTest2",
+  "expression": "Interval[11.0 'g', 20.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval[11.0 'g', 20.0 'g']"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Interval",
+  "name": "QuantityIntervalTest3",
+  "expression": "Interval[5.0 'g', 10.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval[5.0 'g', 10.0 'g']"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Interval",
+  "name": "QuantityIntervalTest4",
+  "expression": "Interval[5.0 'g', 15.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval[5.0 'g', 15.0 'g']"
+  ]
+ },
+ {
+  "file": "CqlIntervalOperatorsTest",
+  "group": "Interval",
+  "name": "QuantityIntervalTest5",
+  "expression": "Interval[14.0 'g', 15.0 'g']",
+  "invalid": null,
+  "expected": [
+   "Interval[14.0 'g', 15.0 'g']"
+  ]
+ },
+ {
+  "file": "CqlListOperatorsTest",
+  "group": "Sort",
+  "name": "quantityList",
+  "expression": "{ 19.99 '[lb_av]', 17.33 '[lb_av]', 10.66 '[lb_av]' }",
+  "invalid": null,
+  "expected": [
+   "{19.99 '[lb_av]', 17.33 '[lb_av]', 10.66 '[lb_av]'}"
+  ]
+ },
+ {
+  "file": "CqlListOperatorsTest",
+  "group": "Equal",
+  "name": "Equal123AndString123",
+  "expression": "{ 1, 2, 3 } = { '1', '2', '3' }",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlListOperatorsTest",
+  "group": "Equivalent",
+  "name": "Equivalent123AndString123",
+  "expression": "{ 1, 2, 3 } ~ { '1', '2', '3' }",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlListOperatorsTest",
+  "group": "NotEqual",
+  "name": "NotEqual123AndString123",
+  "expression": "{ 1, 2, 3 } != { '1', '2', '3' }",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlStringOperatorsTest",
+  "group": "Matches",
+  "name": "MatchesNumberTrue",
+  "expression": "Matches('Not all who wander are lost - circa 2017', '.*\\\\d+')",
+  "invalid": null,
+  "expected": [
+   "true"
+  ]
+ },
+ {
+  "file": "CqlStringOperatorsTest",
+  "group": "Matches",
+  "name": "MatchesWordsAndSpacesFalse",
+  "expression": "Matches('Not all who wander are lost - circa 2017', '[\\\\w]+')",
+  "invalid": null,
+  "expected": [
+   "false"
+  ]
+ },
+ {
+  "file": "CqlStringOperatorsTest",
+  "group": "toString tests",
+  "name": "QuantityToString",
+  "expression": "ToString(125 'cm')",
+  "invalid": null,
+  "expected": [
+   "'125 \\'cm\\''"
+  ]
+ },
+ {
+  "file": "CqlTypeOperatorsTest",
+  "group": "As",
+  "name": "AsQuantity",
+  "expression": "45.5 'g' as Quantity",
+  "invalid": null,
+  "expected": [
+   "45.5 'g'"
+  ]
+ },
+ {
+  "file": "CqlTypeOperatorsTest",
+  "group": "As",
+  "name": "CastAsQuantity",
+  "expression": "cast 45.5 'g' as Quantity",
+  "invalid": null,
+  "expected": [
+   "45.5 'g'"
+  ]
+ },
+ {
+  "file": "CqlTypeOperatorsTest",
+  "group": "ToString",
+  "name": "Quantity5D5CMToString",
+  "expression": "ToString(5.5 'cm')",
+  "invalid": null,
+  "expected": [
+   "'5.5 \\'cm\\''"
+  ]
+ },
+ {
+  "file": "CqlTypesTest",
+  "group": "Any",
+  "name": "AnyQuantity",
+  "expression": "5.0 'g'",
+  "invalid": null,
+  "expected": [
+   "5.0'g'"
+  ]
+ },
+ {
+  "file": "CqlTypesTest",
+  "group": "Quantity",
+  "name": "QuantityTest",
+  "expression": "150.2 '[lb_av]'",
+  "invalid": null,
+  "expected": [
+   "150.2 '[lb_av]'"
+  ]
+ },
+ {
+  "file": "CqlTypesTest",
+  "group": "Quantity",
+  "name": "QuantityTest2",
+  "expression": "2.5589 '{eskimo kisses}'",
+  "invalid": null,
+  "expected": [
+   "2.5589 '{eskimo kisses}'"
+  ]
+ },
+ {
+  "file": "CqlTypesTest",
+  "group": "Quantity",
+  "name": "QuantityFractionalTooBig",
+  "expression": "5.999999999 'g'",
+  "invalid": null,
+  "expected": [
+   "5.999999999 'g'"
+  ]
+ }
+]

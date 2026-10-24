@@ -51,6 +51,10 @@ kotlin {
                 implementation("dev.ohs.fhir:fhir-engine:$engineVersion")
             }
         }
+        webMain.dependencies {
+            // Step 14: the UCUM service on JS and Wasm, where cqframework has none.
+            implementation(npm("@lhncbc/ucum-lhc", "7.1.10"))
+        }
         webTest.dependencies {
             // kotlin-fhir-engine's SQLite worker, which its published JS and Wasm artifacts can't bring (see its README,
             // "Required workaround for consumers targeting js/wasmJs"), with what it needs to run under Node.
