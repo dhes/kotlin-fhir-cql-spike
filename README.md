@@ -27,6 +27,86 @@ below.
 - **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, and `$apply` end to end. WHO's CQL never reaches date-range filtering in retrieve or code-system lookups;
   steps 10 and 11 test them with CQL of the spike's own.
 
+## What a scenario is, and how it is tested
+
+A scenario is one test case from WHO's Karate `.feature` files. Each one names a PlanDefinition, a patient, a test
+bundle and a date, and states what `$apply` should return. The spike doesn't run `$apply`. It evaluates the CQL that
+`$apply` would use, then checks the results three ways.
+
+### What WHO's test does
+
+Each scenario in `input/testing/features/plandefinition/**/*.feature`:
+1. loads a test bundle (a Patient and their Immunizations and Observations) into a FHIR server;
+2. POSTs `PlanDefinition/<id>/$apply` for that patient, with a `Today` date;
+3. checks the response:
+   - the number of resources it contains (`match response.contained == '#[2]'`);
+   - often the guidance text in a CommunicationRequest (`payload.contentString = "…"`).
+
+Against a HAPI server with clinical-reasoning, that runs the PlanDefinition's logic library and builds the resources.
+
+### What the spike takes from each scenario
+
+`tools/build_who_suite.py` reads the feature files at smart-immunizations 12ec2fc54. For each scenario it records the
+PlanDefinition, its logic library, the patient, the bundle, Today, the expected guidance and the expected count, in
+`fixtures/who-suite/scenarios.json`.
+- WHO has 1,021 scenarios over 138 PlanDefinitions.
+- The spike adds 79 twins of the contraindication scenarios, with the contraindication recorded as a Condition
+  instead of an Observation, because WHO's data has no Conditions.
+- That makes 1,100. One WHO bundle is invalid R4, so kotlin-fhir rejects it, and it and its twin are skipped. That
+  leaves the **1,098**.
+
+### Processing, per scenario
+
+1. kotlin-fhir parses the bundle, and `KotlinFhirToCql` converts the resources to CQL values.
+2. cqframework compiles the logic library and every library it includes, directly or not (its closure).
+3. Every definition in every library of the closure is evaluated for the patient, with `Today` set and the evaluation
+   time at noon that day. Over the 1,098 scenarios that gives **343,922 values**.
+
+### The three checks
+
+1. **Against HAPI (the main claim).** The same pipeline runs again with HAPI resources and cqframework's HAPI-based
+   model resolver. Every one of the 343,922 values must be equal, compared element by element. The JVM records the
+   HAPI values in `fixtures/expected/`, so JS and Wasm are checked against the same files.
+2. **Guidance against WHO.** The logic library's `Guidance` definition must equal WHO's expected text. 634 scenarios
+   assert one, and all 634 match.
+3. **Resource count against WHO.** The spike predicts what `$apply` would return: 1 (the RequestGroup) plus one
+   resource per PlanDefinition action whose condition is true. That prediction matches WHO's count in 1,082
+   scenarios. The other 16 differ from WHO for HAPI too, so they don't come from kotlin-fhir.
+
+### Example: `IMMZD2DTMeaslesLowTransmission/Measles25.2`
+
+**WHO's scenario:** "MCV1 was administered and Client's age is less than 15 months: Client is not due for MCV2".
+- **Bundle:** Patient Measles25.2, born 2024-10-12, and one completed MMR Immunization (`XM8TF3`) on 2025-10-12.
+- **Today:** 2025-11-12, so the patient is 13 months old.
+- **Expected:**
+  - the guidance "Should not vaccinate client with MCV2 as client's age is less than 15 months. Check for any vaccines
+    due…";
+  - `contained == '#[2]'`.
+
+**What the spike does:**
+- The logic library is `IMMZD2DTMeaslesLowTransmissionLogic`. Its closure is 12 libraries (Measles elements, IMMZ and
+  WHO common, concepts, FHIRHelpers…), and evaluating all of them gives 317 values.
+- **Check 1:** all 317 equal the HAPI run's values.
+- **Check 2:** `Guidance` gives WHO's text exactly.
+- **Check 3:** the PlanDefinition has three actions:
+
+  | Action condition | Value | Resource it adds |
+  |---|---|---|
+  | `"Client is due for MCV1"` | false (already given) | — |
+  | `"Client is due for MCV2"` | false (under 15 months) | — |
+  | `"Has Guidance"` | true | a CommunicationRequest |
+
+  The prediction is 1 + 1 = 2, which equals WHO's `#[2]`: the RequestGroup and the CommunicationRequest carrying the
+  guidance.
+
+### What this doesn't show
+
+- `$apply` itself isn't run (that's step 15). The guidance check compares the CQL output, not a CommunicationRequest
+  that `$apply` built.
+- The count check rests on the spike's model of what `$apply` returns.
+- "Yes" therefore means that the CQL inputs `$apply` needs come out the same as on the HAPI stack, and agree with
+  WHO's expectations. It doesn't mean that `$apply` output was produced over kotlin-fhir.
+
 ## Follow-on questions
 
 - **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** Yes, once a cqframework
