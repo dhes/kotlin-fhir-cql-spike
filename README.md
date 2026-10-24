@@ -24,8 +24,9 @@ below.
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service
   supplied by the caller (cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
-- **Not tested:** data from kotlin-fhir-engine on JS and Wasm, a terminology server, and `$apply` end to end. WHO's CQL never reaches date-range filtering in retrieve or code-system lookups;
-  steps 10 and 11 test them with CQL of the spike's own.
+- **Not tested:** a browser (JS and Wasm ran under Node only, so kotlin-fhir-engine's browser storage wasn't tried
+  either), a terminology server, and `$apply` end to end. WHO's CQL never reaches date-range filtering in retrieve or
+  code-system lookups; steps 10 and 11 test them with CQL of the spike's own.
 
 ## What a scenario is, and how it is tested
 
@@ -117,8 +118,11 @@ PlanDefinition, its logic library, the patient, the bundle, Today, the expected 
   WHO's 8 dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 7.
 - **Can the libraries, value sets and patient data come from kotlin-fhir-workflow's `WorkflowRepository`, which is
   read with `suspend` calls?** Yes, by reading what the libraries need before evaluating: the same outcomes on the
-  JVM, JS and Wasm, with an in-memory repository. With kotlin-fhir-engine behind it, on the JVM, the same values up to
-  list order, once two kotlin-fhir-engine behaviours are allowed for (see Findings). [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 8 and 9.
+  JVM, JS and Wasm, with an in-memory repository. With kotlin-fhir-engine behind it, the same values up to list
+  order on the JVM, and on JS and Wasm under Node, once two kotlin-fhir-engine behaviours are allowed for (see
+  Findings); on JS and Wasm that needs a copy of kotlin-fhir-engine's SQLite worker, and under Node a stand-in for
+  the browser's Web Worker. [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 8, 9
+  and 13.
 - **Does the retrieve provider cover all of cqframework's `RetrieveProvider` interface?** Yes: date range and profile
   as well, on the JVM, JS and Wasm, tested with CQL of the spike's own. A date range reaches a retrieve only through a
   compiler option that can drop a test's precision or choice type; in the spike's tests, 4 of the 10 retrieves given
@@ -155,6 +159,9 @@ Both runs in `src/jvmTest` use the same `FhirCqlEvaluator`, `InMemoryRetrievePro
 expectations: the guidance text, the predicted `$apply` resource count and, for Conditions, the twins. The
 retrieve's date-range and profile filtering, which WHO's CQL doesn't reach, is checked by step 10, and the
 terminology provider against clinical-reasoning's by step 11.
+
+kotlin-fhir-engine's tests (steps 9 and 13) are in `src/commonTest`; on JS and Wasm they run its SQLite worker under
+Node through `src/webTest` (see step 13).
 
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
@@ -257,7 +264,7 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     `subject`, which finds the same resources for a reference to a Patient.
   - Its search results come back in no fixed order.
 
-  Not tested: kotlin-fhir-engine on JS and Wasm, where it runs SQLite in a web worker.
+  Step 13 runs the same tests on JS and Wasm.
 - Step 10 (2026-10-23): the rest of the `RetrieveProvider` interface: date range and profile (`templateId`).
   - **When the date-range arguments are filled in** (read, cql-to-elm 5.4.0 `Cql2ElmVisitor`): only with the
     compiler option `EnableDateRangeOptimization`. The compiler then takes a `during` or `in` test on an element of
@@ -326,6 +333,51 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     load from ELM and no CQL is compiled, on all three targets. The suite takes about 8 s on the JVM, 41 s on Wasm
     and 2 min 40 s on JS.
   - The ELM is compiled on the target that loads it; ELM compiled on one target and loaded on another wasn't tried.
+
+- Step 13 (2026-10-23): kotlin-fhir-engine on JS and Wasm, under Node. `EngineWorkflowRepositorySuiteTest` and
+  `EnginePatientSearchTest` moved to `src/commonTest` and now run on all three targets.
+  - **How kotlin-fhir-engine runs SQLite there** (read, 2.0.0-alpha04): in a Web Worker, through androidx.sqlite's
+    `WebWorkerSQLiteDriver`. The worker script, `worker.js`, runs `@sqlite.org/sqlite-wasm` and is in a local npm
+    module, `sqlite-wasm-worker`. Its JS and Wasm targets are built for the browser only (`browser()` in its
+    `build.gradle.kts`).
+  - **What it took under Node** (ran; Node 24.10.0, the version Gradle's Kotlin plugin downloads):
+    - **ES modules for the spike's JS build.** kotlin-fhir-engine's JS code uses `import.meta`, so Node loads it as
+      an ES module, and it then can't find the rest of the spike's UMD build ("Its dependency 'kotlin-kotlin-stdlib'
+      was not found").
+    - **A global `require`** for kotlinx-io, which reads files through `eval('require')`, missing in an ES module
+      (Kotlin/kotlinx-io#345, open). Without it every JS test fails on its first file read.
+      `src/jsTest/node/global-require.mjs` provides it, passed to Node with `--import`. Wasm doesn't need it.
+    - **The worker module.** alpha04's published JS and Wasm artifacts don't carry `sqlite-wasm-worker`, so a
+      consumer gets no `worker.js`. This is known: kotlin-fhir-engine's README tells JS and Wasm consumers to copy
+      the module from its engine-app ("Required workaround for consumers targeting js/wasmJs", from
+      ohs-foundation/kotlin-fhir-engine#76). The spike copies it unchanged to `src/webTest/npm/sqlite-wasm-worker/`
+      and declares it as an npm dependency of its JS and Wasm tests, as the README says.
+    - **A Web Worker for Node**, which has none: kotlin-fhir-engine fails with "Worker is not defined".
+      `web-worker.cjs` (in the same directory) gives Node a `Worker` that runs `worker.js` in a Node worker thread,
+      through `node-worker.mjs`, which supplies the worker globals `worker.js` uses (`postMessage`, `onmessage`).
+      `node-worker.mjs` also turns off `worker.js`'s logging of every request with its SQL and bindings, already
+      reported as ohs-foundation/kotlin-fhir-engine#111. The JS and Wasm `emptyTestEngine()` installs the `Worker`
+      before starting kotlin-fhir-engine.
+  - **Result** (ran): kotlin-fhir-engine's in-memory database (`testMode = true`), as on the JVM; each scenario is
+    evaluated through both repositories.
+
+    | | JS | Wasm | JVM (step 9) |
+    |---|---|---|---|
+    | Scenarios | 1,098 | 1,098 | 1,098 |
+    | Values compared | 343,610 | 343,610 | 343,922 |
+    | Differences other than list order | 0 | 0 | 0 |
+    | Scenarios with a list in a different order | 292, 293 (two runs) | 287, 293 (two runs) | 285–295 over five runs |
+    | Time, both repositories | 7 min 15–22 s | 1 min 47–48 s | 22 s |
+
+    JS and Wasm have 312 fewer values because the 6 Typhoid Ty21a scenarios reach `Split`
+    (cqframework/clinical_quality_language#1870): in each, 3 libraries fail there instead of giving their definitions,
+    18 in all. Both
+    repositories give the same error for each. The test now keeps a library's error as a value, compared like any
+    other, and fails on any error other than `NotImplementedError`. `EnginePatientSearchTest` gives the JVM's counts
+    on JS and Wasm (see Findings). Loading WHO's 279 Libraries and 192 ValueSets into kotlin-fhir-engine takes
+    about 3.3 s on JS, 1.8 s on Wasm and 0.3–0.7 s on the JVM.
+  - Not tested: a browser, and so kotlin-fhir-engine's browser storage (OPFS, which its README says needs the page
+    served with cross-origin isolation headers); under Node only the in-memory database can run.
 
 ## Findings so far
 
@@ -410,13 +462,14 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   minimal case (`EnginePatientSearchReproTest`) shows the same for Encounter, and for `revInclude` by `patient`. By
   a scan of the engine's R4 search parameter file, `patient` is defined through `resolve()` on 41 types (Observation,
   Condition, Encounter, Procedure, MedicationRequest, DiagnosticReport, CarePlan, ServiceRequest, Task and others),
-  and 8 more type/parameter pairs use it; only the four types named here were run. No issue tracks this in
-  ohs-foundation/kotlin-fhir-engine or ohs-foundation/kotlin-fhirpath (searched 2026-10-22). Not raised upstream.
+  and 8 more type/parameter pairs use it; only the four types named here were run. The same counts on JS and Wasm
+  under Node (step 13). Reported as ohs-foundation/kotlin-fhir-engine#114 (2026-10-22).
 - **kotlin-fhir-engine's search order varies.** Ran 2026-10-22 (step 9): for the same data, a search returns a
   patient's Immunizations in an order that differs from the bundle's and from one run to the next. A CQL query with
   no `sort` keeps its source's order, so lists such as "Measles Doses Administered to Patient" come out in that order
   too. FHIR search defines no order without `_sort`, so this is allowed. No WHO value other than a list's order
-  changed: no `First`, `Last` or index over an unsorted list gave a different result in this suite.
+  changed: no `First`, `Last` or index over an unsorted list gave a different result in this suite. The same on JS
+  and Wasm under Node (step 13).
 - **The compiler's date-range option drops part of the test it moves.** Ran 2026-10-23 (step 10), cql-to-elm 5.4.0
   with `EnableDateRangeOptimization`. The compiled retrieve has only the element's path and the interval, and the
   where clause is gone, so two kinds of test can't be reproduced by any retrieve provider:
@@ -472,8 +525,11 @@ licence.
 - `src/commonMain/kotlin/dev/ohs/fhir/workflow/WorkflowRepository.kt`: copied unchanged from
   ohs-foundation/kotlin-fhir-workflow at 214c56d (Apache License 2.0), for step 8. The published
   `dev.ohs.fhir:fhir-workflow` 2.0.0-alpha01 has no JS build and depends on kotlin-fhir rc03.
-- `src/jvmTest/kotlin/dev/ohs/fhir/workflow/demo/data/EngineWorkflowRepository.kt`: copied unchanged from
+- `src/commonTest/kotlin/dev/ohs/fhir/workflow/demo/data/EngineWorkflowRepository.kt`: copied unchanged from
   ohs-foundation/kotlin-fhir-workflow's demo app (`workflow-demo`) at 214c56d (Apache License 2.0), for step 9.
+- `src/webTest/npm/sqlite-wasm-worker/worker.js` and `package.json`: copied unchanged from
+  ohs-foundation/kotlin-fhir-engine's `engine-app/src/webMain/npm/sqlite-wasm-worker/` at v2.0.0-alpha04 (Apache
+  License 2.0), for step 13. `node-worker.mjs` and `web-worker.cjs` beside them are the spike's own.
 - `src/jvmTest/kotlin/dev/ohs/fhir/workflow/`: `FhirJson.kt`, `processor/DynamicValueApplier.kt` and
   `processor/EvaluatedValueJson.kt`, copied unchanged from ohs-foundation/kotlin-fhir-workflow at 214c56d
   (Apache License 2.0), for step 7.

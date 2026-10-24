@@ -15,8 +15,14 @@ kotlin {
     jvm()
 
     js {
+        // kotlin-fhir-engine's JS code uses `import.meta`, so Node loads it as an ES module (step 13).
+        useEsModules()
         nodejs {
-            testTask { useMocha { timeout = "3600s" } }
+            testTask {
+                useMocha { timeout = "3600s" }
+                // kotlinx-io needs a global `require` in an ES module (Kotlin/kotlinx-io#345).
+                nodeJsArgs += listOf("--import", file("src/jsTest/node/global-require.mjs").toURI().toString())
+            }
         }
     }
 
@@ -41,7 +47,14 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+                // Step 9 (JVM) and step 13 (JS and Wasm): kotlin-fhir-engine behind kotlin-fhir-workflow's WorkflowRepository.
+                implementation("dev.ohs.fhir:fhir-engine:$engineVersion")
             }
+        }
+        webTest.dependencies {
+            // kotlin-fhir-engine's SQLite worker, which its published JS and Wasm artifacts can't bring (see its README,
+            // "Required workaround for consumers targeting js/wasmJs"), with what it needs to run under Node.
+            implementation(npm("sqlite-wasm-worker", layout.projectDirectory.dir("src/webTest/npm/sqlite-wasm-worker").asFile))
         }
         jvmTest.dependencies {
             // The reference result: cqframework's HAPI-based R4 model resolver, JVM only. HAPI 8.12.0 since step 11
@@ -51,8 +64,6 @@ kotlin {
             implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:8.12.0")
             // For kotlin-fhir-workflow's dynamicValue write-back code, copied into jvmTest (fhir-path version of its main).
             implementation("dev.ohs.fhir:fhir-path-r4:1.0.0-beta06")
-            // Step 9: kotlin-fhir-engine behind kotlin-fhir-workflow's WorkflowRepository.
-            implementation("dev.ohs.fhir:fhir-engine:$engineVersion")
             // Step 11: clinical-reasoning's RepositoryTerminologyProvider as the reference (built on cqframework 5.4.0).
             implementation("org.opencds.cqf.fhir:cqf-fhir-cql:4.13.0")
             // HAPI's FHIRPath, which clinical-reasoning uses, needs its validation support.
