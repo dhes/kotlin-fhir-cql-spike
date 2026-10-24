@@ -66,8 +66,12 @@ PlanDefinition, its logic library, the patient, the bundle, Today, the expected 
 ### The three checks
 
 1. **Against HAPI (the main claim).** The same pipeline runs again with HAPI resources and cqframework's HAPI-based
-   model resolver. Every one of the 343,922 values must be equal, compared element by element. The JVM records the
-   HAPI values in `fixtures/expected/`, so JS and Wasm are checked against the same files.
+   model resolver. Every one of the 343,922 values must be equal. On the JVM both runs are in the same process and
+   are compared element by element; nothing from that comparison is kept. For JS and Wasm, the JVM records each
+   scenario's HAPI outcome in `fixtures/expected/who-suite-outcomes.json`. The outcome holds a hash of all the
+   scenario's values (each written as text, with a resource as its type and id) but not the values themselves. A
+   matching hash means every value matches; a mismatch names the scenario, not the definition. Only step 2's seven
+   measles patients have their values recorded as text, in `fixtures/expected/measles-closure-results.json`.
 2. **Guidance against WHO.** The logic library's `Guidance` definition must equal WHO's expected text. 634 scenarios
    assert one, and all 634 match. All of them are decision-table scenarios (`IMMZD2DT…` and `IMMZD5DT…`, twins
    included), which state the whole text in the scenario. The 464 schedule scenarios (`IMMZD18S…`) aren't in this
