@@ -51,6 +51,19 @@ kotlin {
                 implementation("dev.ohs.fhir:fhir-engine:$engineVersion")
             }
         }
+        // Step 15: kotlin-fhir-workflow main at 214c56d, built locally against kotlin-fhir rc04 (see settings.gradle.kts),
+        // for its two targets in common with the spike, JVM and Wasm. Its common metadata did not build against a local
+        // kotlin-fhirpath, so each target uses its own artifact and compiles the step's sources itself.
+        jvmMain {
+            kotlin.srcDir("src/workflowMain/kotlin")
+            dependencies { implementation("dev.ohs.fhir:fhir-workflow-desktop:2.0.0-spike-214c56d-rc04") }
+        }
+        wasmJsMain {
+            kotlin.srcDir("src/workflowMain/kotlin")
+            dependencies { implementation("dev.ohs.fhir:fhir-workflow-wasm-js:2.0.0-spike-214c56d-rc04") }
+        }
+        jvmTest { kotlin.srcDir("src/workflowTest/kotlin") }
+        wasmJsTest { kotlin.srcDir("src/workflowTest/kotlin") }
         webMain.dependencies {
             // Step 14: the UCUM service on JS and Wasm, where cqframework has none.
             implementation(npm("@lhncbc/ucum-lhc", "7.1.10"))

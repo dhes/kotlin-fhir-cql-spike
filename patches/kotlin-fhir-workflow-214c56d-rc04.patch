@@ -1,0 +1,1024 @@
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index d39113d..721185b 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -1,8 +1,8 @@
+ [versions]
+ kotlin = "2.3.21"
+ android-gradle-plugin = "8.13.0"
+-ohs-fhir-model = "1.0.0-rc03"
+-ohs-fhir-path = "1.0.0-beta06"
++ohs-fhir-model = "1.0.0-rc04"
++ohs-fhir-path = "1.0.0-spike-461a7b9"
+ ohs-fhir-engine = "2.0.0-alpha03"
+ kotlinx-coroutines = "1.10.2"
+ kotlinx-datetime = "0.6.2"
+diff --git a/settings.gradle.kts b/settings.gradle.kts
+index b5168a5..5d02ff3 100644
+--- a/settings.gradle.kts
++++ b/settings.gradle.kts
+@@ -11,6 +11,7 @@ dependencyResolutionManagement {
+   repositories {
+     google()
+     mavenCentral()
++    mavenLocal { content { includeVersionByRegex("dev\\.ohs\\.fhir", "fhir-path.*", ".*-spike-.*") } }
+   }
+ }
+ 
+diff --git a/workflow/build.gradle.kts b/workflow/build.gradle.kts
+index c235d79..947a8b7 100644
+--- a/workflow/build.gradle.kts
++++ b/workflow/build.gradle.kts
+@@ -57,7 +57,7 @@ kotlin {
+ 
+ mavenPublishing {
+   publishToMavenCentral()
+-  signAllPublications()
++  // signAllPublications() -- off for a local, unsigned spike publish
+   coordinates(mavenGroupId, mavenArtifactId, mavenVersion)
+ 
+   pom {
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEvent.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEvent.kt
+index f5fc67c..7542540 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEvent.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEvent.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestPriority
++import dev.ohs.fhir.model.r4.terminologies.EventStatus as FhirEventStatus
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Coding
+@@ -35,7 +37,7 @@ class CPGCommunicationEvent(resource: Communication) :
+       resource.copy(
+         status =
+           Enumeration(
+-            value = Communication.EventStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
++            value = FhirEventStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
+           ),
+         statusReason =
+           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
+@@ -58,11 +60,11 @@ class CPGCommunicationEvent(resource: Communication) :
+       return CPGCommunicationEvent(
+         Communication(
+           id = Uuid.random().toString(),
+-          status = Enumeration(value = Communication.EventStatus.Preparation),
++          status = Enumeration(value = FhirEventStatus.Preparation),
+           category = src.category,
+           priority =
+             src.priority?.value?.code?.let {
+-              Enumeration(value = Communication.RequestPriority.fromCode(it))
++              Enumeration(value = RequestPriority.fromCode(it))
+             },
+           medium = src.medium,
+           subject = src.subject,
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEvent.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEvent.kt
+index 27058e6..8333f2b 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEvent.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEvent.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.MedicationDispenseStatusCodes
+ import dev.ohs.fhir.model.r4.Boolean as FhirBoolean
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+@@ -37,7 +38,7 @@ class CPGMedicationDispenseEvent(resource: MedicationDispense) :
+         status =
+           Enumeration(
+             value =
+-              MedicationDispense.MedicationDispenseStatusCodes.fromCode(
++              MedicationDispenseStatusCodes.fromCode(
+                 mapper.mapStatusToCode(status) ?: "unknown"
+               )
+           ),
+@@ -68,7 +69,7 @@ class CPGMedicationDispenseEvent(resource: MedicationDispense) :
+         MedicationDispense(
+           id = Uuid.random().toString(),
+           status =
+-            Enumeration(value = MedicationDispense.MedicationDispenseStatusCodes.Preparation),
++            Enumeration(value = MedicationDispenseStatusCodes.Preparation),
+           medication = medReqToDispenseMedication(src.medication),
+           // Only set category if single, otherwise let the application fill it in.
+           category = src.category.singleOrNull(),
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEvent.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEvent.kt
+index e412361..8c3e31e 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEvent.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEvent.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.EventStatus as FhirEventStatus
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Coding
+@@ -39,7 +40,7 @@ class CPGProcedureEvent(resource: Procedure) :
+       resource.copy(
+         status =
+           Enumeration(
+-            value = Procedure.EventStatus.fromCode(mapper.mapStatusToCode(status) ?: "preparation")
++            value = FhirEventStatus.fromCode(mapper.mapStatusToCode(status) ?: "preparation")
+           ),
+         statusReason =
+           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
+@@ -62,7 +63,7 @@ class CPGProcedureEvent(resource: Procedure) :
+       return CPGProcedureEvent(
+         Procedure(
+           id = Uuid.random().toString(),
+-          status = Enumeration(value = Procedure.EventStatus.Preparation),
++          status = Enumeration(value = FhirEventStatus.Preparation),
+           code = src.code,
+           subject = src.subject,
+         )
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEvent.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEvent.kt
+index 11dd369..e89ecf0 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEvent.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEvent.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.TaskStatus
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Coding
+@@ -38,7 +39,7 @@ class CPGTaskEvent(resource: Task) : CPGEventResource<Task>(TaskEventStatusMappe
+     resource =
+       resource.copy(
+         status =
+-          Enumeration(value = Task.TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "ready")),
++          Enumeration(value = TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "ready")),
+         statusReason =
+           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
+       )
+@@ -60,7 +61,7 @@ class CPGTaskEvent(resource: Task) : CPGEventResource<Task>(TaskEventStatusMappe
+       return CPGTaskEvent(
+         Task(
+           id = Uuid.random().toString(),
+-          status = Enumeration(value = Task.TaskStatus.Ready),
++          status = Enumeration(value = TaskStatus.Ready),
+           intent = src.intent,
+           code = src.code,
+           `for` = src.`for`,
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGCommunicationRequest.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGCommunicationRequest.kt
+index 5203a50..d07b3f0 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGCommunicationRequest.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGCommunicationRequest.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.request
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Coding
+@@ -57,7 +58,7 @@ class CPGCommunicationRequest(resource: CommunicationRequest) :
+         status =
+           Enumeration(
+             value =
+-              CommunicationRequest.RequestStatus.fromCode(
++              RequestStatus.fromCode(
+                 mapper.mapStatusToCode(status) ?: "unknown"
+               )
+           ),
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGMedicationRequest.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGMedicationRequest.kt
+index 831b044..5372176 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGMedicationRequest.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGMedicationRequest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.request
+ 
++import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
++import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Coding
+@@ -36,7 +38,7 @@ class CPGMedicationRequest(resource: MedicationRequest) :
+       resource.copy(
+         intent =
+           Enumeration(
+-            value = MedicationRequest.MedicationRequestIntent.fromCode(intent.code ?: "order")
++            value = MedicationRequestIntent.fromCode(intent.code ?: "order")
+           )
+       )
+   }
+@@ -49,7 +51,7 @@ class CPGMedicationRequest(resource: MedicationRequest) :
+         status =
+           Enumeration(
+             value =
+-              MedicationRequest.MedicationrequestStatus.fromCode(
++              MedicationrequestStatus.fromCode(
+                 mapper.mapStatusToCode(status) ?: "unknown"
+               )
+           ),
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGServiceRequest.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGServiceRequest.kt
+index 5bb4c69..4d91937 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGServiceRequest.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGServiceRequest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.request
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
++import dev.ohs.fhir.model.r4.terminologies.RequestIntent
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.model.r4.Reference
+ import dev.ohs.fhir.model.r4.ServiceRequest
+@@ -34,7 +36,7 @@ class CPGServiceRequest(resource: ServiceRequest) :
+   override fun setIntent(intent: Intent) {
+     resource =
+       resource.copy(
+-        intent = Enumeration(value = ServiceRequest.RequestIntent.fromCode(intent.code ?: "order"))
++        intent = Enumeration(value = RequestIntent.fromCode(intent.code ?: "order"))
+       )
+   }
+ 
+@@ -46,7 +48,7 @@ class CPGServiceRequest(resource: ServiceRequest) :
+         status =
+           Enumeration(
+             value =
+-              ServiceRequest.RequestStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
++              RequestStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
+           )
+       )
+   }
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGTaskRequest.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGTaskRequest.kt
+index 7061968..733b25d 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGTaskRequest.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGTaskRequest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.request
+ 
++import dev.ohs.fhir.model.r4.terminologies.TaskStatus
++import dev.ohs.fhir.model.r4.terminologies.TaskIntent
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Coding
+@@ -32,7 +34,7 @@ class CPGTaskRequest(resource: Task) : CPGRequestResource<Task>(TaskStatusMapper
+ 
+   override fun setIntent(intent: Intent) {
+     resource =
+-      resource.copy(intent = Enumeration(value = Task.TaskIntent.fromCode(intent.code ?: "order")))
++      resource.copy(intent = Enumeration(value = TaskIntent.fromCode(intent.code ?: "order")))
+   }
+ 
+   override fun getIntent(): Intent = Intent.of(resource.intent.value?.code)
+@@ -42,7 +44,7 @@ class CPGTaskRequest(resource: Task) : CPGRequestResource<Task>(TaskStatusMapper
+       resource.copy(
+         status =
+           Enumeration(
+-            value = Task.TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "requested")
++            value = TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "requested")
+           ),
+         statusReason =
+           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
+diff --git a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessor.kt b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessor.kt
+index 8663ad7..993c029 100644
+--- a/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessor.kt
++++ b/workflow/src/commonMain/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessor.kt
+@@ -15,6 +15,16 @@
+  */
+ package dev.ohs.fhir.workflow.processor
+ 
++import dev.ohs.fhir.model.r4.terminologies.TaskStatus
++import dev.ohs.fhir.model.r4.terminologies.TaskIntent
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
++import dev.ohs.fhir.model.r4.terminologies.RequestResourceType
++import dev.ohs.fhir.model.r4.terminologies.RequestPriority
++import dev.ohs.fhir.model.r4.terminologies.RequestIntent
++import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
++import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
++import dev.ohs.fhir.model.r4.terminologies.CarePlanIntent
++import dev.ohs.fhir.model.r4.terminologies.ActionConditionKind
+ import dev.ohs.fhir.model.r4.ActivityDefinition
+ import dev.ohs.fhir.model.r4.Canonical
+ import dev.ohs.fhir.model.r4.CarePlan
+@@ -22,7 +32,7 @@ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.model.r4.Expression
+-import dev.ohs.fhir.model.r4.Expression.ExpressionLanguage
++import dev.ohs.fhir.model.r4.terminologies.ExpressionLanguage
+ import dev.ohs.fhir.model.r4.MedicationRequest
+ import dev.ohs.fhir.model.r4.Meta
+ import dev.ohs.fhir.model.r4.PlanDefinition
+@@ -62,8 +72,8 @@ class PlanDefinitionProcessor(
+     val requestGroup =
+       RequestGroup(
+         id = planDefinition.logicalId,
+-        status = Enumeration(value = RequestGroup.RequestStatus.Active),
+-        intent = Enumeration(value = RequestGroup.RequestIntent.Proposal),
++        status = Enumeration(value = RequestStatus.Active),
++        intent = Enumeration(value = RequestIntent.Proposal),
+         action = groupActions,
+       )
+ 
+@@ -71,8 +81,8 @@ class PlanDefinitionProcessor(
+       id = planDefinition.logicalId,
+       instantiatesCanonical =
+         planDefinition.url?.value?.let { listOf(Canonical(value = it)) } ?: emptyList(),
+-      status = Enumeration(value = CarePlan.RequestStatus.Active),
+-      intent = Enumeration(value = CarePlan.CarePlanIntent.Plan),
++      status = Enumeration(value = RequestStatus.Active),
++      intent = Enumeration(value = CarePlanIntent.Plan),
+       subject = subjectReference(context),
+       contained = listOf<Resource>(requestGroup) + requests,
+       activity =
+@@ -133,7 +143,7 @@ class PlanDefinitionProcessor(
+     context: EvaluationContext,
+   ): Boolean {
+     val applicabilityConditions =
+-      action.condition.filter { it.kind.value == PlanDefinition.ActionConditionKind.Applicability }
++      action.condition.filter { it.kind.value == ActionConditionKind.Applicability }
+     return applicabilityConditions.isEmpty() ||
+       applicabilityConditions.all { condition ->
+         val expression =
+@@ -185,13 +195,13 @@ class PlanDefinitionProcessor(
+     val basedOn = Reference(reference = FhirString(value = "#${planDefinition.logicalId}"))
+     val request: Resource =
+       when (ad.kind?.value) {
+-        ActivityDefinition.RequestResourceType.MedicationRequest ->
++        RequestResourceType.MedicationRequest ->
+           MedicationRequest(
+             id = id,
+             meta = metaFrom(ad),
+             instantiatesCanonical = listOf(Canonical(value = canonical)),
+-            status = Enumeration(value = MedicationRequest.MedicationrequestStatus.Active),
+-            intent = Enumeration(value = MedicationRequest.MedicationRequestIntent.Proposal),
++            status = Enumeration(value = MedicationrequestStatus.Active),
++            intent = Enumeration(value = MedicationRequestIntent.Proposal),
+             priority = priorityFrom(ad),
+             medication = medicationFrom(ad),
+             subject = subject,
+@@ -199,23 +209,23 @@ class PlanDefinitionProcessor(
+             dosageInstruction = ad.dosage,
+           )
+ 
+-        ActivityDefinition.RequestResourceType.ServiceRequest ->
++        RequestResourceType.ServiceRequest ->
+           ServiceRequest(
+             id = id,
+             meta = metaFrom(ad),
+             instantiatesCanonical = listOf(Canonical(value = canonical)),
+-            status = Enumeration(value = ServiceRequest.RequestStatus.Active),
+-            intent = Enumeration(value = ServiceRequest.RequestIntent.Proposal),
++            status = Enumeration(value = RequestStatus.Active),
++            intent = Enumeration(value = RequestIntent.Proposal),
+             code = ad.code,
+             subject = subject,
+             basedOn = listOf(basedOn),
+           )
+ 
+-        ActivityDefinition.RequestResourceType.CommunicationRequest ->
++        RequestResourceType.CommunicationRequest ->
+           CommunicationRequest(
+             id = id,
+             meta = metaFrom(ad),
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+             subject = subject,
+             basedOn = listOf(basedOn),
+           )
+@@ -225,8 +235,8 @@ class PlanDefinitionProcessor(
+             id = id,
+             meta = metaFrom(ad),
+             instantiatesCanonical = Canonical(value = canonical),
+-            status = Enumeration(value = Task.TaskStatus.Requested),
+-            intent = Enumeration(value = Task.TaskIntent.Proposal),
++            status = Enumeration(value = TaskStatus.Requested),
++            intent = Enumeration(value = TaskIntent.Proposal),
+             code = ad.code,
+             description = action.description ?: ad.description,
+             `for` = subject,
+@@ -287,9 +297,9 @@ class PlanDefinitionProcessor(
+ 
+   private fun priorityFrom(
+     ad: ActivityDefinition
+-  ): Enumeration<MedicationRequest.RequestPriority>? =
++  ): Enumeration<RequestPriority>? =
+     ad.priority?.value?.code?.let {
+-      Enumeration(value = MedicationRequest.RequestPriority.fromCode(it))
++      Enumeration(value = RequestPriority.fromCode(it))
+     }
+ 
+   private fun medicationFrom(ad: ActivityDefinition): MedicationRequest.Medication =
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/FhirOperatorTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/FhirOperatorTest.kt
+index 558632e..dbed9f0 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/FhirOperatorTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/FhirOperatorTest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow
+ 
++import dev.ohs.fhir.model.r4.terminologies.ExpressionLanguage
++import dev.ohs.fhir.model.r4.terminologies.ActionConditionKind
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.model.r4.Expression
+ import dev.ohs.fhir.model.r4.ExtensibleEnumeration
+@@ -46,11 +48,11 @@ class FhirOperatorTest {
+               condition =
+                 listOf(
+                   PlanDefinition.Action.Condition(
+-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
++                    kind = Enumeration(value = ActionConditionKind.Applicability),
+                     expression =
+                       Expression(
+                         language =
+-                          ExtensibleEnumeration.of(Expression.ExpressionLanguage.Text_Fhirpath),
++                          ExtensibleEnumeration.of(ExpressionLanguage.Text_Fhirpath),
+                         expression = FhirString(value = "Patient.active = true"),
+                       ),
+                   )
+@@ -82,12 +84,12 @@ class FhirOperatorTest {
+               condition =
+                 listOf(
+                   PlanDefinition.Action.Condition(
+-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
++                    kind = Enumeration(value = ActionConditionKind.Applicability),
+                     expression =
+                       Expression(
+                         language =
+                           ExtensibleEnumeration.of(
+-                            value = Expression.ExpressionLanguage.Text_Fhirpath
++                            value = ExpressionLanguage.Text_Fhirpath
+                           ),
+                         expression = FhirString(value = "Patient.active = true"),
+                       ),
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowDemoTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowDemoTest.kt
+index 8c4655c..2e5902a 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowDemoTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowDemoTest.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.workflow.activity.phase.event.PerformPhase
+@@ -38,7 +39,7 @@ class ActivityFlowDemoTest {
+     CPGCommunicationRequest(
+         CommunicationRequest(
+           id = "com-req-01",
+-          status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++          status = Enumeration(value = RequestStatus.Active),
+           subject = reference("Patient/pat-01"),
+         )
+       )
+@@ -57,7 +58,7 @@ class ActivityFlowDemoTest {
+     planPhase.shouldBeInstanceOf<PlanPhase<*>>()
+     // proposal is now completed in the store
+     val storedProposal = repo.read("CommunicationRequest", "com-req-01") as CommunicationRequest
+-    assertTrue(storedProposal.status.value == CommunicationRequest.RequestStatus.Completed)
++    assertTrue(storedProposal.status.value == RequestStatus.Completed)
+ 
+     // Activate the plan before it can move to Order
+     val activePlan = planPhase.getRequestResource().apply { setStatus(Status.ACTIVE) }
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowTest.kt
+index 7d9b883..096580d 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/ActivityFlowTest.kt
+@@ -15,6 +15,10 @@
+  */
+ package dev.ohs.fhir.workflow.activity
+ 
++import dev.ohs.fhir.model.r4.terminologies.TaskStatus
++import dev.ohs.fhir.model.r4.terminologies.TaskIntent
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
++import dev.ohs.fhir.model.r4.terminologies.RequestIntent
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.model.r4.Procedure
+@@ -46,7 +50,7 @@ class ActivityFlowTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-1",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+           )
+         )
+         .apply { setIntent(Intent.PROPOSAL) }
+@@ -64,8 +68,8 @@ class ActivityFlowTest {
+       CPGTaskRequest(
+           Task(
+             id = "task-1",
+-            status = Enumeration(value = Task.TaskStatus.Requested),
+-            intent = Enumeration(value = Task.TaskIntent.Proposal),
++            status = Enumeration(value = TaskStatus.Requested),
++            intent = Enumeration(value = TaskIntent.Proposal),
+           )
+         )
+         .apply { setIntent(Intent.PROPOSAL) }
+@@ -82,8 +86,8 @@ class ActivityFlowTest {
+       CPGTaskRequest(
+           Task(
+             id = "task-1",
+-            status = Enumeration(value = Task.TaskStatus.Requested),
+-            intent = Enumeration(value = Task.TaskIntent.Order),
++            status = Enumeration(value = TaskStatus.Requested),
++            intent = Enumeration(value = TaskIntent.Order),
+           )
+         )
+         .apply { setIntent(Intent.ORDER) }
+@@ -104,7 +108,7 @@ class ActivityFlowTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-prop",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+           )
+         )
+         .apply { setIntent(Intent.PROPOSAL) }
+@@ -114,7 +118,7 @@ class ActivityFlowTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-plan",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+             basedOn =
+               listOf(Reference(reference = FhirString(value = "CommunicationRequest/cr-prop"))),
+           )
+@@ -140,7 +144,7 @@ class ActivityFlowTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-active",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+             subject = Reference(reference = FhirString(value = "Patient/p1")),
+           )
+         )
+@@ -151,7 +155,7 @@ class ActivityFlowTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-done",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Completed),
++            status = Enumeration(value = RequestStatus.Completed),
+             subject = Reference(reference = FhirString(value = "Patient/p1")),
+           )
+         )
+@@ -178,8 +182,8 @@ class ActivityFlowTest {
+       CPGServiceRequest(
+           ServiceRequest(
+             id = "sr-1",
+-            status = Enumeration(value = ServiceRequest.RequestStatus.Active),
+-            intent = Enumeration(value = ServiceRequest.RequestIntent.Order),
++            status = Enumeration(value = RequestStatus.Active),
++            intent = Enumeration(value = RequestIntent.Order),
+             subject = Reference(reference = FhirString(value = "Patient/p1")),
+           )
+         )
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/BaseRequestPhaseTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/BaseRequestPhaseTest.kt
+index 9bf3f06..5caa44b 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/BaseRequestPhaseTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/BaseRequestPhaseTest.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.phase
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.workflow.activity.phase.request.BaseRequestPhase
+@@ -40,7 +41,7 @@ class BaseRequestPhaseTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-1",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+           )
+         )
+         .apply { setIntent(Intent.PROPOSAL) }
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/PhaseTransitionsTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/PhaseTransitionsTest.kt
+index 840ebd6..d6e8ca9 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/PhaseTransitionsTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/phase/PhaseTransitionsTest.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.phase
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.workflow.activity.phase.request.PlanPhase
+@@ -34,7 +35,7 @@ class PhaseTransitionsTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-1",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+           )
+         )
+         .apply { setIntent(Intent.PROPOSAL) }
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEventTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEventTest.kt
+index 756dfa9..dcd456c 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEventTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGCommunicationEventTest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
++import dev.ohs.fhir.model.r4.terminologies.RequestPriority
+ import dev.ohs.fhir.model.r4.Communication
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+@@ -30,8 +32,8 @@ class CPGCommunicationEventTest {
+       CPGCommunicationRequest(
+         CommunicationRequest(
+           id = "cr-1",
+-          status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
+-          priority = Enumeration(value = CommunicationRequest.RequestPriority.Urgent),
++          status = Enumeration(value = RequestStatus.Active),
++          priority = Enumeration(value = RequestPriority.Urgent),
+           payload =
+             listOf(
+               CommunicationRequest.Payload(
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGEventResourceTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGEventResourceTest.kt
+index 9a278b1..a855ff7 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGEventResourceTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGEventResourceTest.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.workflow.activity.resource.request.CPGCommunicationRequest
+@@ -29,7 +30,7 @@ class CPGEventResourceTest {
+       CPGCommunicationRequest(
+           CommunicationRequest(
+             id = "cr-1",
+-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++            status = Enumeration(value = RequestStatus.Active),
+           )
+         )
+         .apply { setIntent(Intent.PROPOSAL) }
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEventTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEventTest.kt
+index ed45076..4b4dace 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEventTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGMedicationDispenseEventTest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
++import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.model.r4.MedicationRequest
+@@ -32,8 +34,8 @@ class CPGMedicationDispenseEventTest {
+     CPGMedicationRequest(
+       MedicationRequest(
+         id = "mr-1",
+-        status = Enumeration(value = MedicationRequest.MedicationrequestStatus.Active),
+-        intent = Enumeration(value = MedicationRequest.MedicationRequestIntent.Order),
++        status = Enumeration(value = MedicationrequestStatus.Active),
++        intent = Enumeration(value = MedicationRequestIntent.Order),
+         medication = MedicationRequest.Medication.CodeableConcept(category("amoxicillin")),
+         subject = Reference(reference = FhirString(value = "Patient/p1")),
+         category = categories,
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEventTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEventTest.kt
+index d4a52ae..455399f 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEventTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGProcedureEventTest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
++import dev.ohs.fhir.model.r4.terminologies.RequestIntent
+ import dev.ohs.fhir.model.r4.Code
+ import dev.ohs.fhir.model.r4.CodeableConcept
+ import dev.ohs.fhir.model.r4.Coding
+@@ -36,8 +38,8 @@ class CPGProcedureEventTest {
+     CPGServiceRequest(
+         ServiceRequest(
+           id = "sr-1",
+-          status = Enumeration(value = ServiceRequest.RequestStatus.Active),
+-          intent = Enumeration(value = ServiceRequest.RequestIntent.Order),
++          status = Enumeration(value = RequestStatus.Active),
++          intent = Enumeration(value = RequestIntent.Order),
+           code = CodeableConcept(coding = listOf(Coding(code = Code(value = "CBC")))),
+           subject = Reference(reference = FhirString(value = "Patient/p1")),
+         )
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEventTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEventTest.kt
+index cfe5a3f..b5968d9 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEventTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/event/CPGTaskEventTest.kt
+@@ -15,6 +15,8 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.event
+ 
++import dev.ohs.fhir.model.r4.terminologies.TaskStatus
++import dev.ohs.fhir.model.r4.terminologies.TaskIntent
+ import dev.ohs.fhir.model.r4.Enumeration
+ import dev.ohs.fhir.model.r4.Task
+ import dev.ohs.fhir.workflow.activity.resource.request.CPGTaskRequest
+@@ -28,8 +30,8 @@ class CPGTaskEventTest {
+     CPGTaskRequest(
+         Task(
+           id = "task-1",
+-          status = Enumeration(value = Task.TaskStatus.Requested),
+-          intent = Enumeration(value = Task.TaskIntent.Order),
++          status = Enumeration(value = TaskStatus.Requested),
++          intent = Enumeration(value = TaskIntent.Order),
+         )
+       )
+       .apply { setIntent(Intent.ORDER) }
+@@ -55,8 +57,8 @@ class CPGTaskEventTest {
+       CPGEventResource.of(
+         Task(
+           id = "t",
+-          status = Enumeration(value = Task.TaskStatus.Ready),
+-          intent = Enumeration(value = Task.TaskIntent.Order),
++          status = Enumeration(value = TaskStatus.Ready),
++          intent = Enumeration(value = TaskIntent.Order),
+         )
+       ) is CPGTaskEvent
+     )
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGRequestResourceTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGRequestResourceTest.kt
+index 13dda5c..5ac111e 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGRequestResourceTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/activity/resource/request/CPGRequestResourceTest.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.activity.resource.request
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.model.r4.Enumeration
+ import kotlin.test.Test
+@@ -26,7 +27,7 @@ class CPGRequestResourceTest {
+     val cr =
+       CommunicationRequest(
+         id = "cr-1",
+-        status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++        status = Enumeration(value = RequestStatus.Active),
+       )
+     val wrapped = CPGRequestResource.of(cr)
+     wrapped.setIntent(Intent.PROPOSAL)
+@@ -42,7 +43,7 @@ class CPGRequestResourceTest {
+     val cr =
+       CommunicationRequest(
+         id = "cr-1",
+-        status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
++        status = Enumeration(value = RequestStatus.Active),
+       )
+     val parent = CPGRequestResource.of(cr).apply { setIntent(Intent.PROPOSAL) }
+     val child = parent.copy(id = "cr-1-plan", status = Status.DRAFT, intent = Intent.PLAN)
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessorTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessorTest.kt
+index a1073e7..2d60b06 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessorTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/processor/PlanDefinitionProcessorTest.kt
+@@ -15,6 +15,10 @@
+  */
+ package dev.ohs.fhir.workflow.processor
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestResourceType
++import dev.ohs.fhir.model.r4.terminologies.RequestPriority
++import dev.ohs.fhir.model.r4.terminologies.ExpressionLanguage
++import dev.ohs.fhir.model.r4.terminologies.ActionConditionKind
+ import dev.ohs.fhir.model.r4.ActivityDefinition
+ import dev.ohs.fhir.model.r4.Canonical
+ import dev.ohs.fhir.model.r4.Code
+@@ -59,7 +63,7 @@ class PlanDefinitionProcessorTest {
+             id = "bcg",
+             url = Uri(value = adUrl),
+             status = Enumeration(value = PublicationStatus.Active),
+-            kind = Enumeration(value = ActivityDefinition.RequestResourceType.ServiceRequest),
++            kind = Enumeration(value = RequestResourceType.ServiceRequest),
+             title = FhirString(value = "BCG vaccine"),
+           )
+         )
+@@ -76,12 +80,12 @@ class PlanDefinitionProcessorTest {
+               condition =
+                 listOf(
+                   PlanDefinition.Action.Condition(
+-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
++                    kind = Enumeration(value = ActionConditionKind.Applicability),
+                     expression =
+                       Expression(
+                         language =
+                           ExtensibleEnumeration.of(
+-                            value = Expression.ExpressionLanguage.Text_Fhirpath
++                            value = ExpressionLanguage.Text_Fhirpath
+                           ),
+                         expression = FhirString(value = "Patient.active = true"),
+                       ),
+@@ -119,12 +123,12 @@ class PlanDefinitionProcessorTest {
+               condition =
+                 listOf(
+                   PlanDefinition.Action.Condition(
+-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
++                    kind = Enumeration(value = ActionConditionKind.Applicability),
+                     expression =
+                       Expression(
+                         language =
+                           ExtensibleEnumeration.of(
+-                            value = Expression.ExpressionLanguage.Text_Fhirpath
++                            value = ExpressionLanguage.Text_Fhirpath
+                           ),
+                         expression = FhirString(value = "Patient.active = false"),
+                       ),
+@@ -153,7 +157,7 @@ class PlanDefinitionProcessorTest {
+       )
+     val ctx = EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7))
+     assertFailsWith<NotImplementedError> {
+-      processor.apply(planWithApplicability(Expression.ExpressionLanguage.Text_Cql, "true"), ctx)
++      processor.apply(planWithApplicability(ExpressionLanguage.Text_Cql, "true"), ctx)
+     }
+   }
+ 
+@@ -167,13 +171,13 @@ class PlanDefinitionProcessorTest {
+     val ctx = EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7))
+     assertFailsWith<IllegalStateException> {
+       processor.apply(
+-        planWithApplicability(Expression.ExpressionLanguage.Text_Fhirpath, "'not-a-boolean'"),
++        planWithApplicability(ExpressionLanguage.Text_Fhirpath, "'not-a-boolean'"),
+         ctx,
+       )
+     }
+   }
+ 
+-  private fun planWithApplicability(language: Expression.ExpressionLanguage, expression: String) =
++  private fun planWithApplicability(language: ExpressionLanguage, expression: String) =
+     PlanDefinition(
+       id = "epi",
+       status = Enumeration(value = PublicationStatus.Active),
+@@ -184,7 +188,7 @@ class PlanDefinitionProcessorTest {
+             condition =
+               listOf(
+                 PlanDefinition.Action.Condition(
+-                  kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
++                  kind = Enumeration(value = ActionConditionKind.Applicability),
+                   expression =
+                     Expression(
+                       language = ExtensibleEnumeration.of(value = language),
+@@ -238,7 +242,7 @@ class PlanDefinitionProcessorTest {
+             id = "ad-bcg",
+             url = Uri(value = adUrl),
+             status = Enumeration(value = PublicationStatus.Active),
+-            kind = Enumeration(value = ActivityDefinition.RequestResourceType.Task),
++            kind = Enumeration(value = RequestResourceType.Task),
+             code = CodeableConcept(coding = listOf(Coding(code = Code(value = "BCG")))),
+           )
+         )
+@@ -302,7 +306,7 @@ class PlanDefinitionProcessorTest {
+     val repo = InMemoryWorkflowRepository()
+     val pd =
+       repo.planForKind(
+-        ActivityDefinition.RequestResourceType.MedicationRequest,
++        RequestResourceType.MedicationRequest,
+         ActivityDefinition.Product.CodeableConcept(
+           CodeableConcept(text = FhirString(value = "Apple, daily"))
+         ),
+@@ -330,9 +334,9 @@ class PlanDefinitionProcessorTest {
+     val profile = "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-medicationrequest"
+     val pd =
+       repo.planForKind(
+-        ActivityDefinition.RequestResourceType.MedicationRequest,
++        RequestResourceType.MedicationRequest,
+         profile = Canonical(value = profile),
+-        priority = ActivityDefinition.RequestPriority.Routine,
++        priority = RequestPriority.Routine,
+         dosage = listOf(Dosage(text = FhirString(value = "One apple a day"))),
+       )
+     val processor =
+@@ -342,7 +346,7 @@ class PlanDefinitionProcessorTest {
+ 
+     val medicationRequest = carePlan.contained.filterIsInstance<MedicationRequest>().single()
+     assertEquals(listOf(profile), medicationRequest.meta?.profile?.map { it.value })
+-    assertEquals(MedicationRequest.RequestPriority.Routine, medicationRequest.priority?.value)
++    assertEquals(RequestPriority.Routine, medicationRequest.priority?.value)
+     assertEquals(
+       listOf("One apple a day"),
+       medicationRequest.dosageInstruction.map { it.text?.value },
+@@ -352,7 +356,7 @@ class PlanDefinitionProcessorTest {
+   @Test
+   fun shouldInstantiateServiceRequestWhenKindIsServiceRequest() = runTest {
+     val repo = InMemoryWorkflowRepository()
+-    val pd = repo.planForKind(ActivityDefinition.RequestResourceType.ServiceRequest)
++    val pd = repo.planForKind(RequestResourceType.ServiceRequest)
+     val processor =
+       PlanDefinitionProcessor(ExpressionEvaluatorRouter(), RepositoryCanonicalResolver(repo))
+     val ctx = EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7))
+@@ -377,7 +381,7 @@ class PlanDefinitionProcessorTest {
+     val serviceRequest =
+       PlanDefinitionProcessor(ExpressionEvaluatorRouter(), RepositoryCanonicalResolver(service))
+         .apply(
+-          service.planForKind(ActivityDefinition.RequestResourceType.ServiceRequest),
++          service.planForKind(RequestResourceType.ServiceRequest),
+           EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7)),
+         )
+         .contained
+@@ -389,7 +393,7 @@ class PlanDefinitionProcessorTest {
+     val taskRequest =
+       PlanDefinitionProcessor(ExpressionEvaluatorRouter(), RepositoryCanonicalResolver(task))
+         .apply(
+-          task.planForKind(ActivityDefinition.RequestResourceType.Task),
++          task.planForKind(RequestResourceType.Task),
+           EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7)),
+         )
+         .contained
+@@ -410,7 +414,7 @@ class PlanDefinitionProcessorTest {
+         id = "ad-1",
+         url = Uri(value = adUrl),
+         status = Enumeration(value = PublicationStatus.Active),
+-        kind = Enumeration(value = ActivityDefinition.RequestResourceType.MedicationRequest),
++        kind = Enumeration(value = RequestResourceType.MedicationRequest),
+         product =
+           ActivityDefinition.Product.CodeableConcept(
+             CodeableConcept(text = FhirString(value = "Apple"))
+@@ -422,7 +426,7 @@ class PlanDefinitionProcessorTest {
+               expression =
+                 Expression(
+                   language =
+-                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
++                    ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
+                   expression = FhirString(value = "'routine'"),
+                 ),
+             )
+@@ -462,7 +466,7 @@ class PlanDefinitionProcessorTest {
+         id = "ad-1",
+         url = Uri(value = adUrl),
+         status = Enumeration(value = PublicationStatus.Active),
+-        kind = Enumeration(value = ActivityDefinition.RequestResourceType.MedicationRequest),
++        kind = Enumeration(value = RequestResourceType.MedicationRequest),
+         product =
+           ActivityDefinition.Product.CodeableConcept(
+             CodeableConcept(text = FhirString(value = "Apple"))
+@@ -474,7 +478,7 @@ class PlanDefinitionProcessorTest {
+               expression =
+                 Expression(
+                   language =
+-                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
++                    ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
+                   expression = FhirString(value = "'stat'"),
+                 ),
+             )
+@@ -498,7 +502,7 @@ class PlanDefinitionProcessorTest {
+                       Expression(
+                         language =
+                           ExtensibleEnumeration.of(
+-                            value = Expression.ExpressionLanguage.Text_Fhirpath
++                            value = ExpressionLanguage.Text_Fhirpath
+                           ),
+                         expression = FhirString(value = "'routine'"),
+                       ),
+@@ -528,7 +532,7 @@ class PlanDefinitionProcessorTest {
+         id = "ad-1",
+         url = Uri(value = adUrl),
+         status = Enumeration(value = PublicationStatus.Active),
+-        kind = Enumeration(value = ActivityDefinition.RequestResourceType.MedicationRequest),
++        kind = Enumeration(value = RequestResourceType.MedicationRequest),
+         product =
+           ActivityDefinition.Product.CodeableConcept(
+             CodeableConcept(text = FhirString(value = "Apple"))
+@@ -540,7 +544,7 @@ class PlanDefinitionProcessorTest {
+               expression =
+                 Expression(
+                   language =
+-                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
++                    ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
+                   expression = FhirString(value = "'routine'"),
+                 ),
+             )
+@@ -566,10 +570,10 @@ class PlanDefinitionProcessorTest {
+   }
+ 
+   private suspend fun InMemoryWorkflowRepository.planForKind(
+-    kind: ActivityDefinition.RequestResourceType,
++    kind: RequestResourceType,
+     product: ActivityDefinition.Product? = null,
+     profile: Canonical? = null,
+-    priority: ActivityDefinition.RequestPriority? = null,
++    priority: RequestPriority? = null,
+     dosage: List<Dosage> = listOf(),
+   ): PlanDefinition {
+     val adUrl = "https://ohs.fhir.org/ActivityDefinition/ad-1"
+diff --git a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/repository/InMemoryWorkflowRepositoryTest.kt b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/repository/InMemoryWorkflowRepositoryTest.kt
+index e28f76a..9a004eb 100644
+--- a/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/repository/InMemoryWorkflowRepositoryTest.kt
++++ b/workflow/src/commonTest/kotlin/dev/ohs/fhir/workflow/repository/InMemoryWorkflowRepositoryTest.kt
+@@ -15,6 +15,7 @@
+  */
+ package dev.ohs.fhir.workflow.repository
+ 
++import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+ import dev.ohs.fhir.model.r4.CommunicationRequest
+ import dev.ohs.fhir.workflow.testing.InMemoryWorkflowRepository
+ import kotlin.test.Test
+@@ -37,5 +38,5 @@ class InMemoryWorkflowRepositoryTest {
+   }
+ 
+   private fun statusActive() =
+-    dev.ohs.fhir.model.r4.Enumeration(value = CommunicationRequest.RequestStatus.Active)
++    dev.ohs.fhir.model.r4.Enumeration(value = RequestStatus.Active)
+ }

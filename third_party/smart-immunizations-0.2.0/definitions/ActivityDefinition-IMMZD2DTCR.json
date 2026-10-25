@@ -1,0 +1,39 @@
+{
+ "resourceType": "ActivityDefinition",
+ "id": "IMMZD2DTCR",
+ "meta": {
+  "profile": [
+   "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-communicationactivity|2.0.0"
+  ]
+ },
+ "extension": [
+  {
+   "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-knowledgeCapability",
+   "valueCode": "computable"
+  }
+ ],
+ "url": "http://smart.who.int/immunizations/ActivityDefinition/IMMZD2DTCR",
+ "version": "0.2.0",
+ "name": "IMMZD2DTCommunicationRequest",
+ "title": "IMMZ.D2.DT.CR",
+ "status": "draft",
+ "experimental": false,
+ "date": "2023-12-03",
+ "publisher": "WHO",
+ "contact": [
+  {
+   "name": "WHO",
+   "telecom": [
+    {
+     "system": "url",
+     "value": "http://who.int"
+    }
+   ]
+  }
+ ],
+ "description": "Provide immunization communication",
+ "kind": "CommunicationRequest",
+ "profile": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-communicationrequest",
+ "intent": "proposal",
+ "doNotPerform": false
+}

@@ -26,8 +26,13 @@ below.
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service,
   which the spike supplies over the `@lhncbc/ucum-lhc` npm package (step 14; see also
   cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
+- **`$apply` through kotlin-fhir-workflow** (step 15, JVM and Wasm; kotlin-fhir-workflow has no JS target): each
+  scenario's PlanDefinition, run by kotlin-fhir-workflow's own `FhirOperator.generateCarePlan` with the spike's CQL
+  evaluator behind its `ExpressionEvaluator`, gives step 4's resource count and guidance in every scenario that
+  runs. That takes a local build of kotlin-fhir-workflow `main` on kotlin-fhir rc04, and a rewrite of WHO's expression
+  languages and three dynamicValue paths that `main` doesn't take yet (ohs-foundation/kotlin-fhir-workflow#9).
 - **Not tested:** a browser (JS and Wasm ran under Node only, so kotlin-fhir-engine's browser storage wasn't tried
-  either), a terminology server, and `$apply` end to end. WHO's CQL never reaches date-range filtering in retrieve or
+  either), a terminology server, and `$apply` on iOS or Android. WHO's CQL never reaches date-range filtering in retrieve or
   code-system lookups; steps 10 and 11 test them with CQL of the spike's own.
 
 ## What a scenario is, and how it is tested
@@ -113,8 +118,8 @@ PlanDefinition, its logic library, the patient, the bundle, Today, the expected 
 
 ### What this doesn't show
 
-- `$apply` itself isn't run (that's step 15). The guidance check compares the CQL output, not a CommunicationRequest
-  that `$apply` built.
+- `$apply` itself isn't run in these checks. The guidance check compares the CQL output, not a CommunicationRequest
+  that `$apply` built. Step 15 runs `$apply` through kotlin-fhir-workflow and gets the same counts and guidance.
 - The count check rests on the spike's model of what `$apply` returns.
 - "Yes" therefore means that the CQL inputs `$apply` needs come out the same as on the HAPI stack, and agree with
   WHO's expectations. It doesn't mean that `$apply` output was produced over kotlin-fhir.
@@ -160,6 +165,12 @@ The pieces are in `src/commonMain`:
 - `WorkflowRepositoryCqlEvaluator` (step 8): reads the libraries (through `WorkflowRepositoryLibrarySourceProvider`),
   value sets and patient data a library needs from the `WorkflowRepository`, then evaluates with `FhirCqlEvaluator`.
 
+In `src/workflowMain`, compiled into the JVM and Wasm targets only (step 15):
+
+- `CqlExpressionEvaluator`: kotlin-fhir-workflow's `ExpressionEvaluator` over `FhirCqlEvaluator`, for one patient and
+  one PlanDefinition's library. A text that names a definition of the library gives its value; any other text is
+  evaluated as a CQL expression, in a library `InlineCqlLibraries` writes for it.
+
 In `src/webMain`, for JS and Wasm only:
 
 - `UcumLhcService` (step 14): cqframework's `UcumService` over the `@lhncbc/ucum-lhc` npm package.
@@ -179,6 +190,17 @@ kotlin-fhir-engine's tests (steps 9 and 13) are in `src/commonTest`; on JS and W
 Node through `src/webTest` (see step 13).
 
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
+
+Step 15 needs two local builds in Maven Local (`~/.m2`), each from a separate `git worktree` of the upstream repository,
+with its patch from `patches/` applied:
+
+- ohs-foundation/kotlin-fhirpath at 461a7b9 with `kotlin-fhirpath-461a7b9-local.patch` (signing off):
+  `./gradlew :fhir-path-core:publishToMavenLocal :fhir-path-r4:publishToMavenLocal -PmavenVersion=1.0.0-spike-461a7b9`
+  (an Android SDK must be set in `local.properties`).
+- ohs-foundation/kotlin-fhir-workflow at 214c56d with `kotlin-fhir-workflow-214c56d-rc04.patch`:
+  `./gradlew :workflow:publishKotlinMultiplatformPublicationToMavenLocal :workflow:publishDesktopPublicationToMavenLocal
+  :workflow:publishWasmJsPublicationToMavenLocal -PmavenVersion=2.0.0-spike-214c56d-rc04`. The common metadata
+  publication fails (see step 15); the JVM and Wasm ones are what the spike uses.
 
 The JVM tests of steps 5–7 also read WHO's package `smart.who.int.immunizations` 0.2.0, unpacked, from the directory
 named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
@@ -446,6 +468,58 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     the Kotlin 2.3.20 compiler (`ArrayIndexOutOfBoundsException` in `WasmIrFileMetadata.fromByteArray`), so this
     is still unconfirmed.
 
+- Step 15 (2026-10-24): `$apply` through kotlin-fhir-workflow, on the JVM and Wasm.
+  - **What runs:** kotlin-fhir-workflow's own `FhirOperator.generateCarePlan`, from its `main` at 214c56d, on each
+    scenario's PlanDefinition and patient. Its `ExpressionEvaluatorRouter` gets the spike's `CqlExpressionEvaluator`
+    as its CQL evaluator, in place of the `ElmExpressionEvaluator` stub. The PlanDefinitions and ActivityDefinitions
+    are WHO's, copied into `third_party/smart-immunizations-0.2.0/definitions/` by `tools/copy_who_definitions.py`.
+    `WhoApplyTest` compares each CarePlan's contained resources and its CommunicationRequest's `payload` with step 4's
+    values and with WHO's expectations. JS is out: kotlin-fhir-workflow has no JS target.
+  - **What it took:**
+    - **A build of kotlin-fhir-workflow on kotlin-fhir rc04.** `main` is built on rc03. Run as it is with the spike's
+      rc04, every scenario failed with `NoClassDefFoundError: dev/ohs/fhir/model/r4/PlanDefinition$ActionConditionKind`
+      (ran): rc04 moved every ValueSet enum into a `terminologies` package (ohs-foundation/kotlin-fhir#153). The
+      source change is mechanical, 25 files (`patches/kotlin-fhir-workflow-214c56d-rc04.patch`), and kotlin-fhir-workflow's
+      70 JVM tests pass with it (ran). It also needs a kotlin-fhirpath on rc04: its `main` moved to rc04 on 2026-10-23
+      (#146), with no release yet, so that is built locally too. These builds are in Maven Local only (see Code).
+    - **WHO's expression languages.** kotlin-fhir-workflow routes `text/fhirpath` and `text/cql` only; WHO's
+      conditions are `text/cql-identifier` and its dynamicValues `text/cql-identifier` or `text/cql-expression`. As
+      published, a scenario of each PlanDefinition stops with "Unsupported expression language: text/cql-identifier"
+      for 137 of the 138; the other scenario's bundle is one kotlin-fhir rejects (ran). `WhoApply.conform` rewrites both languages to `text/cql` before `$apply`.
+    - **No library in the expression.** kotlin-fhir-workflow passes only the expression's text to its CQL evaluator,
+      so the spike makes one `CqlExpressionEvaluator` per PlanDefinition library and patient. A text that names a
+      definition of that library gives its value; any other text is compiled as a CQL expression in a library that
+      includes it.
+    - **Three dynamicValue paths and `priority`** (ohs-foundation/kotlin-fhir-workflow#9, open): `conform` also writes
+      `category[0].coding[0]`, `payload[0].contentString` and `medicationCodeableConcept`, and gives `priority` the
+      Code's `code`, as step 7 did by hand.
+    - **A FHIR primitive as a value.** WHO's `MedicationRequest.id` dynamicValues are `First(…).id`, a FHIR `id`, not a
+      CQL String; the evaluator writes its `value`.
+  - **Result** (ran):
+
+    | | JVM | Wasm |
+    |---|---|---|
+    | Scenarios through `$apply` | 1,098 of 1,100 | 1,092 of 1,100 |
+    | Resource count and guidance different from step 4 | 0 | 0 |
+    | Resource count matches WHO's | 1,082 | 1,076 |
+    | Guidance matches WHO's | 634 of 634 | 631 of 631 |
+    | Time | 9 s | 31 s |
+
+    The 2 scenarios missing on both are the bundles kotlin-fhir rejects (see Findings). The other 6 on Wasm reach
+    `Split` (cqframework/clinical_quality_language#1870). The 16 count differences from WHO are step 4's, so they don't
+    come from `$apply`. Every request kotlin-fhir-workflow wrote back decoded as a kotlin-fhir resource; it decodes
+    each one after its dynamicValues.
+  - **Along the way:**
+    - kotlin-fhir-workflow's common metadata did not compile against the local kotlin-fhirpath build ("Unresolved
+      reference 'FhirPathEngine'"): its transformed metadata had fhir-path-r4 but not fhir-path-core. Not
+      investigated. The spike uses its JVM and Wasm artifacts directly and compiles `src/workflowMain` and
+      `src/workflowTest` into each target.
+    - The Kotlin 2.3.20 Wasm compiler crashed twice on incremental builds of the spike, once for its main code and once
+      for its tests (`ArrayIndexOutOfBoundsException` in `WasmIrFileMetadata.fromByteArray`), the same crash as in step
+      14. A full recompile (`--rerun` on the compile task) succeeded each time. Not investigated.
+  - **Not tested:** `$apply` on Android or iOS, kotlin-fhir-workflow's FHIRPath and CQL together in one
+    PlanDefinition, and anything but WHO's immunization content.
+
 ## Findings so far
 
 - **UCUM service on JS and Wasm.** On JS and Wasm the caller must supply a UCUM service, by design: cqframework's
@@ -617,6 +691,11 @@ licence.
 - `third_party/cqframework-cql-tests-5.4.0/quantity-cases.json`: test cases extracted from the CQL test suite files
   in cqframework/clinical_quality_language at v5.4.0, `engine-fhir/src/jvmTest/resources/org/hl7/fhirpath/cql/`
   (Apache License 2.0), by `tools/extract_quantity_cases.py`, for step 14.
+- `third_party/smart-immunizations-0.2.0/definitions/`: the 138 PlanDefinition and 3 ActivityDefinition resources of
+  the same package (CC0-1.0), without their narratives, written by `tools/copy_who_definitions.py`, for step 15.
+- `patches/kotlin-fhir-workflow-214c56d-rc04.patch` and `patches/kotlin-fhirpath-461a7b9-local.patch`: changes to
+  ohs-foundation/kotlin-fhir-workflow and ohs-foundation/kotlin-fhirpath (Apache License 2.0) for the spike's local
+  builds of them (step 15).
 - `@lhncbc/ucum-lhc` 7.1.10, an npm dependency of the JS and Wasm builds (step 14), is not in the repository. Its
   licence is NLM's, with the UCUM table's terms from Regenstrief Institute and the UCUM Organization (its
   `LICENSE.md`).

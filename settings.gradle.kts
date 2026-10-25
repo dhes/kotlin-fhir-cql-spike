@@ -18,6 +18,8 @@ dependencyResolutionManagement {
         if (providers.gradleProperty("engineVersion").isPresent) {
             mavenLocal { content { includeModuleByRegex("dev\\.ohs\\.fhir", "fhir-engine.*") } }
         }
+        // Step 15: kotlin-fhir-workflow main at 214c56d and kotlin-fhirpath main at 461a7b9, built locally (*-spike-*).
+        mavenLocal { content { includeVersionByRegex("dev\\.ohs\\.fhir", "fhir-(workflow|path).*", ".*-spike-.*") } }
     }
 }
 

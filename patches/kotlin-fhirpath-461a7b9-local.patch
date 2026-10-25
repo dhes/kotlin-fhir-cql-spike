@@ -1,0 +1,26 @@
+diff --git a/buildSrc/src/main/kotlin/fhir-path-version-conventions.gradle.kts b/buildSrc/src/main/kotlin/fhir-path-version-conventions.gradle.kts
+index b426a0b..e8d019a 100644
+--- a/buildSrc/src/main/kotlin/fhir-path-version-conventions.gradle.kts
++++ b/buildSrc/src/main/kotlin/fhir-path-version-conventions.gradle.kts
+@@ -80,7 +80,7 @@ configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {
+ // Configure Maven Central publishing base extension
+ configure<MavenPublishBaseExtension> {
+     publishToMavenCentral()
+-    signAllPublications()
++    // signAllPublications() -- off for a local, unsigned spike publish
+     coordinates(mavenGroupId, project.name, mavenVersion)
+ 
+     pom {
+diff --git a/fhir-path-core/build.gradle.kts b/fhir-path-core/build.gradle.kts
+index 9aef4a2..cd400f6 100644
+--- a/fhir-path-core/build.gradle.kts
++++ b/fhir-path-core/build.gradle.kts
+@@ -97,7 +97,7 @@ configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {
+ 
+ mavenPublishing {
+     publishToMavenCentral()
+-    signAllPublications()
++    // signAllPublications() -- off for a local, unsigned spike publish
+     coordinates(mavenGroupId, "fhir-path-core", mavenVersion)
+ 
+     pom {

@@ -1,0 +1,47 @@
+{
+ "resourceType": "ActivityDefinition",
+ "id": "IMMZD2DTMR",
+ "meta": {
+  "profile": [
+   "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-immunizationactivity|2.0.0"
+  ]
+ },
+ "extension": [
+  {
+   "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-knowledgeCapability",
+   "valueCode": "computable"
+  }
+ ],
+ "url": "http://smart.who.int/immunizations/ActivityDefinition/IMMZD2DTMR",
+ "version": "0.2.0",
+ "name": "IMMZD2DTMedicationRequest",
+ "title": "IMMZD2DTMR",
+ "status": "draft",
+ "experimental": false,
+ "date": "2025-10-27",
+ "publisher": "WHO",
+ "contact": [
+  {
+   "name": "WHO",
+   "telecom": [
+    {
+     "system": "url",
+     "value": "http://who.int"
+    }
+   ]
+  }
+ ],
+ "description": "Provide immunization",
+ "kind": "MedicationRequest",
+ "profile": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-immunizationrequest",
+ "intent": "proposal",
+ "doNotPerform": false,
+ "productCodeableConcept": {
+  "coding": [
+   {
+    "system": "http://smart.who.int/immunizations/CodeSystem/IMMZ.Z",
+    "code": "DE0"
+   }
+  ]
+ }
+}
