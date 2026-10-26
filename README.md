@@ -647,7 +647,7 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     the three `Split` cases. cqframework's engine tests pass on the JVM and JS (280 and 85), engine-fhir's on the
     JVM (3,318, 264 skipped as on `main`), and `spotlessCheck`. The new tests fail on JS without the fix.
   - **Scope:** none of WHO's 279 immunization CQL libraries calls the three regex operators or `Combine` (scan), so
-    its suite is unaffected. Filed as cqframework/clinical_quality_language#1885 (2026-10-26).
+    its suite is unaffected. Filed as cqframework/clinical_quality_language#1885 (2026-10-26); the fix is PR #1888.
 - **Calendar-only CQL needs a UCUM service since cqframework 5.2.0.** Ran 2026-10-15: `define X: 4 weeks` compiles
   with no UCUM service under cql-to-elm 5.1.0 and fails under 5.2.0 and 5.4.0, on JS, Wasm and the JVM; `4 'mg'`
   fails in all three versions. The change is consistent with cqframework #1819 (first released in 5.2.0), whose
