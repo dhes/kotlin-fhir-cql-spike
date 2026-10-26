@@ -660,7 +660,10 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   quantity's unit (`LibraryBuilder.createQuantity` calls `validateUnit`, which asks the UCUM service), so setting
   the option to `false` does not turn validation off.
 - **Patient context paths.** The element linking each resource type to its patient is a hand-written table for seven
-  types (`KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS`); the model info does not record it.
+  types (`KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS`, step 3). The FHIR 4.0.1 model info records a
+  `contextRelationship` to Patient for each type, but its `relatedKeyElement` is not always an element of that type:
+  for Condition, Encounter and Procedure it is `patient`, where the element is `subject` (read, cqframework's quick
+  5.4.0 model info). So the table cannot simply be read from the model info.
 - **dateTime precision.** kotlin-fhir does not record how many fractional-second digits a dateTime had, so a value
   with `.000` converts at second precision. Not exercised by these patients, whose dates are all date-only.
 - **`Split` is not implemented on JS or Wasm.** In cqframework 5.4.0, and on `main` at fb8055df, the engine's
