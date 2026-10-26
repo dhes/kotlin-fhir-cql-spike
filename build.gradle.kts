@@ -49,6 +49,9 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
                 // Step 9 (JVM) and step 13 (JS and Wasm): kotlin-fhir-engine behind kotlin-fhir-workflow's WorkflowRepository.
                 implementation("dev.ohs.fhir:fhir-engine:$engineVersion")
+                // Step 16: kotlin-fhir-knowledge main at 45b6960, built locally against kotlin-fhir rc04 and
+                // kotlin-fhir-engine's Room and SQLite versions (patches/kotlin-fhir-knowledge-45b6960-rc04.patch).
+                implementation("dev.ohs.fhir:fhir-knowledge:2.0.0-spike-45b6960-rc04")
             }
         }
         // Step 15: kotlin-fhir-workflow main at 214c56d, built locally against kotlin-fhir rc04 (see settings.gradle.kts),
@@ -69,6 +72,8 @@ kotlin {
             implementation(npm("@lhncbc/ucum-lhc", "7.1.10"))
         }
         webTest.dependencies {
+            // Step 16: the web targets have no file system okio implements, so WHO's unpacked package is put in one.
+            implementation("com.squareup.okio:okio-fakefilesystem:3.17.0")
             // kotlin-fhir-engine's SQLite worker, which its published JS and Wasm artifacts can't bring (see its README,
             // "Required workaround for consumers targeting js/wasmJs"), with what it needs to run under Node.
             implementation(npm("sqlite-wasm-worker", layout.projectDirectory.dir("src/webTest/npm/sqlite-wasm-worker").asFile))
@@ -107,8 +112,14 @@ val generateTestPaths by tasks.registering {
     }
 }
 
+// Step 16: WHO's package, unpacked for the JS and Wasm tests, where kotlin-fhir-knowledge can't unpack it (no gzip).
+val unpackWhoPackage by tasks.registering(Copy::class) {
+    from(tarTree(resources.gzip(file("third_party/smart-immunizations-0.2.0/smart.who.int.immunizations-0.2.0.tgz"))))
+    into(layout.buildDirectory.dir("who-package"))
+}
+
 tasks.matching { it.name.startsWith("compileTestKotlin") || it.name == "compileTestDevelopmentExecutableKotlinJs" }
-    .configureEach { dependsOn(generateTestPaths) }
+    .configureEach { dependsOn(generateTestPaths, unpackWhoPackage) }
 
 tasks.withType<Test>().configureEach {
     testLogging {

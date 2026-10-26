@@ -31,6 +31,10 @@ below.
   evaluator behind its `ExpressionEvaluator`, gives step 4's resource count and guidance in every scenario that
   runs. That takes a local build of kotlin-fhir-workflow `main` on kotlin-fhir rc04, and a rewrite of WHO's expression
   languages and three dynamicValue paths that `main` doesn't take yet (ohs-foundation/kotlin-fhir-workflow#9).
+- **WHO's package from kotlin-fhir-knowledge** (step 16, JVM, JS and Wasm): with the package as published installed
+  (JVM) or imported (JS and Wasm) into kotlin-fhir-knowledge, and the suite's Libraries and ValueSets, and
+  `$apply`'s PlanDefinitions and ActivityDefinitions, read from it, the outcomes are the same. That takes a local
+  build of kotlin-fhir-knowledge `main` on kotlin-fhir rc04 and on kotlin-fhir-engine's Room and SQLite versions.
 - **Not tested:** a browser (JS and Wasm ran under Node only, so kotlin-fhir-engine's browser storage wasn't tried
   either), a terminology server, and `$apply` on iOS or Android. WHO's CQL never reaches date-range filtering in retrieve or
   code-system lookups; steps 10 and 11 test them with CQL of the spike's own.
@@ -187,12 +191,13 @@ retrieve's date-range and profile filtering, which WHO's CQL doesn't reach, is c
 terminology provider against clinical-reasoning's by step 11.
 
 kotlin-fhir-engine's tests (steps 9 and 13) are in `src/commonTest`; on JS and Wasm they run its SQLite worker under
-Node through `src/webTest` (see step 13).
+Node through `src/webTest` (see step 13). So do step 16's, where `KnowledgeWorkflowRepository` reads WHO's Library and
+ValueSet resources from kotlin-fhir-knowledge.
 
 Run: `./gradlew allTests` (JVM, and JS and Wasm under Node)
 
-Step 15 needs two local builds in Maven Local (`~/.m2`), each from a separate `git worktree` of the upstream repository,
-with its patch from `patches/` applied:
+Steps 15 and 16 need three local builds in Maven Local (`~/.m2`), each from a separate `git worktree` of the upstream
+repository, with its patch from `patches/` applied:
 
 - ohs-foundation/kotlin-fhirpath at 461a7b9 with `kotlin-fhirpath-461a7b9-local.patch` (signing off):
   `./gradlew :fhir-path-core:publishToMavenLocal :fhir-path-r4:publishToMavenLocal -PmavenVersion=1.0.0-spike-461a7b9`
@@ -201,6 +206,10 @@ with its patch from `patches/` applied:
   `./gradlew :workflow:publishKotlinMultiplatformPublicationToMavenLocal :workflow:publishDesktopPublicationToMavenLocal
   :workflow:publishWasmJsPublicationToMavenLocal -PmavenVersion=2.0.0-spike-214c56d-rc04`. The common metadata
   publication fails (see step 15); the JVM and Wasm ones are what the spike uses.
+- ohs-foundation/kotlin-fhir-knowledge at 45b6960 with `kotlin-fhir-knowledge-45b6960-rc04.patch` (step 16; the patch
+  sets the version): `./gradlew :knowledge:publishKotlinMultiplatformPublicationToMavenLocal
+  :knowledge:publishDesktopPublicationToMavenLocal :knowledge:publishJsPublicationToMavenLocal
+  :knowledge:publishWasmJsPublicationToMavenLocal` (an Android SDK must be set in `local.properties`).
 
 The JVM tests of steps 5–7 also read WHO's package `smart.who.int.immunizations` 0.2.0, unpacked, from the directory
 named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
@@ -520,6 +529,60 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - **Not tested:** `$apply` on Android or iOS, kotlin-fhir-workflow's FHIRPath and CQL together in one
     PlanDefinition, and anything but WHO's immunization content.
 
+- Step 16 (2026-10-25): WHO's package served by kotlin-fhir-knowledge, on the JVM, JS and Wasm.
+  - **What runs:** ohs-foundation/kotlin-fhir-knowledge `main` at 45b6960 (its first KMP version, merged 2026-10-21;
+    no release yet) holds WHO's package `smart.who.int.immunizations` 0.2.0 as published, from its tarball
+    (`third_party/smart-immunizations-0.2.0/smart.who.int.immunizations-0.2.0.tgz`, WHO's CI build). `KnowledgeWorkflowRepository`
+    answers the `WorkflowRepository`'s canonical lookups (`searchByUri`) with `KnowledgeManager.loadResources`, so
+    the Library and ValueSet resources the suite reads come from kotlin-fhir-knowledge, and the patient data from
+    `InMemoryWorkflowRepository` as before. `KnowledgeSuiteTest` runs WHO's suite through it, as step 8 does with the
+    spike's copies. `KnowledgeApplyTest` (JVM and Wasm) runs step 15's `$apply` with the PlanDefinition and
+    ActivityDefinitions resolved through the adapter in kotlin-fhir-knowledge's README, `KnowledgeCanonicalResolver`,
+    and compares each outcome with step 15's from the spike's copies.
+  - **How the package gets in:**
+    - **JVM:** `install()`, from a package server on localhost that serves the tarball and answers 404 for anything
+      else. kotlin-fhir-knowledge downloads, unpacks and indexes it, then asks for each of its 10 dependencies
+      (`hl7.fhir.r4.core` and the rest), logs a warning with a stack trace for each 404 and for the missing
+      `package.json` that follows, and returns normally. `install()` returns nothing, so a caller can't tell from the
+      call which packages were installed. None of the dependencies is needed: FHIRHelpers comes from cqframework, as
+      in every step.
+    - **JS and Wasm:** `import()`, from an okio `FakeFileSystem` holding the package as the build unpacks it
+      (`unpackWhoPackage`). `install()` can't be used there: kotlin-fhir-knowledge has no gzip on the web targets, and
+      says so in its README. `import()` indexed 712 resources and skipped 3 files (`package.json` and two index
+      files), with none failing to decode as kotlin-fhir rc04 resources.
+  - **What it took:**
+    - **A local build of kotlin-fhir-knowledge on kotlin-fhir rc04 and on kotlin-fhir-engine's Room and SQLite**
+      (`patches/kotlin-fhir-knowledge-45b6960-rc04.patch`). `main` is built on rc03 and on Room 3.0.0-alpha06 and
+      SQLite 2.7.0-alpha06; the spike's kotlin-fhir-engine alpha04 brings Room 3.0.2 and SQLite 2.7.0, and one
+      classpath holds one version. Room 3.0 renamed `@TypeConverter`/`@TypeConverters` to
+      `@ColumnTypeConverter`/`@ColumnTypeConverters` (kotlin-fhir-engine already uses the new names); with that
+      rename kotlin-fhir-knowledge's 64 desktop tests pass (ran) and its web targets compile.
+    - **Its SQLite worker, on JS and Wasm.** kotlin-fhir-knowledge, like kotlin-fhir-engine, runs SQLite in a Web
+      Worker from a local npm module, `sqlite-wasm-worker`. Its published web artifacts don't declare that module
+      (read: the `package.json` in the wasm-js klib lists `ws` and `@js-joda/core` only), so a consumer gets no
+      `worker.js`, as with kotlin-fhir-engine (ohs-foundation/kotlin-fhir-engine#76). The spike's Node `Worker` (step
+      13) runs kotlin-fhir-engine's copy of `worker.js` whatever URL it is given, so kotlin-fhir-knowledge ran on that
+      copy, not its own. The two differ in one place (read): kotlin-fhir-knowledge's opens every database with
+      `OpfsDb`, the Origin Private File System, including the `:memory:` database Room asks for with
+      `inMemory = true`; kotlin-fhir-engine's opens `:memory:` in memory. What kotlin-fhir-knowledge's own worker does
+      with `inMemory = true` in a browser was not run.
+  - **Result** (ran):
+
+    | | JVM | JS | Wasm |
+    |---|---|---|---|
+    | How the package got in | `install()` | `import()` | `import()` |
+    | Suite: scenarios that give the recorded HAPI outcomes | 1,098 of 1,098 | 1,092 of 1,098 | 1,092 of 1,098 |
+    | Suite: time, from kotlin-fhir-knowledge / from the spike's copies (step 8) | 13 s / 8 s | 4 min 1 s / 3 min 37 s | 62 s / 43 s |
+    | `$apply`: scenarios that differ from step 15 | 0 (1,098 applied) | — | 0 (1,092 applied) |
+
+    The 6 scenarios on JS and Wasm reach `Split` (cqframework/clinical_quality_language#1870), as in every step. The
+    suite made 1,518 Library and 38,430 ValueSet lookups; the 3,294 that found nothing are three value sets WHO's CQL
+    declares and the package doesn't hold, the same three as with the spike's copies. `$apply` resolved 1,100
+    PlanDefinitions and 1,333 ActivityDefinitions on the JVM. The suite is slower from kotlin-fhir-knowledge: each
+    `loadResources` call reads and decodes the resource's file again.
+  - **Not tested:** a browser, Android and iOS; `install()` from packages.fhir.org (0.2.0 is not there, only 1.0.0)
+    and of a package's dependencies; kotlin-fhir-knowledge's own `worker.js`.
+
 ## Findings so far
 
 - **UCUM service on JS and Wasm.** On JS and Wasm the caller must supply a UCUM service, by design: cqframework's
@@ -695,7 +758,12 @@ licence.
   the same package (CC0-1.0), without their narratives, written by `tools/copy_who_definitions.py`, for step 15.
 - `patches/kotlin-fhir-workflow-214c56d-rc04.patch` and `patches/kotlin-fhirpath-461a7b9-local.patch`: changes to
   ohs-foundation/kotlin-fhir-workflow and ohs-foundation/kotlin-fhirpath (Apache License 2.0) for the spike's local
-  builds of them (step 15).
+  builds of them (step 15). `patches/kotlin-fhir-knowledge-45b6960-rc04.patch`: the same for
+  ohs-foundation/kotlin-fhir-knowledge (step 16).
+- `third_party/smart-immunizations-0.2.0/smart.who.int.immunizations-0.2.0.tgz`: the package
+  `smart.who.int.immunizations` 0.2.0 as published (CC0-1.0), WHO's CI build at build.fhir.org (its `package.json`
+  is dated 2026-07-07), for step 16. Its 279
+  Libraries' CQL and its 192 ValueSets are the same as in `cql/` and `valuesets/`.
 - `@lhncbc/ucum-lhc` 7.1.10, an npm dependency of the JS and Wasm builds (step 14), is not in the repository. Its
   licence is NLM's, with the UCUM table's terms from Regenstrief Institute and the UCUM Organization (its
   `LICENSE.md`).

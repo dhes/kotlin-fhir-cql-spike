@@ -1,0 +1,78 @@
+diff --git a/gradle.properties b/gradle.properties
+index fcbc491..1a902fb 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -6,4 +6,4 @@ android.useAndroidX=true
+ # Bump mavenVersion before cutting a release.
+ mavenGroupId=dev.ohs.fhir
+ mavenArtifactId=fhir-knowledge
+-mavenVersion=2.0.0-alpha01
++mavenVersion=2.0.0-spike-45b6960-rc04
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 443db57..51952f0 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -1,9 +1,9 @@
+ [versions]
+ kotlin = "2.3.21"
+ android-gradle-plugin = "8.13.0"
+-androidx-room3 = "3.0.0-alpha06"
+-androidx-sqlite = "2.7.0-alpha06"
+-ohs-fhir-model = "1.0.0-rc03"
++androidx-room3 = "3.0.2"
++androidx-sqlite = "2.7.0"
++ohs-fhir-model = "1.0.0-rc04"
+ kotlinx-coroutines = "1.10.2"
+ kotlinx-browser = "0.5.0"
+ kotlinx-serialization = "1.8.0"
+diff --git a/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/DbTypeConverters.kt b/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/DbTypeConverters.kt
+index ca7a6b0..ea61865 100644
+--- a/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/DbTypeConverters.kt
++++ b/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/DbTypeConverters.kt
+@@ -15,7 +15,7 @@
+  */
+ package dev.ohs.fhir.knowledge.db
+ 
+-import androidx.room3.TypeConverter
++import androidx.room3.ColumnTypeConverter
+ import dev.ohs.fhir.model.r4.terminologies.ResourceType
+ import okio.Path
+ import okio.Path.Companion.toPath
+@@ -29,11 +29,11 @@ import okio.Path.Companion.toPath
+  */
+ internal object DbTypeConverters {
+ 
+-  @TypeConverter fun filePathToFile(filePath: String): Path = filePath.toPath()
++  @ColumnTypeConverter fun filePathToFile(filePath: String): Path = filePath.toPath()
+ 
+-  @TypeConverter fun fileToFilePath(file: Path): String = file.toString()
++  @ColumnTypeConverter fun fileToFilePath(file: Path): String = file.toString()
+ 
+-  @TypeConverter fun codeToResourceType(code: String): ResourceType = ResourceType.fromCode(code)
++  @ColumnTypeConverter fun codeToResourceType(code: String): ResourceType = ResourceType.fromCode(code)
+ 
+-  @TypeConverter fun resourceTypeToCode(resourceType: ResourceType): String = resourceType.code
++  @ColumnTypeConverter fun resourceTypeToCode(resourceType: ResourceType): String = resourceType.code
+ }
+diff --git a/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/KnowledgeDatabase.kt b/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/KnowledgeDatabase.kt
+index 9938935..d9883af 100644
+--- a/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/KnowledgeDatabase.kt
++++ b/knowledge/src/commonMain/kotlin/dev/ohs/fhir/knowledge/db/KnowledgeDatabase.kt
+@@ -19,7 +19,7 @@ import androidx.room3.ConstructedBy
+ import androidx.room3.Database
+ import androidx.room3.RoomDatabase
+ import androidx.room3.RoomDatabaseConstructor
+-import androidx.room3.TypeConverters
++import androidx.room3.ColumnTypeConverters
+ import dev.ohs.fhir.knowledge.db.dao.KnowledgeDao
+ import dev.ohs.fhir.knowledge.db.entities.ImplementationGuideEntity
+ import dev.ohs.fhir.knowledge.db.entities.ImplementationGuideResourceMetadataEntity
+@@ -45,7 +45,7 @@ import dev.ohs.fhir.knowledge.db.entities.ResourceMetadataEntity
+   version = 1,
+   exportSchema = true,
+ )
+-@TypeConverters(DbTypeConverters::class)
++@ColumnTypeConverters(DbTypeConverters::class)
+ @ConstructedBy(KnowledgeDatabaseConstructor::class)
+ internal abstract class KnowledgeDatabase : RoomDatabase() {
+   abstract fun knowledgeDao(): KnowledgeDao

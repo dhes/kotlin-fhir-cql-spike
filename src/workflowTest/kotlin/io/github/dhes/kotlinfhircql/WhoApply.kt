@@ -5,6 +5,7 @@ import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Patient
 import dev.ohs.fhir.model.r4.PlanDefinition
 import dev.ohs.fhir.model.r4.Resource
+import dev.ohs.fhir.model.r4.terminologies.ResourceType
 import dev.ohs.fhir.workflow.CanonicalResolver
 import dev.ohs.fhir.workflow.FhirOperator
 import dev.ohs.fhir.workflow.expression.ExpressionEvaluatorRouter
@@ -110,15 +111,23 @@ object WhoApply {
         definitionsJson.mapValues { (_, json) -> MeaslesFixtures.json.decodeFromString(Resource.serializer(), json.toString()) }
     }
 
+    /** [resource] as [conform] rewrites it. */
+    fun conformed(resource: Resource): Resource {
+        val json = MeaslesFixtures.json.encodeToJsonElement(Resource.serializer(), resource).jsonObject
+        return MeaslesFixtures.json.decodeFromJsonElement(Resource.serializer(), conform(json))
+    }
+
     /**
      * Applies the scenario's PlanDefinition to its patient with kotlin-fhir-workflow's `FhirOperator`: as [conform]
-     * rewrites it, or as published when [published] is true.
+     * rewrites it, or as published when [published] is true. The PlanDefinition and the ActivityDefinitions its
+     * actions name come from [resolver] when one is given, and from the spike's copies otherwise.
      */
-    suspend fun apply(scenario: WhoScenario, published: Boolean = false): ApplyOutcome =
+    suspend fun apply(scenario: WhoScenario, published: Boolean = false, resolver: CanonicalResolver? = null): ApplyOutcome =
         try {
             val (evaluator, inline) = evaluator
             val source = if (published) publishedDefinitions else definitions
-            val plan = source.getValue("http://smart.who.int/immunizations/PlanDefinition/${scenario.planDefinition}") as PlanDefinition
+            val planUrl = "http://smart.who.int/immunizations/PlanDefinition/${scenario.planDefinition}"
+            val plan = (resolver?.resolve(ResourceType.PlanDefinition, planUrl) ?: source.getValue(planUrl)) as PlanDefinition
             val bundle = WhoSuite.bundleResources(scenario)
             val patient = bundle.filterIsInstance<Patient>().single { it.id == scenario.patient }
             val (y, m, d) = scenario.today.split("-").map(String::toInt)
@@ -132,8 +141,8 @@ object WhoApply {
                     mapOf("Today" to Date(y, m, d)),
                     WhoSuite.evaluationDateTime(scenario),
                 )
-            val resolver = CanonicalResolver { _, canonical -> source[canonical.substringBefore("|")] }
-            val operator = FhirOperator(InMemoryWorkflowRepository(emptyList()), ExpressionEvaluatorRouter(elm = cql), resolver)
+            val definitions = resolver ?: CanonicalResolver { _, canonical -> source[canonical.substringBefore("|")] }
+            val operator = FhirOperator(InMemoryWorkflowRepository(emptyList()), ExpressionEvaluatorRouter(elm = cql), definitions)
             val carePlan: CarePlan = operator.generateCarePlan(plan, patient, today = LocalDate(y, m, d))
             val guidance =
                 carePlan.contained.filterIsInstance<CommunicationRequest>().firstNotNullOfOrNull { request ->
