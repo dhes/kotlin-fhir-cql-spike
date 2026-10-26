@@ -469,7 +469,7 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
       - `2.5589 '{eskimo kisses}'`: ucum-lhc rejects the space in the annotation, and fhir-ucum accepts it.
 
       The other 17 are cqframework's on JS and Wasm, and need no UCUM service: 6 from its `BigDecimal` arithmetic
-      (Wasm and JS), 10 on JS and 11 on Wasm from equivalence (`~`), and 1 on JS only from `Matches` (see Findings).
+      (Wasm and JS), 10 on JS and 11 on Wasm from equivalence (`~`), and 1 on JS only from `Matches`, explained since (see Findings).
   - **WHO's suite with the new service** (ran): the same outcomes as step 13 on JS and Wasm. WHO's CQL needs no unit
     conversion.
   - **Not done:** the roadmap's check of `divideBy` in cqframework's Wasm export `createUcumService`, which calls the
@@ -607,8 +607,35 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     decimal equivalence reaches it; quantities and ratios compared with `~` fail the same way.
   - **Scope:** WHO's suite gives the same outcomes on JS, Wasm and the JVM, so its CQL does not reach these or is not
     changed by them. No cqframework issue found (searched 2026-10-24).
-- **`Matches` with `\d` on JS.** `Matches('Not all who wander are lost - circa 2017', '.*\\d+')`, a case of
-  cqframework's CQL test suite, is `true` on the JVM and Wasm and `false` on JS (ran, step 14). Not investigated.
+- **`Matches`, `ReplaceMatches` and `SplitOnMatches` see the quoted CQL literal on JS, and `ReplaceMatches` on
+  Wasm.** Found in step 14 as one suite case, `Matches('Not all who wander are lost - circa 2017', '.*\\d+')`: `true`
+  on the JVM and Wasm, `false` on JS. Explained 2026-10-26 (`MatchesProbeTest`, `RegexOnCqlStringProbeTest`,
+  cqframework 5.4.0):
+  - **The cause** (read, the same in v5.5.0 and on `main` that day). The three evaluators hand the regex functions
+    the CQL String object itself, not its text: `argument.matches(pattern.value.toRegex())`. That object is a
+    `CharSequence` by delegation to its text, but its `toString()` gives the CQL literal, quotes included: `'abc'`.
+    Kotlin/JVM's regex reads the characters through `CharSequence`. Kotlin/JS's appears to run on `toString()`
+    while taking the length from `CharSequence` (inferred from the results, not read in Kotlin's source):
+    `Matches('abc', 'abc')` is `false` and `Matches('abc', '\'ab')` is `true` (ran).
+    `Regex("abc").matches(...)` on the object gives the same: `false` on JS, `true` on the JVM and Wasm (ran).
+    Java's `CharSequence` contract says `toString()` returns the sequence's characters.
+  - **Not the compiler:** the pattern compiles to `.*\d+` (5 characters) on all three targets (ran), and Node's
+    regex engine matches it (ran).
+  - **What differs from the JVM** (ran):
+
+    | Expression | JVM | JS | Wasm |
+    |---|---|---|---|
+    | `Matches('abc', 'abc')` | true | false | true |
+    | `Matches('abc', '\'ab')` | false | true | false |
+    | `ReplaceMatches('abc', 'b', 'X')` | `'aXc'` | `'\'aXc\''` | `'\'Xb'` |
+    | `ReplaceMatches('abc', '.*', 'X')` | `'XX'` | `'XX'` | `'X'` |
+    | `SplitOnMatches('a,b', ',')` | `{'a', 'b'}` | `{'a,', ''}` | `{'a', 'b'}` |
+
+    On Wasm only `ReplaceMatches` is affected; why `'.*'` gives `'X'` there, and whether that is the same cause or a
+    difference in Kotlin/Wasm's own regex engine, was not looked into. A fix in cqframework would pass
+    `argument.value` (not tried).
+  - **Scope:** none of WHO's 279 immunization CQL libraries calls the three (scan), so its suite is unaffected. No
+    cqframework issue found (searched 2026-10-26; #1070 is about full-string matching, from 2019).
 - **Calendar-only CQL needs a UCUM service since cqframework 5.2.0.** Ran 2026-10-15: `define X: 4 weeks` compiles
   with no UCUM service under cql-to-elm 5.1.0 and fails under 5.2.0 and 5.4.0, on JS, Wasm and the JVM; `4 'mg'`
   fails in all three versions. The change is consistent with cqframework #1819 (first released in 5.2.0), whose

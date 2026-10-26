@@ -55,7 +55,7 @@ class QuantityCasesTest {
         const val STRIP_ZEROS = "cqframework's JS and Wasm BigDecimal.stripTrailingZeros() is not implemented (TODO())"
         const val OFFSET_UNITS = "the JVM's fhir-ucum does not convert units with an offset (Cel, [degF]); ucum-lhc does"
         const val ANNOTATION = "ucum-lhc rejects a space in an annotation; the JVM's fhir-ucum accepts it"
-        const val MATCHES = "on JS only, cqframework's Matches gives false for the pattern '.*\\\\d+' (no unit involved)"
+        const val MATCHES = "on JS, cqframework's Matches runs the regex on the quoted CQL literal (see README, Findings)"
 
         /** The cases that differ on JS and Wasm, and why. */
         val KNOWN_DIFFERENCES =
