@@ -722,10 +722,13 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
 
   FHIR R4 defines `ActivityDefinition.dynamicValue.path` as "a FHIRPath resolveable on the specified target type"
   and says indexers are "allowed" (read, hl7.org/fhir/R4 activitydefinition-definitions, 2026-10-19), so WHO's
-  paths look valid; they fall outside the narrower contract in the applier's KDoc. How clinical-reasoning handles
-  these three was not checked. Also read on that `main`: `Expression.toProtocolExpression` routes only
-  `text/fhirpath` and `text/cql`, so WHO's `text/cql-expression` and `text/cql-identifier` dynamicValues would not
-  reach an evaluator there today.
+  paths look valid; they fall outside the narrower contract in the applier's KDoc. Also read on kotlin-fhir-workflow's
+  `main` at 214c56d: `Expression.toProtocolExpression` routes only `text/fhirpath` and `text/cql`, so WHO's
+  `text/cql-expression` and `text/cql-identifier` dynamicValues would not reach an evaluator there today.
+
+  Raised as ohs-foundation/kotlin-fhir-workflow#9 (2026-10-20); open as of 2026-10-26, acknowledged by the
+  maintainer on 2026-10-21. Until it is settled, the spike's `WhoApply.conform` (step 15) rewrites the paths and
+  `priority` before `$apply`.
 - **kotlin-fhir-engine skips search parameters that use `resolve()`.** Ran 2026-10-22, kotlin-fhir-engine
   2.0.0-alpha04 on the JVM (`EnginePatientSearchTest`), over every resource in WHO's test bundles: a `patient` search
   finds 0 of 195 Observations, 0 of 78 Conditions and 0 of 78 MedicationRequests, while a `subject` search finds all
