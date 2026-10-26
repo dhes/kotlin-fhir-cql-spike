@@ -744,6 +744,18 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   too. FHIR search defines no order without `_sort`, so this is allowed. No WHO value other than a list's order
   changed: no `First`, `Last` or index over an unsorted list gave a different result in this suite. The same on JS
   and Wasm under Node (step 13).
+
+  *Note: where WHO's CQL depends on that order.* Scan, 2026-10-26, of the 70 `First` and `Last` calls in WHO's CQL.
+  Most take a list sorted first (by date or value), a list of elements within one resource, or a filter by `id`.
+  Two take an unsorted list of retrieved resources:
+  - `First("Rotavirus Doses Administered to Patient".getDose('1')).brand()`, and the same for dose `'2'`
+    (IMMZD2DTRotavirusElements, IMMZD2DTRotavirusEncounterElements). A patient with two Immunizations recorded as
+    the same Rotavirus dose, with different brands, can get either brand.
+  - `First( First (Elements."Adverse Events for Immunization" ).seriousness.coding )` (IMMZIND44Logic, an
+    indicator, outside the decision tables this suite runs).
+
+  The sorted lists still keep search order among equal keys, such as two draft MedicationRequests with the same
+  `authoredOn`. This is a property of WHO's CQL on any FHIR server that defines no order, not of kotlin-fhir-engine.
 - **The compiler's date-range option drops part of the test it moves.** Ran 2026-10-23 (step 10), cql-to-elm 5.4.0
   with `EnableDateRangeOptimization`. The compiled retrieve has only the element's path and the interval, and the
   where clause is gone, so two kinds of test can't be reproduced by any retrieve provider:
