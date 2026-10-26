@@ -15,6 +15,8 @@ class RegexOnCqlStringProbeTest {
         println("REGEX-PROBE | Regex(\"abc\").containsMatchIn(cqlString) = ${Regex("abc").containsMatchIn(cs)}")
         println("REGEX-PROBE | Regex(\"'abc'\").matches(cqlString) = ${Regex("'abc'").matches(cs)}")
         println("REGEX-PROBE | Regex(\".*\").find(cqlString)?.value = ${Regex(".*").find(cs)?.value}")
+        println("REGEX-PROBE | cqlString.replace(Regex(\"b\"), \"X\") = ${cs.replace(Regex("b"), "X")}")
+        println("REGEX-PROBE | cqlString.split(Regex(\",\")) on 'a,b' = ${(CqlString("a,b") as CharSequence).split(Regex(","))}")
         println("REGEX-PROBE | Regex(\"abc\").matches(StringBuilder(\"abc\")) = ${Regex("abc").matches(StringBuilder("abc"))}")
     }
 }

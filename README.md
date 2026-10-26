@@ -607,8 +607,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     decimal equivalence reaches it; quantities and ratios compared with `~` fail the same way.
   - **Scope:** WHO's suite gives the same outcomes on JS, Wasm and the JVM, so its CQL does not reach these or is not
     changed by them. No cqframework issue found (searched 2026-10-24).
-- **`Matches`, `ReplaceMatches` and `SplitOnMatches` see the quoted CQL literal on JS, and `ReplaceMatches` on
-  Wasm.** Found in step 14 as one suite case, `Matches('Not all who wander are lost - circa 2017', '.*\\d+')`: `true`
+- **`Matches`, `ReplaceMatches`, `SplitOnMatches` and `Combine` see the quoted CQL literal on JS, and
+  `ReplaceMatches` and `Combine` on Wasm.** Found in step 14 as one suite case, `Matches('Not all who wander are lost - circa 2017', '.*\\d+')`: `true`
   on the JVM and Wasm, `false` on JS. Explained 2026-10-26 (`MatchesProbeTest`, `RegexOnCqlStringProbeTest`,
   cqframework 5.4.0):
   - **The cause** (read, the same in v5.5.0 and on `main` that day). The three evaluators hand the regex functions
@@ -634,8 +634,21 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     On Wasm only `ReplaceMatches` is affected; why `'.*'` gives `'X'` there, and whether that is the same cause or a
     difference in Kotlin/Wasm's own regex engine, was not looked into. A fix in cqframework would pass
     `argument.value` (not tried).
-  - **Scope:** none of WHO's 279 immunization CQL libraries calls the three (scan), so its suite is unaffected. No
-    cqframework issue found (searched 2026-10-26; #1070 is about full-string matching, from 2019).
+  - **The whole string library** (ran, 2026-10-26, `StringOperatorsProbeTest`): the 93 definitions of cqframework's
+    `CqlStringOperatorsTest.cql` (v5.4.0), each evaluated alone. Against the JVM, JS differs in 15 and Wasm in 7:
+    `Combine` on both (`Combine({'a', 'b', 'c'})` gives `'\'a\'\'\'\'b\'\'\'\'c\''`: `StringBuilder.append` of
+    the String object), the three regex operators on JS, `ReplaceMatches` on Wasm, and the three `Split` cases on
+    both (`NotImplementedError`, cqframework#1870). Under Kotlin 2.3.20, the spike's; cqframework builds with 2.3.10,
+    and its own Wasm run of the new tests passed without the fix, so the Wasm results depend on the Kotlin version
+    the application is built with.
+  - **A fix** (ran): pass the String's `value` in the four evaluators, on dhes/clinical_quality_language branch
+    `regex-operators-cql-string-text` (58cdce9a, off `main` at 1072c579), with a common test per evaluator. With it,
+    published to mavenLocal and used by the spike, all 93 definitions give the JVM's value on JS and Wasm except
+    the three `Split` cases. cqframework's engine tests pass on the JVM and JS (280 and 85), engine-fhir's on the
+    JVM (3,318, 264 skipped as on `main`), and `spotlessCheck`. The new tests fail on JS without the fix.
+  - **Scope:** none of WHO's 279 immunization CQL libraries calls the three regex operators or `Combine` (scan), so
+    its suite is unaffected. No cqframework issue found (searched 2026-10-26; #1070 is about full-string matching,
+    from 2019).
 - **Calendar-only CQL needs a UCUM service since cqframework 5.2.0.** Ran 2026-10-15: `define X: 4 weeks` compiles
   with no UCUM service under cql-to-elm 5.1.0 and fails under 5.2.0 and 5.4.0, on JS, Wasm and the JVM; `4 'mg'`
   fails in all three versions. The change is consistent with cqframework #1819 (first released in 5.2.0), whose
