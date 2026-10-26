@@ -642,7 +642,7 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     and its own Wasm run of the new tests passed without the fix, so the Wasm results depend on the Kotlin version
     the application is built with.
   - **A fix** (ran): pass the String's `value` in the four evaluators, on dhes/clinical_quality_language branch
-    `regex-operators-cql-string-text` (58cdce9a, off `main` at 1072c579), with a common test per evaluator. With it,
+    `string-operators-value` (58cdce9a, off `main` at 1072c579), with a common test per evaluator. With it,
     published to mavenLocal and used by the spike, all 93 definitions give the JVM's value on JS and Wasm except
     the three `Split` cases. cqframework's engine tests pass on the JVM and JS (280 and 85), engine-fhir's on the
     JVM (3,318, 264 skipped as on `main`), and `spotlessCheck`. The new tests fail on JS without the fix.
