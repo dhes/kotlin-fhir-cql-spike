@@ -655,8 +655,10 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   quantities are calendar durations, compiled on JS and Wasm with no UCUM service before 5.2.0 and does not now.
   The probe is in Dan's cqframework hub, `probes/2026-10-15-ucum-calendar-units`. Reported as
   cqframework/clinical_quality_language#1869 (2026-10-16).
-- **`validateUnits` compiler option is not read** (read, not run). On cqframework `main` at fb8055df the CLI and
-  options files set it, but nothing in the compiler reads it; quantity units are validated regardless.
+- **`validateUnits` compiler option is not read** (read, not run). On cqframework `main` at fb8055df, and still at
+  1072c579, the CLI and options files set it, but nothing in the compiler reads it. The compiler always validates a
+  quantity's unit (`LibraryBuilder.createQuantity` calls `validateUnit`, which asks the UCUM service), so setting
+  the option to `false` does not turn validation off.
 - **Patient context paths.** The element linking each resource type to its patient is a hand-written table for seven
   types (`KotlinFhirModelResolver.PATIENT_CONTEXT_PATHS`); the model info does not record it.
 - **dateTime precision.** kotlin-fhir does not record how many fractional-second digits a dateTime had, so a value
