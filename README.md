@@ -670,9 +670,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   *Note for later.* That pattern cannot be copied at runtime in KMP code: the model info gives Condition's `subject`
   only as `FHIR.Reference`, kotlin-fhir's `Condition.subject` is a plain `Reference` (read, local checkout
   d5d68b1c), and JS and Wasm have no reflection. The target types are in FHIR R4's StructureDefinitions, which
-  kotlin-fhir's code generator already reads. So when this code moves into a library, the table (and
-  `WorkflowRepositoryCqlEvaluator.PATIENT_SEARCH_PARAMETERS`) could be generated from them at build time, taking the
-  first reference element that can point to Patient, as HAPI does. Until then a retrieve of a type missing from the
+  kotlin-fhir's code generator already reads. So when this code moves into a library, the table could be generated
+  from them at build time, taking the first reference element that can point to Patient, as HAPI does. Until then a retrieve of a type missing from the
   table fails with "No <type> resources were read for this retrieve" (read, not run).
 - **dateTime precision.** kotlin-fhir does not record how many fractional-second digits a dateTime had, so a value
   with `.000` converts at second precision. Not exercised by these patients, whose dates are all date-only.
