@@ -21,7 +21,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.opencds.cqf.cql.engine.runtime.Date
 
 /** What kotlin-fhir-workflow's `$apply` returned for one WHO scenario, and what WHO's test expects. */
-data class ApplyOutcome(val contained: Int?, val guidance: String?, val error: String?)
+data class ApplyOutcome(val contained: Int?, val guidance: String?, val error: String?, val carePlan: CarePlan? = null)
 
 /** WHO's PlanDefinitions run through kotlin-fhir-workflow's `FhirOperator.generateCarePlan`, with CQL behind it. */
 object WhoApply {
@@ -148,7 +148,7 @@ object WhoApply {
                 carePlan.contained.filterIsInstance<CommunicationRequest>().firstNotNullOfOrNull { request ->
                     request.payload.firstOrNull()?.content?.asString()?.value?.value
                 }
-            ApplyOutcome(carePlan.contained.size, guidance, null)
+            ApplyOutcome(carePlan.contained.size, guidance, null, carePlan)
         } catch (e: Throwable) {
             ApplyOutcome(null, null, "${e::class.simpleName}: ${e.message?.lineSequence()?.first()}")
         }

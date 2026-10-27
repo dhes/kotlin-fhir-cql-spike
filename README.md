@@ -35,6 +35,10 @@ below.
   (JVM) or imported (JS and Wasm) into kotlin-fhir-knowledge, and the suite's Libraries and ValueSets, and
   `$apply`'s PlanDefinitions and ActivityDefinitions, read from it, the outcomes are the same. That takes a local
   build of kotlin-fhir-knowledge `main` on kotlin-fhir rc04 and on kotlin-fhir-engine's Room and SQLite versions.
+- **clinical-reasoning's `$apply`** (step 17, JVM): `PlanDefinitionProcessor` (cqf-fhir-cr 4.13.0) over WHO's
+  package as published gives the same requests, by type and content, as kotlin-fhir-workflow's in all 1,098
+  scenarios, and WHO's guidance in all 636 that state one. Its CarePlans differ in structure (step 17). As a server
+  would return them, 49 lose a request, because two get one id.
 - **Not tested:** a browser (JS and Wasm ran under Node only, so kotlin-fhir-engine's browser storage wasn't tried
   either), a terminology server, and `$apply` on iOS or Android. WHO's CQL never reaches date-range filtering in retrieve or
   code-system lookups; steps 10 and 11 test them with CQL of the spike's own.
@@ -61,8 +65,8 @@ WHO's `tools/node/processDAK.js` generates the feature files from the DAK spread
 server. The guidance text is the decision table row's guidance. The count is 3 when the row's output says "is due" or
 "is contraindicated" and 2 otherwise; for a schedule, 2, or 1 for its last row. WHO's commit messages say the CQL was
 run against the feature files and fixed where it failed, but no server output is checked in, and none of WHO's GitHub
-workflows runs them (scan). So a match with WHO is a match with the DAK, not with clinical-reasoning's `$apply`, which
-the spike has not run.
+workflows runs them (scan). So a match with WHO is a match with the DAK, not with clinical-reasoning's `$apply`; step
+17 runs that.
 
 ### What the spike takes from each scenario
 
@@ -100,7 +104,8 @@ PlanDefinition, its logic library, the patient, the bundle, Today, the expected 
    read. Check 1 still compares those definitions with HAPI.
 3. **Resource count against WHO.** The spike predicts what `$apply` would return: 1 (the RequestGroup) plus one
    resource per PlanDefinition action whose condition is true. That prediction matches WHO's count in 1,082
-   scenarios. The other 16 differ from WHO for HAPI too, so they don't come from kotlin-fhir.
+   scenarios. The other 16 differ from WHO for HAPI too, so they don't come from kotlin-fhir. clinical-reasoning's
+   `$apply` gives the same 16 (step 17).
 
 ### Example: `IMMZD2DTMeaslesLowTransmission/Measles25.2`
 
@@ -591,6 +596,64 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - **Not tested:** a browser, Android and iOS; `install()` from packages.fhir.org (0.2.0 is not there, only 1.0.0)
     and of a package's dependencies; kotlin-fhir-knowledge's own `worker.js`.
 
+- Step 17 (2026-10-27): clinical-reasoning's `$apply`, on the JVM, against WHO's expectations and kotlin-fhir-workflow's
+  `$apply` (step 15).
+  - **What runs:** `Step17Test`. For each of the 1,100 scenarios, clinical-reasoning's `PlanDefinitionProcessor`
+    (cqf-fhir-cr 4.13.0, built on cqframework 5.4.0, as the spike is) applies the scenario's PlanDefinition, with
+    the default `CrSettings`. It reads from an in-memory repository (`InMemoryFhirRepository`) holding every resource
+    of WHO's package 0.2.0 as published, read by HAPI, and the scenario's bundle. The request is WHO's: subject
+    `Patient/<id>`, and a `parameters` Parameters with `Today`. No server and no `WhoApply.conform`: WHO's expression
+    languages and dynamicValue paths go in as published. The same test runs step 15's `$apply` on each scenario and
+    compares the two CarePlans field by field (`build/step17/counts.tsv` has the counts per scenario).
+  - **Now() at noon on Today.** WHO's CQL calls Now() 52 times in 19 libraries (scan), in definitions such as "The
+    latest cholera dose was administered less than 14 days ago". clinical-reasoning's `$apply` gives cqframework no
+    evaluation time, so Now() is the wall clock (read: `LibraryEngine` 4.13.0 passes `zonedDateTime` null on this
+    path, and cqframework 5.4.0's `CqlEngine` then takes the current time). To compare with steps 4 and 15, which
+    set Now() to noon on Today, the spike puts a copy of `LibraryEngine.kt` on the test classpath, ahead of the jar,
+    with two lines changed to use that time (`src/jvmTest/kotlin/org/opencds/cqf/fhir/cql/`).
+  - **Result** (ran):
+
+    | | clinical-reasoning |
+    |---|---|
+    | Scenarios applied | 1,100 of 1,100 (the 2 bundles kotlin-fhir rejects included) |
+    | Guidance matches WHO's | 636 of 636 |
+    | Resource count matches WHO's, each resource counted once | 1,084 of 1,100: all but step 4's 16 |
+    | Resource count matches WHO's, as a server would return it (JSON) | 1,057 of 1,100 |
+    | Same requests as kotlin-fhir-workflow (type, and payload or medication) | 1,098 of 1,098 |
+    | Time, clinical-reasoning alone | about 16 s |
+
+  - **Why "as a server would return it" differs** (ran, and read in 4.13.0's `ProcessDefinition` and
+    `ApplyProcessor`): for R4, `$apply` keeps the generated requests contained, and some appear in the CarePlan's
+    `contained` twice (the same object). When two actions use one ActivityDefinition, both requests get its id, such
+    as `IMMZD2DTCR`. clinical-reasoning numbers repeated ids (`IMMZD2DTCR2`, its fix for
+    cqframework/clinical-reasoning#779), but it looks for earlier ones only among requests it doesn't contain, so on
+    this path it finds none. HAPI writes one contained resource per id, so in JSON the second request is gone. That
+    happens in 49 scenarios. In 38 of them the count then differs from WHO's; in 11 it then matches WHO's where the
+    content doesn't (11 of step 4's 16). The code is the same in 4.14.0 and on `main` at 6735b150 (2026-10-26).
+  - **How the CarePlans differ** (kotlin-fhir-workflow → clinical-reasoning; the number of scenarios of 1,098):
+
+    | Where | Difference | Scenarios |
+    |---|---|---|
+    | CarePlan | `intent` `plan` → `proposal` | 1,098 |
+    | CarePlan, MedicationRequest | `instantiatesCanonical` gains the version (`…|0.2.0`) | 1,098, 259 |
+    | CarePlan | `activity` only in clinical-reasoning's when the RequestGroup has no action | 73 |
+    | RequestGroup | `subject` and `instantiatesCanonical` only in clinical-reasoning's | 1,098 |
+    | RequestGroup actions | `condition`, with its result (`cpg-action-condition-result`), only in clinical-reasoning's | 1,025 |
+    | RequestGroup | the requests also in its own `contained`, only in clinical-reasoning's | 1,025 |
+    | Requests | `basedOn` (the RequestGroup) only in kotlin-fhir-workflow's; `doNotPerform: false` only in clinical-reasoning's | 1,025 |
+    | Contraindication actions (`IMMZD5DT…`) | `type` `update` only in clinical-reasoning's; the action's `resource` reference differs (below) | 67 |
+
+    In the 67, a dynamicValue sets the MedicationRequest's `id` (`First(…).id`, an existing request of the
+    patient's). kotlin-fhir-workflow points the action at the new id; clinical-reasoning's action keeps the
+    ActivityDefinition's (`#IMMZD5DTMR`), which no contained resource has.
+  - **With Now() on the wall clock** (ran 2026-10-27, `nowOnTheWallClock`, which only prints): 14 scenarios change,
+    all DTP in pregnancy (`IMMZD2DTDTPPregnancy…`, `IMMZD18SDTPPregnancy…`), each with fewer requests and other
+    guidance.
+    The count then matches WHO's in 1,074 of 1,100 and the guidance in 629 of 636. The number depends on the day the
+    test runs.
+  - **Not tested:** clinical-reasoning behind a HAPI server (as WHO's Karate files run), and its own settings beyond
+    the defaults.
+
 ## Findings so far
 
 - **UCUM service on JS and Wasm.** On JS and Wasm the caller must supply a UCUM service, by design: cqframework's
@@ -723,7 +786,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     `WhoDynamicValuePathsTest` (in `src/jvmTest/kotlin/dev/ohs/fhir/workflow/processor`) writes one value at each of
     WHO's six paths, then at the four failing ones rewritten to the contract (`category[0].coding[0]`,
     `payload[0].contentString`, `medicationCodeableConcept`, `priority` ← the code), which all decode.
-  - clinical-reasoning (read at d09f71d1, not run) handles all of these through HAPI's model definitions:
+  - clinical-reasoning (read at d09f71d1; ran at 4.13.0 in step 17, where its requests match kotlin-fhir-workflow's in
+    all 1,098 scenarios) handles all of these through HAPI's model definitions:
     `BaseAdapter.setNestedValue` takes a segment without an index as the first list element, creating it;
     `resolveChoiceProperty` finds a choice element by its name without the type; `getEnumValue` takes a Coding's
     `code` for a code-valued target.
@@ -797,6 +861,19 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
 - **clinical-reasoning's `lookup` doesn't check the code** (read at d09f71d1, and ran): it returns the code whenever
   its system matches, logging "Unvalidated CodeSystem lookup", so CQL's `in` a code system is true for any code in
   that system. Its KDoc says so.
+- **clinical-reasoning's R4 `$apply` gives two requests one id** (ran 2026-10-27, step 17, cqf-fhir-cr 4.13.0; read
+  in its `ProcessDefinition`). When two actions of a PlanDefinition use one ActivityDefinition, both contained
+  requests get the ActivityDefinition's id, and some requests are in the CarePlan's `contained` twice. Written to JSON,
+  one of the two is lost: 49 of WHO's 1,100 scenarios. The fix for cqframework/clinical-reasoning#779 numbers
+  repeated ids only on the path that doesn't contain requests. Unchanged in 4.14.0 and on `main` at 6735b150.
+- **clinical-reasoning's action reference after a dynamicValue sets `id`** (ran 2026-10-27, step 17): in WHO's 67
+  contraindication scenarios that create a MedicationRequest, the RequestGroup action keeps pointing at
+  `#IMMZD5DTMR` after the dynamicValue gives the request another id, so the reference resolves to nothing.
+  kotlin-fhir-workflow updates it.
+- **WHO's CQL reads the wall clock** (scan, and ran 2026-10-27, step 17): 52 calls to Now() in 19 libraries, beside the
+  `Today` parameter WHO's tests send. clinical-reasoning's `$apply` gives cqframework no evaluation time, so on a
+  server these definitions use the day the test runs. Run on 2026-10-27, 14 scenarios change, and 7 no longer give
+  WHO's guidance. Steps 4 to 17 set Now() to noon on Today.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
   twins cover Conditions. WHO's CQL never reaches date-range filtering in retrieve, a profile, a value set version or
   a code-system test; steps 10 and 11 cover them with CQL of the spike's own.
@@ -843,6 +920,9 @@ licence.
 - `@lhncbc/ucum-lhc` 7.1.10, an npm dependency of the JS and Wasm builds (step 14), is not in the repository. Its
   licence is NLM's, with the UCUM table's terms from Regenstrief Institute and the UCUM Organization (its
   `LICENSE.md`).
+- `src/jvmTest/kotlin/org/opencds/cqf/fhir/cql/LibraryEngine.kt`: copied from cqframework/clinical-reasoning at
+  v4.13.0, `cqf-fhir-cql/src/main/java/org/opencds/cqf/fhir/cql/LibraryEngine.kt` (Apache License 2.0), with two lines
+  changed to set CQL's evaluation time, for step 17.
 - `src/jvmTest/kotlin/dev/ohs/fhir/workflow/`: `FhirJson.kt`, `processor/DynamicValueApplier.kt` and
   `processor/EvaluatedValueJson.kt`, copied unchanged from ohs-foundation/kotlin-fhir-workflow at 214c56d
   (Apache License 2.0), for step 7.

@@ -88,6 +88,8 @@ kotlin {
             implementation("dev.ohs.fhir:fhir-path-r4:1.0.0-beta06")
             // Step 11: clinical-reasoning's RepositoryTerminologyProvider as the reference (built on cqframework 5.4.0).
             implementation("org.opencds.cqf.fhir:cqf-fhir-cql:4.13.0")
+            // Step 17: clinical-reasoning's $apply (PlanDefinitionProcessor), same version.
+            implementation("org.opencds.cqf.fhir:cqf-fhir-cr:4.13.0")
             // HAPI's FHIRPath, which clinical-reasoning uses, needs its validation support.
             implementation("ca.uhn.hapi.fhir:hapi-fhir-validation:8.12.0")
             implementation("ca.uhn.hapi.fhir:hapi-fhir-caching-caffeine:8.12.0")
@@ -122,6 +124,9 @@ tasks.matching { it.name.startsWith("compileTestKotlin") || it.name == "compileT
     .configureEach { dependsOn(generateTestPaths, unpackWhoPackage) }
 
 tasks.withType<Test>().configureEach {
+    // Step 17 keeps clinical-reasoning's compiled libraries and WHO's package for the rest of the run; Gradle's
+    // default of 512 MB then runs out in the tests after it.
+    maxHeapSize = "2g"
     testLogging {
         events("passed", "failed", "skipped", "standardOut", "standardError")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
