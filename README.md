@@ -56,6 +56,14 @@ Each scenario in `input/testing/features/plandefinition/**/*.feature`:
 
 Against a HAPI server with clinical-reasoning, that runs the PlanDefinition's logic library and builds the resources.
 
+*Note: where WHO's expected results come from* (read; smart-immunizations 12ec2fc54, unchanged at `main` bd7fa72).
+WHO's `tools/node/processDAK.js` generates the feature files from the DAK spreadsheet; they are not recorded from a
+server. The guidance text is the decision table row's guidance. The count is 3 when the row's output says "is due" or
+"is contraindicated" and 2 otherwise; for a schedule, 2, or 1 for its last row. WHO's commit messages say the CQL was
+run against the feature files and fixed where it failed, but no server output is checked in, and none of WHO's GitHub
+workflows runs them (scan). So a match with WHO is a match with the DAK, not with clinical-reasoning's `$apply`, which
+the spike has not run.
+
 ### What the spike takes from each scenario
 
 `tools/build_who_suite.py` reads the feature files at smart-immunizations 12ec2fc54. For each scenario it records the
