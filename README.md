@@ -872,8 +872,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   in its `ProcessDefinition`). When two actions of a PlanDefinition use one ActivityDefinition, both contained
   requests get the ActivityDefinition's id, and some requests are in the CarePlan's `contained` twice. Written to JSON,
   one of the two is lost: 49 of WHO's 1,100 scenarios. The fix for cqframework/clinical-reasoning#779 numbers
-  repeated ids only on the path that doesn't contain requests. Unchanged in 4.14.0 and on `main` at 6735b150. A fix
-  is on dhes/clinical-reasoning branch `apply-contained-request-ids` (step 17); not yet offered upstream.
+  repeated ids only on the path that doesn't contain requests. Unchanged in 4.14.0 and on `main` at 6735b150. Filed as
+  cqframework/clinical-reasoning#1137 (2026-10-27); the fix is PR #1138 (step 17).
 - **clinical-reasoning's action reference after a dynamicValue sets `id`** (ran 2026-10-27, step 17): in WHO's 67
   contraindication scenarios that create a MedicationRequest, the RequestGroup action keeps pointing at
   `#IMMZD5DTMR` after the dynamicValue gives the request another id, so the reference resolves to nothing.
