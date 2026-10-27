@@ -10,6 +10,9 @@ val cqlVersion = (findProperty("cqlVersion") as String?) ?: "5.4.0"
 // ./gradlew -PengineVersion=<version> uses that kotlin-fhir-engine version, from mavenLocal if published there.
 val engineVersion = (findProperty("engineVersion") as String?) ?: "2.0.0-alpha04"
 val kotlinFhirVersion = "1.0.0-rc04"
+// ./gradlew -PcrVersion=<version> uses that clinical-reasoning version (steps 11 and 17), from mavenLocal if published
+// there.
+val crVersion = (findProperty("crVersion") as String?) ?: "4.13.0"
 
 kotlin {
     jvm()
@@ -87,9 +90,9 @@ kotlin {
             // For kotlin-fhir-workflow's dynamicValue write-back code, copied into jvmTest (fhir-path version of its main).
             implementation("dev.ohs.fhir:fhir-path-r4:1.0.0-beta06")
             // Step 11: clinical-reasoning's RepositoryTerminologyProvider as the reference (built on cqframework 5.4.0).
-            implementation("org.opencds.cqf.fhir:cqf-fhir-cql:4.13.0")
+            implementation("org.opencds.cqf.fhir:cqf-fhir-cql:$crVersion")
             // Step 17: clinical-reasoning's $apply (PlanDefinitionProcessor), same version.
-            implementation("org.opencds.cqf.fhir:cqf-fhir-cr:4.13.0")
+            implementation("org.opencds.cqf.fhir:cqf-fhir-cr:$crVersion")
             // HAPI's FHIRPath, which clinical-reasoning uses, needs its validation support.
             implementation("ca.uhn.hapi.fhir:hapi-fhir-validation:8.12.0")
             implementation("ca.uhn.hapi.fhir:hapi-fhir-caching-caffeine:8.12.0")

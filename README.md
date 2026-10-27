@@ -651,6 +651,13 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     guidance.
     The count then matches WHO's in 1,074 of 1,100 and the guidance in 629 of 636. The number depends on the day the
     test runs.
+  - **With a fix** (ran 2026-10-27): dhes/clinical-reasoning branch `apply-contained-request-ids` (e73adbd5, off `main`
+    at 6735b150) checks the ids already contained before it contains a request, and appends a count as #788 does.
+    Built to mavenLocal (`4.15.0-apply-contained-request-ids-e73adbd5-SNAPSHOT`) and run with
+    `-PcrVersion=<that> -PcqlVersion=5.5.0` (clinical-reasoning `main` is built on cqframework 5.5.0), against a copy
+    of that version's `LibraryEngine.kt` with the same two lines changed (not committed; the copy in the repository is
+    4.13.0's). No scenario loses a request in JSON, and the count as served matches WHO's in 1,084 of 1,100. Released
+    4.14.0 run the same way: 49 and 1,057, as with 4.13.0.
   - **Not tested:** clinical-reasoning behind a HAPI server (as WHO's Karate files run), and its own settings beyond
     the defaults.
 
@@ -865,7 +872,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   in its `ProcessDefinition`). When two actions of a PlanDefinition use one ActivityDefinition, both contained
   requests get the ActivityDefinition's id, and some requests are in the CarePlan's `contained` twice. Written to JSON,
   one of the two is lost: 49 of WHO's 1,100 scenarios. The fix for cqframework/clinical-reasoning#779 numbers
-  repeated ids only on the path that doesn't contain requests. Unchanged in 4.14.0 and on `main` at 6735b150.
+  repeated ids only on the path that doesn't contain requests. Unchanged in 4.14.0 and on `main` at 6735b150. A fix
+  is on dhes/clinical-reasoning branch `apply-contained-request-ids` (step 17); not yet offered upstream.
 - **clinical-reasoning's action reference after a dynamicValue sets `id`** (ran 2026-10-27, step 17): in WHO's 67
   contraindication scenarios that create a MedicationRequest, the RequestGroup action keeps pointing at
   `#IMMZD5DTMR` after the dynamicValue gives the request another id, so the reference resolves to nothing.
