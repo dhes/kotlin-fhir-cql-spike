@@ -686,7 +686,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - **Scope:** WHO's suite gives the same outcomes on JS, Wasm and the JVM, so its CQL does not reach these or is not
     changed by them. Filed as cqframework/clinical_quality_language#1894 (2026-10-27), with the same results on
     cqframework 5.5.0.
-  - **A prototype fix** (ran 2026-10-27): dhes/clinical_quality_language branch `decimal-js-exact` (75f3c9a0, off
+  - **A fix**, offered as cqframework/clinical_quality_language#1895 (ran 2026-10-27): dhes/clinical_quality_language
+    branch `decimal-js-exact` (75f3c9a0, off
     `main` at bc0c795e) rebuilds `BigDecimalJs` on an unscaled integer and a scale, with `java.math.BigDecimal`'s
     semantics, and compares it with `java.math.BigDecimal` on the JVM over generated values. With it
     (`-PcqlVersion=5.6.0-decimal-js-exact-75f3c9a0-SNAPSHOT`), the 194 quantity cases on Wasm leave 4 differences
