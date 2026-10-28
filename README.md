@@ -37,7 +37,8 @@ below.
   build of kotlin-fhir-knowledge `main` on kotlin-fhir rc04 and on kotlin-fhir-engine's Room and SQLite versions.
 - **clinical-reasoning's `$apply`** (step 17, JVM): `PlanDefinitionProcessor` (cqf-fhir-cr 4.13.0) over WHO's
   package as published gives the same requests, by type and content, as kotlin-fhir-workflow's in all 1,098
-  scenarios, and WHO's guidance in all 636 that state one. Its CarePlans differ in structure (step 17). As a server
+  scenarios, and WHO's guidance in all 636 that state one (the 634 above, plus the 2 whose bundle kotlin-fhir rejects;
+  clinical-reasoning reads it with HAPI). Its CarePlans differ in structure (step 17). As a server
   would return them, 49 lose a request, because two get one id.
 - **Not tested:** a browser (JS and Wasm ran under Node only, so kotlin-fhir-engine's browser storage wasn't tried
   either), a terminology server, and `$apply` on iOS or Android. WHO's CQL never reaches date-range filtering in retrieve or
