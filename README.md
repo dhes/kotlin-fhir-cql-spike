@@ -684,7 +684,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     that mode, so `0.02 * 0.03` is rounded to 2 places. `stripTrailingZeros()` is `TODO()`, and cqframework's
     decimal equivalence reaches it; quantities and ratios compared with `~` fail the same way.
   - **Scope:** WHO's suite gives the same outcomes on JS, Wasm and the JVM, so its CQL does not reach these or is not
-    changed by them. No cqframework issue found (searched 2026-10-24).
+    changed by them. Filed as cqframework/clinical_quality_language#1894 (2026-10-27), with the same results on
+    cqframework 5.5.0.
 - **`Matches`, `ReplaceMatches`, `SplitOnMatches` and `Combine` see the quoted CQL literal on JS, and
   `ReplaceMatches` and `Combine` on Wasm.** Found in step 14 as one suite case, `Matches('Not all who wander are lost - circa 2017', '.*\\d+')`: `true`
   on the JVM and Wasm, `false` on JS. Explained 2026-10-26 (`MatchesProbeTest`, `RegexOnCqlStringProbeTest`,
