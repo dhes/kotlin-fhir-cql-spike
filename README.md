@@ -885,6 +885,13 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   one of the two is lost: 49 of WHO's 1,100 scenarios. The fix for cqframework/clinical-reasoning#779 numbers
   repeated ids only on the path that doesn't contain requests. Unchanged in 4.14.0 and on `main` at 6735b150. Filed as
   cqframework/clinical-reasoning#1137 (2026-10-27); the fix is PR #1138 (step 17).
+- **kotlin-fhir-workflow's `$apply` gives two requests one id too** (ran 2026-10-28, step 15's setup,
+  `DuplicateRequestIdsTest` and `DuplicateRequestIdsHapiTest`; read in its `PlanDefinitionProcessor` at 214c56d). A
+  request's id is the action's `id`, or else the ActivityDefinition's, so two actions with no `id` that use one
+  ActivityDefinition give two contained requests one id, and both RequestGroup actions reference it. 49 of WHO's 1,098
+  scenarios, in 8 PlanDefinitions: two `IMMZD2DTCR` CommunicationRequests in five schedule PlanDefinitions
+  (`IMMZD18S…`), two `IMMZD2DTMR` MedicationRequests in three decision tables (`IMMZD2DT…`). HAPI reads both from the
+  CarePlan's JSON, but keeps one when it writes the CarePlan again: all 49.
 - **clinical-reasoning's action reference after a dynamicValue sets `id`** (ran 2026-10-27, step 17): in WHO's 67
   contraindication scenarios that create a MedicationRequest, the RequestGroup action keeps pointing at
   `#IMMZD5DTMR` after the dynamicValue gives the request another id, so the reference resolves to nothing.
