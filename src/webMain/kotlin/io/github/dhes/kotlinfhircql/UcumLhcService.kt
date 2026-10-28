@@ -89,7 +89,10 @@ private class Exact(val digits: String, val scale: Int) {
 
     /** The quotient, truncated after [QUOTIENT_PLACES] more decimal places than this value has. */
     operator fun div(other: Exact) =
-        Exact(integer(digits + "0".repeat(QUOTIENT_PLACES + other.scale)).divide(integer(other.digits)), scale + QUOTIENT_PLACES)
+        Exact(
+            integer(digits + "0".repeat(QUOTIENT_PLACES + other.scale)).divideAndRemainder(integer(other.digits))[0],
+            scale + QUOTIENT_PLACES,
+        )
 
     fun toBigDecimal(): BigDecimal {
         val negative = digits.startsWith("-")

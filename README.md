@@ -686,6 +686,14 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - **Scope:** WHO's suite gives the same outcomes on JS, Wasm and the JVM, so its CQL does not reach these or is not
     changed by them. Filed as cqframework/clinical_quality_language#1894 (2026-10-27), with the same results on
     cqframework 5.5.0.
+  - **A prototype fix** (ran 2026-10-27): dhes/clinical_quality_language branch `decimal-js-exact` (75f3c9a0, off
+    `main` at bc0c795e) rebuilds `BigDecimalJs` on an unscaled integer and a scale, with `java.math.BigDecimal`'s
+    semantics, and compares it with `java.math.BigDecimal` on the JVM over generated values. With it
+    (`-PcqlVersion=5.6.0-decimal-js-exact-75f3c9a0-SNAPSHOT`), the 194 quantity cases on Wasm leave 4 differences
+    from the JVM, all from the UCUM libraries (offset units, an annotation with a space), against 21 on 5.4.0; WHO's
+    suite gives the same outcomes on JS and Wasm as before. `UcumLhcService` now takes the integer quotient with
+    `divideAndRemainder`, since an exact `divide` of two whole numbers throws when the quotient doesn't terminate, as
+    on the JVM; that works with both versions.
 - **`Matches`, `ReplaceMatches`, `SplitOnMatches` and `Combine` see the quoted CQL literal on JS, and
   `ReplaceMatches` and `Combine` on Wasm.** Found in step 14 as one suite case, `Matches('Not all who wander are lost - circa 2017', '.*\\d+')`: `true`
   on the JVM and Wasm, `false` on JS. Explained 2026-10-26 (`MatchesProbeTest`, `RegexOnCqlStringProbeTest`,
