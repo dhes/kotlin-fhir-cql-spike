@@ -11,7 +11,7 @@ import kotlinx.coroutines.test.runTest
 class DuplicateRequestIdsTest {
     @Test
     fun containedIdsRepeated() = runTest(timeout = 60.minutes) {
-        val byPlan = sortedMapOf<String, MutableSet<String>>()
+        val byPlan = mutableMapOf<String, MutableSet<String>>()
         val scenarios = mutableListOf<String>()
         var applied = 0
         for (scenario in WhoSuite.scenarios) {
@@ -20,10 +20,10 @@ class DuplicateRequestIdsTest {
             val repeated = carePlan.contained.mapNotNull { it.id }.groupingBy { it }.eachCount().filterValues { it > 1 }
             if (repeated.isEmpty()) continue
             scenarios += "${scenario.id}: ${repeated.entries.joinToString { "${it.key} ×${it.value}" }}"
-            byPlan.getOrPut(scenario.planDefinition) { sortedSetOf() } += repeated.keys
+            byPlan.getOrPut(scenario.planDefinition) { mutableSetOf() } += repeated.keys
         }
         println("Scenarios applied: $applied; with a repeated contained id: ${scenarios.size}")
-        byPlan.forEach { (plan, ids) -> println("  $plan: $ids") }
+        byPlan.keys.sorted().forEach { plan -> println("  $plan: ${byPlan.getValue(plan).sorted()}") }
         scenarios.take(10).forEach { println("  $it") }
     }
 }
