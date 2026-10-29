@@ -924,7 +924,9 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
 ## Licence
 
 The spike's own code is under the Apache License 2.0 (`LICENSE`). The third-party content below keeps its own
-licence.
+licence. WHO's licensing is mixed: the package `smart.who.int.immunizations` 0.2.0 declares CC0-1.0 (its
+`package.json`), while WorldHealthOrganization/smart-immunizations' `LICENSE.md` puts WHO-authored guideline content
+under CC BY-NC-SA 3.0 IGO and software under the 3-clause BSD licence (read 2026-10-29, at 12ec2fc54).
 
 ## Third-party content
 
@@ -937,8 +939,10 @@ licence.
   written by `tools/copy_who_libraries.py`, which leaves out the ELM XML attachment and other elements and checks
   the CQL against `cql/`.
 - `fixtures/who-measles-tests/` and `fixtures/who-suite/`: test bundles, `.feature` file and scenario list from
-  WorldHealthOrganization/smart-immunizations at 12ec2fc54, `input/testing/features/plandefinition/` (CC0-1.0).
-  `fixtures/who-suite/` is written by `tools/build_who_suite.py`, which also writes the Condition twins.
+  WorldHealthOrganization/smart-immunizations at 12ec2fc54, `input/testing/features/plandefinition/`. These files
+  are not in the package, so its CC0-1.0 may not cover them; the repo's `LICENSE.md` puts WHO's guideline content
+  under CC BY-NC-SA 3.0 IGO and software under the 3-clause BSD licence. `fixtures/who-suite/` is written by
+  `tools/build_who_suite.py`, which also writes the Condition twins.
 - `src/commonMain/kotlin/dev/ohs/fhir/workflow/WorkflowRepository.kt`: copied unchanged from
   ohs-foundation/kotlin-fhir-workflow at 214c56d (Apache License 2.0), for step 8. The published
   `dev.ohs.fhir:fhir-workflow` 2.0.0-alpha01 has no JS build and depends on kotlin-fhir rc03.
