@@ -19,8 +19,10 @@ below.
   with cqframework's HAPI-based `R4FhirModelResolver`, compared element by element, resources included. The only
   differences change no CQL value: HAPI adds an empty `meta` that isn't in the data, and names one backbone element
   by its Java class. The guidance text matches WHO's in all 634 scenarios that state one.
-- **JS and Wasm (under Node):** the same outcomes, except 6 scenarios that reach CQL's `Split`, which cqframework does
-  not implement there (cqframework/clinical_quality_language#1870). Outside WHO's content, cqframework's decimal
+- **JS and Wasm (under Node):** the same outcomes, except 6 scenarios that reach CQL's `Split`, which cqframework 5.4.0
+  does not implement there (cqframework/clinical_quality_language#1870). cqframework/clinical_quality_language#1876,
+  merged 2026-10-28 and not yet released, implements it: with cqframework `main` at 2b5c7401, all 1,098 scenarios give
+  the JVM's outcomes on JS and Wasm too (Status, 2026-10-28). Outside WHO's content, cqframework's decimal
   multiplication, division, `mod`, `div` and equivalence give wrong values or fail there (step 14, Findings).
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service,
@@ -661,6 +663,19 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     4.14.0 run the same way: 49 and 1,057, as with 4.13.0.
   - **Not tested:** clinical-reasoning behind a HAPI server (as WHO's Karate files run), and its own settings beyond
     the defaults.
+- 2026-10-28: cqframework `main` with `Split` on JS and Wasm.
+  - **What runs:** the whole suite (`allTests`, JVM, JS and Wasm) against cqframework `main` at 2b5c7401, built to
+    mavenLocal as `5.6.0-upstream-main-2b5c7401-SNAPSHOT` and run with `-PcqlVersion=<that>`. It includes
+    cqframework/clinical_quality_language#1876 (merged 2026-10-28, closing #1870), which implements `Split` with a
+    separator on JS and Wasm; no release has it yet (5.5.0 is from 2026-10-23).
+  - **Result** (ran): no scenario reaches an unimplemented operation on any target. On JS and Wasm the suite gives
+    343,922 results (343,610 with 5.4.0), 0 different from the recorded HAPI outcomes; guidance matches WHO's in
+    634/634 and the resource count in 1,082/1,098, as on the JVM. Step 15's `$apply` on Wasm applies 1,098 scenarios
+    (1,092 with 5.4.0), with 0 differences from step 4. The three `Split` cases of `StringOperatorsProbeTest` give
+    the JVM's values. Everything else is as with 5.4.0: the quantity cases (step 14), the 49 repeated request ids,
+    steps 16 and 17 on the JVM, and the list-order counts (282 to 293, within their run-to-run spread).
+  - **Not run with it:** steps 6 and 7 (`PrecompiledDynamicValueTest`, `DynamicValueWriteBackTest`), which need the
+    fix in #1874 (open); they fail the same way with 5.4.0.
 
 ## Findings so far
 
@@ -768,7 +783,9 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   `stringUtilsSplit` is `TODO()` on both targets, so CQL's `Split` throws `NotImplementedError`; on the JVM it calls
   Apache Commons `StringUtils.split`. WHO's `WHOCommon.references()` and `IMMZCommon`'s medication lookup use
   `Split`. In step 4 it is reached by 6 Typhoid Ty21a scenarios. Reported as
-  cqframework/clinical_quality_language#1870 (2026-10-16).
+  cqframework/clinical_quality_language#1870 (2026-10-16). Fixed by cqframework/clinical_quality_language#1876
+  (merged 2026-10-28, not yet released): with cqframework `main` at 2b5c7401 the 6 scenarios pass on JS and Wasm
+  (Status, 2026-10-28).
 - **An invalid WHO test bundle.** `tests-Typhoid41.1-bundle.json` has a MedicationRequest without `medication[x]`,
   which R4 requires. kotlin-fhir rejects the bundle; HAPI's parser accepts it. Its scenario and twin are skipped on
   the kotlin-fhir side. Not raised upstream.
