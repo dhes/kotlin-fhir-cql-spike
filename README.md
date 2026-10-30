@@ -692,8 +692,15 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     scenarios; 282 to 293 on JS and Wasm).
   - **The one failure,** `QuantityCasesTest`: 67 of 194 cases differ from the JVM. 58 come from the UCUM stand-in.
     The other 9 are the decimal arithmetic of cqframework/clinical_quality_language#1894 (`mod`, `div`, `*`, `/`, `~`),
-    since iOS uses the same `BigDecimal` as JS and Wasm; #1895 would fix those too. Not run: step 15's `$apply`
-    (kotlin-fhir-workflow's local build has no iOS publication) and step 17 (JVM only).
+    since iOS uses the same `BigDecimal` as JS and Wasm; #1895 would fix those too. Not run: step 17 (JVM only).
+  - **`$apply` on iOS** (ran, `WhoApplyTest`, `KnowledgeApplyTest`, `DuplicateRequestIdsTest`, 17 minutes): step
+    15's local kotlin-fhir-workflow build, published for the iOS simulator without its common metadata (which does not
+    compile against the local kotlin-fhirpath; step 15). `FhirOperator.generateCarePlan` applies 1,098 of 1,100
+    scenarios (the 2 rejected bundles aside); resource count and guidance differ from step 4 in 0; the count matches
+    WHO's in 1,082/1,098 and the guidance in 634/634, as on the JVM and Wasm. As published, 137 PlanDefinitions stop at
+    `text/cql-identifier`, as elsewhere. Through kotlin-fhir-knowledge (step 16): 0 different from the spike's copies.
+    Repeated contained request ids (ohs-foundation/kotlin-fhir-workflow#10): 49 scenarios in the same 8
+    PlanDefinitions as on the JVM.
 
 ## Findings so far
 

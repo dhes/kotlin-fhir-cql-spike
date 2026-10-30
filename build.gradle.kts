@@ -74,6 +74,15 @@ kotlin {
         }
         jvmTest { kotlin.srcDir("src/workflowTest/kotlin") }
         wasmJsTest { kotlin.srcDir("src/workflowTest/kotlin") }
+        if (findProperty("ios") == "true") {
+            // The iOS simulator build of the same local kotlin-fhir-workflow (published without its common metadata,
+            // which does not compile against the local kotlin-fhirpath; see step 15).
+            iosSimulatorArm64Main {
+                kotlin.srcDir("src/workflowMain/kotlin")
+                dependencies { implementation("dev.ohs.fhir:fhir-workflow-iossimulatorarm64:2.0.0-spike-214c56d-rc04") }
+            }
+            iosSimulatorArm64Test { kotlin.srcDir("src/workflowTest/kotlin") }
+        }
         webMain.dependencies {
             // Step 14: the UCUM service on JS and Wasm, where cqframework has none.
             implementation(npm("@lhncbc/ucum-lhc", "7.1.10"))
