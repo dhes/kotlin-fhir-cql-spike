@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WHO Immunization Tests</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --surface: #ffffff; --text: #1d1d1b; --muted: #66665f; --border: #e3e2dd;
+    --accent: #1f5fa8; --pass: #1e7a46; --fail: #b4441c; --track: #ecebe6; --code: #f3f2ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #a3a29b; --border: #34332f;
+      --accent: #7fb0ea; --pass: #5cc48a; --fail: #ef8a62; --track: #2c2b28; --code: #262624;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 0 0 12px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  p { margin: 0 0 10px; max-width: 72ch; }
+  .muted { color: var(--muted); }
+  .versions { font-size: 13px; }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .run { display: flex; align-items: center; gap: 14px; margin: 22px 0 6px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 600; padding: 9px 22px; border-radius: 8px; border: 0;
+    background: var(--accent); color: var(--bg); cursor: pointer;
+  }
+  button:disabled { opacity: .45; cursor: default; }
+  .score { display: flex; align-items: baseline; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .score .n { font-size: 52px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .score .of { font-size: 18px; color: var(--muted); }
+  .bar { height: 10px; background: var(--track); border-radius: 5px; overflow: hidden; display: flex; margin: 12px 0 6px; }
+  .bar .p { background: var(--pass); }
+  .bar .f { background: var(--fail); }
+  .counts { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; table-layout: fixed; }
+  td { overflow-wrap: anywhere; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; }
+  .vaccines { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .vaccine { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .vaccine .name { font-weight: 600; font-size: 14px; }
+  .vaccine .v { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .vaccine .v b { color: var(--text); }
+  .vaccine.has-fail .v .fails { color: var(--fail); font-weight: 600; }
+  .filters { display: flex; gap: 6px; margin-bottom: 8px; }
+  .filters button { background: var(--surface); color: var(--text); border: 1px solid var(--border); font-weight: 500; padding: 5px 12px; font-size: 13px; }
+  .filters button.on { border-color: var(--accent); color: var(--accent); }
+  .cases { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .cases tr.case { cursor: pointer; }
+  .cases tr.case:hover td { background: var(--code); }
+  .tag { font-size: 12px; font-weight: 600; }
+  .tag.pass { color: var(--pass); }
+  .tag.fail { color: var(--fail); }
+  tr.detail td { background: var(--code); }
+  .detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 4px 0 10px; }
+  .detail dt { color: var(--muted); font-size: 13px; }
+  .detail dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .detail pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; max-height: 360px; overflow: auto; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px; }
+  .error { color: var(--fail); font-weight: 600; }
+  .reasons { margin: 0; padding: 0; list-style: none; }
+  .reasons li { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+  .reasons .k { font-weight: 600; }
+  .reasons .k b { color: var(--fail); }
+  col.vac { width: 150px; } col.res { width: 34%; }
+  @media (max-width: 560px) { .hide-narrow, col.vac { display: none; } .score .n { font-size: 40px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>WHO's immunization test cases, run in this browser</h1>
+  <p>
+    WHO's SMART Guidelines immunizations guide (0.2.0) comes with test cases: a patient, a date and a PlanDefinition,
+    and what applying it should give. This page runs every one of them here, in this browser tab, with no server.
+    For each case, ohs-foundation/kotlin-fhir-workflow applies the PlanDefinition to the patient (<code>$apply</code>),
+    and cqframework's CQL evaluator evaluates the CQL it calls over ohs-foundation/kotlin-fhir resources, all compiled
+    from Kotlin to WebAssembly.
+  </p>
+  <p>
+    A case passes when the CarePlan contains the number of resources WHO's test expects and, where the test gives one,
+    the same guidance text. Before they are applied, WHO's PlanDefinitions are rewritten where kotlin-fhir-workflow
+    doesn't take them yet as published: the expression languages <code>text/cql-identifier</code> and
+    <code>text/cql-expression</code> become <code>text/cql</code>, and three dynamicValue paths are given in the form
+    it takes (ohs-foundation/kotlin-fhir-workflow#9).
+  </p>
+  <p class="muted versions" id="versions"></p>
+
+  <div class="run">
+    <button id="run">Run the test cases</button>
+    <span id="status" class="muted"></span>
+  </div>
+
+  <div id="results" hidden>
+    <div class="score"><span class="n" id="passed">0</span><span class="of" id="of"></span></div>
+    <div class="bar"><div class="p" id="barPass"></div><div class="f" id="barFail"></div></div>
+    <div class="counts" id="counts"></div>
+
+    <div id="whyBox" hidden>
+      <h2>Why some don't pass</h2>
+      <ul class="reasons" id="why"></ul>
+    </div>
+
+    <h2>By vaccine</h2>
+    <div class="vaccines" id="vaccines"></div>
+
+    <h2>Test cases</h2>
+    <div class="filters">
+      <button id="showFail" class="on">Not passing</button>
+      <button id="showAll">All</button>
+    </div>
+    <div class="cases">
+      <table>
+        <colgroup><col><col class="vac"><col class="res"></colgroup>
+        <thead><tr><th>Test case</th><th class="hide-narrow">Vaccine</th><th>Result</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const cases = [];
+  const byVaccine = new Map();
+  let total = 0, passed = 0, filter = "fail", startedAt = 0, timer = null;
+  const fmt = (n) => n.toLocaleString("en-US");
+  const NAMES = {
+    HepatitisA: "Hepatitis A", HepatitisB: "Hepatitis B", Seasonalinfluenza: "Seasonal influenza",
+    Yellowfever: "Yellow fever", JE: "Japanese encephalitis", TBE: "Tick-borne encephalitis",
+  };
+  const vaccineOf = (feature) => { const n = feature.split("/")[0].replace(/^IMMZ/, ""); return NAMES[n] || n; };
+  // What each kind of result that isn't a pass comes from, as the spike measured it (see its README).
+  const REASONS = [
+    [/Resource count differs/, "The CarePlan has a different number of resources than WHO's test expects.",
+      "cqframework's CQL evaluator on the JVM over HAPI FHIR resources, and cqframework/clinical-reasoning's $apply, give the same result in each of these cases, so the difference doesn't come from kotlin-fhir-workflow or the browser."],
+    [/NotImplementedError/, "The CQL calls Split, which cqframework 5.5.0 doesn't implement on JS and Wasm.",
+      "cqframework/clinical_quality_language#1870, fixed on its main branch after the 5.5.0 release."],
+    [/SerializationException/, "The test's patient bundle isn't valid FHIR R4.",
+      "It has a MedicationRequest without its required medication, which kotlin-fhir rejects."],
+  ];
+
+  function drawReasons() {
+    const failing = cases.filter((c) => !c.pass);
+    const ul = $("why");
+    ul.textContent = "";
+    $("whyBox").hidden = failing.length === 0;
+    const known = new Set();
+    for (const [re, what, why] of REASONS) {
+      const n = failing.filter((c) => re.test(c.result));
+      n.forEach((c) => known.add(c));
+      if (n.length) {
+        const li = document.createElement("li");
+        li.innerHTML = `<div class="k"><b>${fmt(n.length)}</b> · ${esc(what)}</div><div class="muted">${esc(why)}</div>`;
+        ul.appendChild(li);
+      }
+    }
+    const other = failing.filter((c) => !known.has(c));
+    if (other.length) {
+      const li = document.createElement("li");
+      li.innerHTML = `<div class="k"><b>${fmt(other.length)}</b> · Other results; see the test cases below.</div>`;
+      ul.appendChild(li);
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+
+  function drawScore() {
+    const done = cases.length;
+    $("passed").textContent = fmt(passed);
+    $("of").textContent = `of ${fmt(done)} ${done < total ? `run so far (${fmt(total)} in all)` : "pass"}`;
+    $("barPass").style.width = (100 * passed / total) + "%";
+    $("barFail").style.width = (100 * (done - passed) / total) + "%";
+    const secs = ((performance.now() - startedAt) / 1000).toFixed(0);
+    $("counts").textContent = `${fmt(done)} of ${fmt(total)} run · ${fmt(done - passed)} not passing · ${secs} s`;
+  }
+
+  function drawVaccine(name) {
+    const v = byVaccine.get(name);
+    let el = $("vac-" + name);
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "vaccine";
+      el.id = "vac-" + name;
+      $("vaccines").appendChild(el);
+    }
+    el.classList.toggle("has-fail", v.run > v.pass);
+    el.innerHTML = `<div class="name">${esc(name)}</div><div class="v"><b>${fmt(v.pass)}</b> of ${fmt(v.run)} pass` +
+      (v.run > v.pass ? ` · <span class="fails">${fmt(v.run - v.pass)} not</span>` : "") + `</div>`;
+  }
+
+  function rowFor(c) {
+    const tr = document.createElement("tr");
+    tr.className = "case";
+    tr.innerHTML = `<td><code>${esc(c.id)}</code><div class="muted" style="font-size:13px">${esc(c.scenario)}</div></td>` +
+      `<td class="hide-narrow">${esc(vaccineOf(c.feature))}</td>` +
+      `<td><span class="tag ${c.pass ? "pass" : "fail"}">${c.pass ? "Passes" : esc(c.result)}</span></td>`;
+    tr.addEventListener("click", () => toggleDetail(tr, c));
+    return tr;
+  }
+
+  function toggleDetail(tr, c) {
+    const next = tr.nextElementSibling;
+    if (next && next.classList.contains("detail")) { next.remove(); return; }
+    const d = document.createElement("tr");
+    d.className = "detail";
+    let carePlan = "";
+    if (c.carePlan) {
+      try { carePlan = JSON.stringify(JSON.parse(c.carePlan), null, 2); } catch (e) { carePlan = c.carePlan; }
+    }
+    d.innerHTML = `<td colspan="3"><dl>
+        <dt>PlanDefinition</dt><dd><code>${esc(c.planDefinition)}</code>, applied on ${esc(c.today)}</dd>
+        <dt>Resources</dt><dd>WHO expects ${c.expectedContained ?? "—"}; the CarePlan contains ${c.contained ?? "—"}</dd>
+        ${c.expectedGuidance != null ? `<dt>WHO's guidance</dt><dd>${esc(c.expectedGuidance)}</dd>` : ""}
+        <dt>Guidance</dt><dd>${c.guidance != null ? esc(c.guidance) : "<span class=muted>none</span>"}</dd>
+      </dl>${carePlan ? `<pre>${esc(carePlan)}</pre>` : ""}</td>`;
+    tr.after(d);
+  }
+
+  function drawRows() {
+    const body = $("rows");
+    body.textContent = "";
+    for (const c of cases) if (filter === "all" || !c.pass) body.appendChild(rowFor(c));
+  }
+
+  function setFilter(f) {
+    filter = f;
+    $("showFail").classList.toggle("on", f === "fail");
+    $("showAll").classList.toggle("on", f === "all");
+    drawRows();
+  }
+  $("showFail").addEventListener("click", () => setFilter("fail"));
+  $("showAll").addEventListener("click", () => setFilter("all"));
+
+  window.whoPage = {
+    onRun(start) {
+      $("run").addEventListener("click", () => {
+        $("run").disabled = true;
+        cases.length = 0; passed = 0; byVaccine.clear();
+        $("vaccines").textContent = ""; $("rows").textContent = ""; $("whyBox").hidden = true;
+        startedAt = performance.now();
+        start();
+      });
+      if (new URLSearchParams(location.search).has("run")) $("run").click();
+    },
+    versions(cql, fhir, workflow) {
+      $("versions").textContent =
+        `cqframework ${cql} · kotlin-fhir ${fhir} · kotlin-fhir-workflow ${workflow} · ${navigator.userAgent.match(/(Firefox|Chrome|Safari)\/[\d.]+/)?.[0] ?? ""}`;
+    },
+    status(text) {
+      $("status").textContent = text;
+      if (text.startsWith("Compiling")) {
+        total = Number(text.match(/(\d+) test cases/)[1]);
+        $("results").hidden = false;
+        drawScore();
+        timer = setInterval(drawScore, 1000);
+      }
+    },
+    testCase(c) {
+      cases.push(c);
+      if (c.pass) passed++;
+      const name = vaccineOf(c.feature);
+      const v = byVaccine.get(name) || { run: 0, pass: 0 };
+      v.run++; if (c.pass) v.pass++;
+      byVaccine.set(name, v);
+      drawVaccine(name);
+      if (filter === "all" || !c.pass) $("rows").appendChild(rowFor(c));
+      if (cases.length === 1) $("status").textContent = "Running";
+      drawScore();
+    },
+    done(p, t, seconds) {
+      clearInterval(timer);
+      drawScore();
+      drawReasons();
+      $("counts").textContent = `${fmt(t)} run · ${fmt(t - p)} not passing · ${seconds.toFixed(0)} s`;
+      $("status").textContent = "Done";
+      document.title = `${fmt(p)}/${fmt(t)} · WHO Immunization Tests`;
+      $("run").disabled = false;
+    },
+    error(text) {
+      clearInterval(timer);
+      $("status").innerHTML = `<span class="error">${esc(text)}</span>`;
+      $("run").disabled = false;
+    },
+  };
+})();
+</script>
+<script src="demo.js"></script>
+</body>
+</html>
