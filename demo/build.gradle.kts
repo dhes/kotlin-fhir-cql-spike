@@ -10,7 +10,11 @@ plugins {
 
 val cqlVersion = (findProperty("cqlVersion") as String?) ?: "5.5.0"
 val kotlinFhirVersion = "1.0.0-rc04"
-val workflowVersion = "2.0.0-spike-214c56d-rc04"
+// kotlin-fhir-workflow `main` at 214c56d with the fix offered on #9 (dhes/kotlin-fhir-workflow 6ba0f6c), built locally
+// against kotlin-fhir rc04 like the spike's 214c56d build (README, step 15). -PworkflowVersion=2.0.0-spike-214c56d-rc04
+// runs `main` itself, with the spike rewriting the dynamicValue paths instead (WhoApply.conform).
+val workflowVersion = (findProperty("workflowVersion") as String?) ?: "2.0.0-spike-6ba0f6c-rc04"
+val workflowFix = "6ba0f6c" in workflowVersion
 val spike = rootProject.projectDir
 
 // The spike's test files the page reuses, copied so that the rest of its tests stay out of the build.
@@ -30,6 +34,8 @@ val suiteWasmSources by tasks.registering(Sync::class) {
 val versions by tasks.registering {
     val out = layout.buildDirectory.dir("generated/versions")
     val values = mapOf("CQL_VERSION" to cqlVersion, "KOTLIN_FHIR_VERSION" to kotlinFhirVersion, "WORKFLOW_VERSION" to workflowVersion)
+    val fix = workflowFix
+    inputs.property("fix", fix)
     inputs.property("values", values)
     outputs.dir(out)
     doLast {
@@ -39,7 +45,9 @@ val versions by tasks.registering {
             "package io.github.dhes.kotlinfhircql\n\n" +
                 "/** Unused on the page, which reads the files it fetched (MeaslesFixtures.preloaded). */\n" +
                 "const val PROJECT_DIR = \"\"\n\n" +
-                values.entries.joinToString("") { (k, v) -> "const val $k = \"$v\"\n" }
+                values.entries.joinToString("") { (k, v) -> "const val $k = \"$v\"\n" } +
+                "\n/** Whether kotlin-fhir-workflow has the fix offered on #9, so the page leaves WHO's paths as published. */\n" +
+                "const val WORKFLOW_FIX = $fix\n"
         )
     }
 }

@@ -733,6 +733,11 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     998 of 1,021 pass in 55 seconds. The 23 others are the 16 count differences HAPI and clinical-reasoning share,
     the 6 Typhoid cases at `Split`, and Typhoid41.1's invalid bundle: the conformance test's 1,004 on the JVM less the
     6 at `Split`. The Wasm is 9 MB and WHO's files 17.5 MB, fetched by the page.
+  - **The page on the #9 fix** (ran): kotlin-fhir-workflow 214c56d plus the fix offered on
+    ohs-foundation/kotlin-fhir-workflow#9 (dhes/kotlin-fhir-workflow 6ba0f6c, built against rc04 with the step 15
+    patch), with `WhoApply.rewritePaths` false, so only the expression languages are rewritten: 998 of 1,021, the same
+    23 not passing. Control, 214c56d without the path rewrites: 70, the conformance test's number before the fix.
+    The page uses the fix build; hosted at https://dhes.github.io/kotlin-fhir-cql-spike/ (branch `gh-pages`).
   - **Not yet:** Chrome; OPFS (on-disk storage, which needs COOP/COEP headers); the page hosted anywhere.
 
 ## Findings so far

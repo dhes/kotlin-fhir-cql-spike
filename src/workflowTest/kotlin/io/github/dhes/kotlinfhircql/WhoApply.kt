@@ -46,8 +46,15 @@ object WhoApply {
      *   `category.coding` to `category[0].coding[0]`, `payload.contentString` to `payload[0].contentString`, and
      *   `medication` to `medicationCodeableConcept`;
      * - a CQL Code written to `priority`, a FHIR `code`, to the Code's `code`.
+     *
+     * With [rewritePaths] false, only the expression languages: for a kotlin-fhir-workflow build that takes WHO's
+     * paths and writes a Code's `code` to `priority` itself, such as the fix offered on #9 (dhes/kotlin-fhir-workflow
+     * 6ba0f6c), which the page in `demo/` uses.
      */
     fun conform(json: JsonObject): JsonObject = rewrite(json) as JsonObject
+
+    /** Whether [conform] rewrites dynamicValue paths and `priority`; set before [definitions] is first read. */
+    var rewritePaths = true
 
     private val PATHS =
         mapOf(
@@ -67,9 +74,9 @@ object WhoApply {
                     JsonObject(
                         element +
                             mapOf(
-                                "path" to JsonPrimitive(PATHS[path] ?: path),
+                                "path" to JsonPrimitive((if (rewritePaths) PATHS[path] else null) ?: path),
                                 "expression" to
-                                    cqlExpression(expression, if (path == "priority") "($text).code" else text),
+                                    cqlExpression(expression, if (rewritePaths && path == "priority") "($text).code" else text),
                             )
                     )
                 } else if (key == "condition") {

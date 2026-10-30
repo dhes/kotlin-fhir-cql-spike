@@ -13,12 +13,19 @@ same guidance text: the rule of the conformance test on dhes/kotlin-fhir-workflo
 
 The page compiles the spike's own code: its main sources, `CqlExpressionEvaluator` (step 15) and the test files that
 read and apply WHO's suite (`WhoSuite`, `MeaslesFixtures`, `WhoApply`, `InMemoryWorkflowRepository`), copied into the
-build by `build.gradle.kts`. So it applies the PlanDefinitions as `WhoApplyTest` does, including `WhoApply.conform`:
-the expression languages `text/cql-identifier` and `text/cql-expression` become `text/cql`, and three dynamicValue
-paths are given in `DynamicValueApplier`'s form (ohs-foundation/kotlin-fhir-workflow#9). The page says so.
+build by `build.gradle.kts`. So it applies the PlanDefinitions as `WhoApplyTest` does, with one difference.
 
-Versions: cqframework 5.5.0 (`-PcqlVersion` to change), kotlin-fhir 1.0.0-rc04, kotlin-fhir-workflow `main` at 214c56d
-built locally (see the spike's step 15).
+kotlin-fhir-workflow is `main` at 214c56d plus the fix offered on ohs-foundation/kotlin-fhir-workflow#9
+(dhes/kotlin-fhir-workflow 6ba0f6c, branch `dynamic-value-paths`, not merged), which writes dynamicValues to WHO's
+paths as published. So the page sets `WhoApply.rewritePaths` to false, and `WhoApply.conform` rewrites only the
+expression languages `text/cql-identifier` and `text/cql-expression` to `text/cql`, the only CQL language `main`
+routes. The page says so. Built like the spike's 214c56d build (spike README, step 15): a worktree at 6ba0f6c with
+`patches/kotlin-fhir-workflow-214c56d-rc04.patch` applied (it applies unchanged), then
+`./gradlew :workflow:publishDesktopPublicationToMavenLocal :workflow:publishWasmJsPublicationToMavenLocal
+-PmavenVersion=2.0.0-spike-6ba0f6c-rc04`. `-PworkflowVersion=2.0.0-spike-214c56d-rc04` builds the page on `main`
+instead, with the spike's path rewrites, and the page's text follows.
+
+Versions: cqframework 5.5.0 (`-PcqlVersion` to change), kotlin-fhir 1.0.0-rc04.
 
 WHO's files (the scenarios and their bundles, the CQL, value sets and definitions, the model info and FHIRHelpers) go
 next to the page as one JSON file, `fixtures.json` (17.5 MB), which it fetches when the run starts.
@@ -43,7 +50,9 @@ Clicking a test case shows what WHO expects, what the CarePlan has, and the Care
 
 ## Result
 
-Ran 2026-10-30 in headless Firefox 159, production build: 998 of 1,021 pass in 55 seconds. The others: 16 whose
+Ran 2026-10-30 in headless Firefox 159, production build: 998 of 1,021 pass in 55 seconds, on the #9 fix and on
+`main` with the spike's rewrites alike, with the same 23 not passing. A control, `main` without the path rewrites,
+gives 70, as the conformance test on the JVM does before the fix. The others: 16 whose
 resource count differs from WHO's (HAPI and clinical-reasoning give the same, steps 4 and 17), 6 Typhoid cases whose CQL
 calls `Split`, which cqframework 5.5.0 doesn't implement on JS and Wasm (cqframework/clinical_quality_language#1870),
 and Typhoid41.1, whose bundle isn't valid R4. See also the spike README, Status, 2026-10-30.

@@ -25,14 +25,17 @@ actual suspend fun preloadFixtures() {
 
 // The page's functions (index.html).
 private fun onRun(start: () -> Unit): Unit = js("window.whoPage.onRun(start)")
-private fun showVersions(cql: String, fhir: String, workflow: String): Unit = js("window.whoPage.versions(cql, fhir, workflow)")
+private fun showVersions(cql: String, fhir: String, workflow: String, fix: Boolean): Unit =
+    js("window.whoPage.versions(cql, fhir, workflow, fix)")
 private fun showStatus(text: String): Unit = js("window.whoPage.status(text)")
 private fun showCase(json: String): Unit = js("window.whoPage.testCase(JSON.parse(json))")
 private fun showDone(passed: Int, total: Int, seconds: Double): Unit = js("window.whoPage.done(passed, total, seconds)")
 private fun showError(text: String): Unit = js("window.whoPage.error(text)")
 
 fun main() {
-    showVersions(CQL_VERSION, KOTLIN_FHIR_VERSION, WORKFLOW_VERSION)
+    // With the #9 fix, kotlin-fhir-workflow takes WHO's dynamicValue paths as published.
+    WhoApply.rewritePaths = !WORKFLOW_FIX
+    showVersions(CQL_VERSION, KOTLIN_FHIR_VERSION, WORKFLOW_VERSION, WORKFLOW_FIX)
     onRun { MainScope().launch { runSuite() } }
 }
 
