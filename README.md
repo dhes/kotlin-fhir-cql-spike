@@ -677,6 +677,24 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - **Not run with it:** steps 6 and 7 (`PrecompiledDynamicValueTest`, `DynamicValueWriteBackTest`), which need the
     fix in #1874 (open); they fail the same way with 5.4.0.
 
+- 2026-10-29: the iOS simulator, with a cqframework build that has iOS targets.
+  - **What runs:** the common tests (`iosSimulatorArm64Test`, with `-Pios=true
+    -PcqlVersion=5.6.0-ios-probe-7c018009-SNAPSHOT`) on an iPhone simulator on an Apple-silicon Mac. No cqframework
+    release has iOS artifacts; the build is the `ios-probe` branch of dhes/clinical_quality_language (7c018009, from
+    `main` at 441524c5), which adds `iosArm64` and `iosSimulatorArm64` to its five KMP modules, published to Maven
+    Local. kotlin-fhir-knowledge is step 16's local build, republished with its iOS targets. iOS has no UCUM service, so
+    `src/iosTest` supplies the stand-in of steps 1–13 (every unit accepted, conversion only between identical units).
+  - **Result** (ran, 43 minutes in all): 18 tests, 17 pass. On iOS, WHO's suite gives what it gives on the JVM:
+    `WhoSuiteTest` 1,098 scenarios, 0 different from the recorded HAPI outcomes, none reaching an unimplemented
+    operation, guidance matching WHO's in 634/634 and the resource count in 1,082/1,098 (6 minutes).
+    `WorkflowRepositorySuiteTest` and `KnowledgeSuiteTest` (kotlin-fhir-knowledge on iOS): 343,922 results, 0
+    different. `EngineWorkflowRepositorySuiteTest` (kotlin-fhir-engine on iOS): 0 different other than list order (297
+    scenarios; 282 to 293 on JS and Wasm).
+  - **The one failure,** `QuantityCasesTest`: 67 of 194 cases differ from the JVM. 58 come from the UCUM stand-in.
+    The other 9 are the decimal arithmetic of cqframework/clinical_quality_language#1894 (`mod`, `div`, `*`, `/`, `~`),
+    since iOS uses the same `BigDecimal` as JS and Wasm; #1895 would fix those too. Not run: step 15's `$apply`
+    (kotlin-fhir-workflow's local build has no iOS publication) and step 17 (JVM only).
+
 ## Findings so far
 
 - **UCUM service on JS and Wasm.** On JS and Wasm the caller must supply a UCUM service, by design: cqframework's

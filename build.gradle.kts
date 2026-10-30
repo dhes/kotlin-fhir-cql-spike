@@ -36,6 +36,10 @@ kotlin {
         }
     }
 
+    // iOS simulator, with -Pios=true only: it needs a cqframework build with iOS targets, which no release has, such as
+    // the ios-probe branch of dhes/clinical_quality_language (-PcqlVersion=5.6.0-ios-probe-7c018009-SNAPSHOT).
+    if (findProperty("ios") == "true") iosSimulatorArm64()
+
     sourceSets {
         commonMain.dependencies {
             implementation("org.cqframework:cql-to-elm:$cqlVersion")
