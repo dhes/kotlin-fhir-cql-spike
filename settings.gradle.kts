@@ -29,3 +29,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "kotlin-fhir-cql-spike"
+
+// Step 3 of the browser work: a page that runs WHO's test cases through $apply (demo/README.md).
+include("demo")

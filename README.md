@@ -726,7 +726,14 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
       `EnginePatientSearchTest`): unchanged.
     - The Kotlin 2.3.20 Wasm compiler crash of steps 14 and 15 recurred once on an incremental build; a full recompile
       (`compileTestKotlinWasmJs --rerun`) fixed it.
-  - **Not yet:** Chrome; OPFS (on-disk storage, which needs COOP/COEP headers); a page that shows the result.
+  - **A page** (`demo/`, see `demo/README.md`): it runs WHO's 1,021 test cases (the spike's twins left out) through
+    kotlin-fhir-workflow's `$apply` in the browser tab, with the spike's `WhoApply`, and shows how many pass by the
+    conformance test's rule (resource count, and guidance where WHO's test gives one), by vaccine, why the others
+    don't, and each case's CarePlan. Ran in headless Firefox 159 (puppeteer-core, production build, cqframework 5.5.0):
+    998 of 1,021 pass in 55 seconds. The 23 others are the 16 count differences HAPI and clinical-reasoning share,
+    the 6 Typhoid cases at `Split`, and Typhoid41.1's invalid bundle: the conformance test's 1,004 on the JVM less the
+    6 at `Split`. The Wasm is 9 MB and WHO's files 17.5 MB, fetched by the page.
+  - **Not yet:** Chrome; OPFS (on-disk storage, which needs COOP/COEP headers); the page hosted anywhere.
 
 ## Findings so far
 
