@@ -34,6 +34,11 @@ Then open http://localhost:8765/. The page needs a server, not a `file://` URL, 
 the JSON. `?run` starts the run when the page loads. `./gradlew :demo:wasmJsBrowserDevelopmentRun` serves a
 development build instead.
 
+Hosted at https://dhes.github.io/kotlin-fhir-cql-spike/ (GitHub Pages, from the `gh-pages` branch, which holds only the
+built files). To update it, build, then copy `demo/build/dist/wasmJs/productionExecutable/*` into a worktree of
+`gh-pages` (keeping its `.nojekyll`), commit and push. GitHub Actions can't build it, since kotlin-fhir-workflow is a
+local build.
+
 Clicking a test case shows what WHO expects, what the CarePlan has, and the CarePlan itself.
 
 ## Result
