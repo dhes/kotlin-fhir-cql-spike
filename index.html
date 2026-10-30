@@ -26,6 +26,7 @@
   p { margin: 0 0 10px; max-width: 72ch; }
   .muted { color: var(--muted); }
   .versions { font-size: 13px; }
+  a { color: var(--accent); }
   code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
   .run { display: flex; align-items: center; gap: 14px; margin: 22px 0 6px; flex-wrap: wrap; }
   button {
@@ -86,11 +87,9 @@
   </p>
   <p>
     A case passes when the CarePlan contains the number of resources WHO's test expects and, where the test gives one,
-    the same guidance text. Before they are applied, WHO's PlanDefinitions are rewritten where kotlin-fhir-workflow
-    doesn't take them yet as published: the expression languages <code>text/cql-identifier</code> and
-    <code>text/cql-expression</code> become <code>text/cql</code>, and three dynamicValue paths are given in the form
-    it takes (ohs-foundation/kotlin-fhir-workflow#9).
+    the same guidance text.
   </p>
+  <p id="rewrites"></p>
   <p class="muted versions" id="versions"></p>
 
   <div class="run">
@@ -253,7 +252,18 @@
       });
       if (new URLSearchParams(location.search).has("run")) $("run").click();
     },
-    versions(cql, fhir, workflow) {
+    versions(cql, fhir, workflow, fix) {
+      const languages = "the expression languages <code>text/cql-identifier</code> and <code>text/cql-expression</code> " +
+        "become <code>text/cql</code>, the only CQL language kotlin-fhir-workflow's <code>main</code> takes";
+      $("rewrites").innerHTML = fix
+        ? "kotlin-fhir-workflow here is its <code>main</code> branch plus " +
+          "<a href=\"https://github.com/dhes/kotlin-fhir-workflow/commit/6ba0f6c\">a proposed change</a> " +
+          "(<a href=\"https://github.com/ohs-foundation/kotlin-fhir-workflow/issues/9\">ohs-foundation/kotlin-fhir-workflow#9</a>, " +
+          "not merged) that lets it write the values of WHO's dynamicValues to the paths as WHO gives them. " +
+          `One thing is still rewritten in WHO's PlanDefinitions before they are applied: ${languages}.`
+        : `Before they are applied, WHO's PlanDefinitions are rewritten where kotlin-fhir-workflow's <code>main</code> ` +
+          `doesn't take them yet as published: ${languages}, and three dynamicValue paths are given in the form it takes ` +
+          `(ohs-foundation/kotlin-fhir-workflow#9).`;
       $("versions").textContent =
         `cqframework ${cql} · kotlin-fhir ${fhir} · kotlin-fhir-workflow ${workflow} · ${navigator.userAgent.match(/(Firefox|Chrome|Safari)\/[\d.]+/)?.[0] ?? ""}`;
     },
