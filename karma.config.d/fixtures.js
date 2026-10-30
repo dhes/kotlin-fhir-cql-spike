@@ -16,3 +16,19 @@ config.browserDisconnectTimeout = 2 * 60 * 60 * 1000;
 config.captureTimeout = 5 * 60 * 1000;
 config.client = config.client || {};
 config.client.mocha = Object.assign(config.client.mocha || {}, { timeout: 0 });
+
+// Firefox's updater, started from Terminal, tries to update Firefox.app, which macOS reports as Terminal asking to
+// change another app. The same Firefox, with updates off in its test profile (as Firefox's own test harnesses do).
+config.customLaunchers = Object.assign(config.customLaunchers || {}, {
+  FirefoxHeadlessNoUpdate: {
+    base: 'FirefoxHeadless',
+    prefs: {
+      'app.update.disabledForTesting': true,
+      'app.update.auto': false,
+      'app.update.background.enabled': false,
+      'app.update.staging.enabled': false,
+      'app.update.checkInstallTime': false,
+    },
+  },
+});
+config.browsers = config.browsers.map((b) => (b === 'FirefoxHeadless' ? 'FirefoxHeadlessNoUpdate' : b));

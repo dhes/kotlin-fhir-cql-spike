@@ -702,7 +702,7 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     Repeated contained request ids (ohs-foundation/kotlin-fhir-workflow#10): 49 scenarios in the same 8
     PlanDefinitions as on the JVM.
 - 2026-10-30: a browser, branch `browser`.
-  - **What runs:** `WhoSuiteTest` on Wasm in headless Firefox 158 through Karma (`./gradlew wasmJsBrowserTest
+  - **What runs:** `WhoSuiteTest` on Wasm in headless Firefox through Karma (158, then 159 after Firefox updated itself during the first run; updates are now off in the test profile) (`./gradlew wasmJsBrowserTest
     -Pbrowser=true --tests '*WhoSuiteTest*'`), cqframework 5.5.0 from Maven Central. Chrome isn't installed on this
     Mac, so Firefox. A browser has no file system, so the Gradle task `bundleBrowserFixtures` writes the files the
     test reads (WHO's CQL, value sets and scenarios, the model info, FHIRHelpers, the recorded outcomes) into one JSON
