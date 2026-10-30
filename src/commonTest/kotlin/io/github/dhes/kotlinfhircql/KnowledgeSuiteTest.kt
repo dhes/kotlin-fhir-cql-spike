@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 class KnowledgeSuiteTest {
     @Test
     fun whoSuiteFromKnowledge() = runTest(timeout = 60.minutes) {
+        preloadFixtures()
         val knowledge = whoKnowledge()
         println(knowledge.how)
         val patients = InMemoryWorkflowRepository(emptyList())

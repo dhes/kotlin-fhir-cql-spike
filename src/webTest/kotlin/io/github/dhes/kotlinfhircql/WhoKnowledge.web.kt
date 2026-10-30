@@ -19,11 +19,19 @@ actual suspend fun whoKnowledge(): WhoKnowledge {
     val fileSystem = FakeFileSystem()
     val root = "/package".toPath()
     fileSystem.createDirectories(root)
-    val unpacked = Path(PROJECT_DIR, WhoPackage.UNPACKED)
-    for (file in SystemFileSystem.list(unpacked)) {
-        if (SystemFileSystem.metadataOrNull(file)?.isDirectory == true) continue
-        val bytes = SystemFileSystem.source(file).buffered().use { it.readByteArray() }
-        fileSystem.write(root / file.name) { write(bytes) }
+    val preloaded = MeaslesFixtures.preloaded
+    if (preloaded != null) {
+        // A browser: the package's files, preloaded (bundleBrowserFixtures).
+        for (name in MeaslesFixtures.list(WhoPackage.UNPACKED)) {
+            fileSystem.write(root / name) { write(preloaded.getValue("${WhoPackage.UNPACKED}/$name").encodeToByteArray()) }
+        }
+    } else {
+        val unpacked = Path(PROJECT_DIR, WhoPackage.UNPACKED)
+        for (file in SystemFileSystem.list(unpacked)) {
+            if (SystemFileSystem.metadataOrNull(file)?.isDirectory == true) continue
+            val bytes = SystemFileSystem.source(file).buffered().use { it.readByteArray() }
+            fileSystem.write(root / file.name) { write(bytes) }
+        }
     }
     val manager = KnowledgeManager.create(inMemory = true, fileSystem = fileSystem)
     val result = manager.import(FhirNpmPackage(WhoPackage.NAME, WhoPackage.VERSION), root)

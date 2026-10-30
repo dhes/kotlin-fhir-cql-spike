@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 class WhoApplyTest {
     @Test
     fun whoSuiteThroughWorkflowApply() = runTest(timeout = 60.minutes) {
+        preloadFixtures()
         val recorded: Map<String, WhoOutcome> = MeaslesFixtures.json.decodeFromString(MeaslesFixtures.readText(WhoSuite.EXPECTED))
         val errors = mutableMapOf<String, String>()
         val countDiffers = mutableListOf<String>()
@@ -49,6 +50,7 @@ class WhoApplyTest {
     /** WHO's PlanDefinitions as published, without [WhoApply.conform]: what kotlin-fhir-workflow `main` does with them. */
     @Test
     fun publishedPlanDefinitionsStopAtTheirExpressionLanguage() = runTest(timeout = 10.minutes) {
+        preloadFixtures()
         val errors =
             WhoSuite.scenarios.filter { it.twinOf == null }.distinctBy { it.planDefinition }.map { scenario ->
                 WhoApply.apply(scenario, published = true).error ?: "no error"

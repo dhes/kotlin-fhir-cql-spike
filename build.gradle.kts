@@ -152,25 +152,34 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-// Browser runs: the fixture files WhoSuiteTest reads, as one JSON object from project-relative path to text.
+// Browser runs: the fixture files WhoSuiteTest and the $apply tests read, as one JSON object from project-relative path to text.
 val bundleBrowserFixtures by tasks.registering {
     val dirs = listOf(
         "fixtures/who-suite",
         "fixtures/expected",
         "third_party/smart-immunizations-0.2.0/cql",
         "third_party/smart-immunizations-0.2.0/valuesets",
+        // $apply (WhoApply)
+        "third_party/smart-immunizations-0.2.0/definitions",
+        // WHO's Library resources (WhoSuite.libraryResources), for the repository tests
+        "third_party/smart-immunizations-0.2.0/libraries",
     )
     val files = listOf(
         "third_party/cqframework-quick-5.4.0/fhir-modelinfo-4.0.1.xml",
         "third_party/cqframework-quick-5.4.0/FHIRHelpers-4.0.1.cql",
     )
+    // kotlin-fhir-knowledge's import (WhoKnowledge.web.kt): WHO's unpacked package, its JSON files only.
+    val packageDir = "build/who-package/package"
+    dependsOn(unpackWhoPackage)
     val root = projectDir
     dirs.forEach { inputs.dir(it) }
+    inputs.dir(packageDir)
     files.forEach { inputs.file(it) }
     val out = layout.buildDirectory.file("browser-fixtures/fixtures.json")
     outputs.file(out)
     doLast {
-        val all = dirs.flatMap { d -> root.resolve(d).walkTopDown().filter { it.isFile }.toList() } + files.map(root::resolve)
+        val all = dirs.flatMap { d -> root.resolve(d).walkTopDown().filter { it.isFile }.toList() } + files.map(root::resolve) +
+            root.resolve(packageDir).listFiles { f -> f.isFile && f.name.endsWith(".json") }!!.toList()
         val map = all.associate { it.relativeTo(root).invariantSeparatorsPath to it.readText() }.toSortedMap()
         out.get().asFile.apply { parentFile.mkdirs() }.writeText(groovy.json.JsonOutput.toJson(map))
     }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 class WorkflowRepositorySuiteTest {
     @Test
     fun matchesRecordedHapiOutcomes() = runTest(timeout = 60.minutes) {
+        preloadFixtures()
         val repository = InMemoryWorkflowRepository(WhoSuite.libraryResources + WhoSuite.valueSets)
         val differences = whoSuiteThroughRepository(repository) { repository.loadPatientData(it) }
         println("Repository calls: ${repository.calls.entries.sortedBy { it.key }.joinToString()}")

@@ -10,8 +10,6 @@ import dev.ohs.fhir.workflow.CanonicalResolver
 import dev.ohs.fhir.workflow.FhirOperator
 import dev.ohs.fhir.workflow.expression.ExpressionEvaluatorRouter
 import kotlinx.datetime.LocalDate
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -29,7 +27,7 @@ object WhoApply {
 
     /** WHO's PlanDefinitions and ActivityDefinitions, as JSON, by canonical url. */
     val definitionsJson: Map<String, JsonObject> by lazy {
-        SystemFileSystem.list(Path(PROJECT_DIR, DEFINITIONS_DIR)).map { it.name }.sorted().associate { name ->
+        MeaslesFixtures.list(DEFINITIONS_DIR).associate { name ->
             val resource = MeaslesFixtures.json.parseToJsonElement(MeaslesFixtures.readText("$DEFINITIONS_DIR/$name")).jsonObject
             resource.getValue("url").jsonPrimitive.content to resource
         }

@@ -23,6 +23,7 @@ class KnowledgeCanonicalResolver(private val knowledgeManager: KnowledgeManager)
 class KnowledgeApplyTest {
     @Test
     fun applyWithDefinitionsFromKnowledge() = runTest(timeout = 60.minutes) {
+        preloadFixtures()
         val knowledge = whoKnowledge()
         println(knowledge.how)
         val fromKnowledge = KnowledgeCanonicalResolver(knowledge.manager)

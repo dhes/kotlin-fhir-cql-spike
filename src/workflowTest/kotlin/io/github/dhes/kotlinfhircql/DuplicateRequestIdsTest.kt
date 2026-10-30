@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 class DuplicateRequestIdsTest {
     @Test
     fun containedIdsRepeated() = runTest(timeout = 60.minutes) {
+        preloadFixtures()
         val byPlan = mutableMapOf<String, MutableSet<String>>()
         val scenarios = mutableListOf<String>()
         var applied = 0

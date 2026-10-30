@@ -22,6 +22,7 @@ import org.opencds.cqf.cql.engine.runtime.String as CqlString
 class EngineWorkflowRepositorySuiteTest {
     @Test
     fun matchesInMemoryRepository() = runTest(timeout = 60.minutes) {
+        preloadFixtures()
         val engine = emptyTestEngine()
         val knowledge = WhoSuite.libraryResources + WhoSuite.valueSets
         var start = TimeSource.Monotonic.markNow()

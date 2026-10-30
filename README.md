@@ -712,7 +712,21 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     outcomes. As on Node with 5.5.0, 6 Typhoid scenarios reach `Split` (cqframework/clinical_quality_language#1870,
     fixed on `main` after 5.5.0), and with them excluded the guidance matches WHO's in 631/631 and the resource count
     in 1,076/1,092. JVM and Node rerun with the change: unchanged.
-  - **Not yet:** `$apply` and kotlin-fhir-engine in the browser; Chrome; a page that shows the result.
+  - **`$apply`, kotlin-fhir-knowledge and kotlin-fhir-engine in the browser** (ran, same setup; the bundle also holds
+    WHO's definitions, Library resources and unpacked package):
+    - `WhoApplyTest`: 1,092 scenarios applied (6 at `Split`, 2 rejected bundles), resource count and guidance differ
+      from step 4 in 0; as published, 137 PlanDefinitions stop at `text/cql-identifier`. `DuplicateRequestIdsTest`:
+      the same 49 scenarios (ohs-foundation/kotlin-fhir-workflow#10).
+    - kotlin-fhir-knowledge, with its SQLite in the browser's own Web Worker (no Node workaround; the bundler serves
+      kotlin-fhir-engine's `worker.js` from the spike's local npm module): import 712, `KnowledgeSuiteTest` 0
+      different from HAPI, `KnowledgeApplyTest` 0 different from the spike's copies.
+    - kotlin-fhir-engine, in memory: `EngineWorkflowRepositorySuiteTest` 343,610 results, 0 different other than list
+      order (295 scenarios; Node 282 to 293, iOS 297). `WorkflowRepositorySuiteTest`: 0 different from HAPI.
+    - JS and Wasm under Node rerun with the change (`KnowledgeApplyTest`, `KnowledgeSuiteTest`,
+      `EnginePatientSearchTest`): unchanged.
+    - The Kotlin 2.3.20 Wasm compiler crash of steps 14 and 15 recurred once on an incremental build; a full recompile
+      (`compileTestKotlinWasmJs --rerun`) fixed it.
+  - **Not yet:** Chrome; OPFS (on-disk storage, which needs COOP/COEP headers); a page that shows the result.
 
 ## Findings so far
 
