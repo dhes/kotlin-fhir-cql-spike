@@ -1,6 +1,8 @@
 package io.github.dhes.kotlinfhircql
 
 import kotlin.test.Test
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.test.runTest
 import kotlin.test.assertTrue
 import kotlin.time.TimeSource
 
@@ -11,7 +13,8 @@ import kotlin.time.TimeSource
  */
 class WhoSuiteTest {
     @Test
-    fun matchesRecordedHapiOutcomes() {
+    fun matchesRecordedHapiOutcomes() = runTest(timeout = 120.minutes) {
+        preloadFixtures()
         val expected: Map<String, WhoOutcome> = MeaslesFixtures.json.decodeFromString(MeaslesFixtures.readText(WhoSuite.EXPECTED))
         val start = TimeSource.Monotonic.markNow()
         val evaluator =

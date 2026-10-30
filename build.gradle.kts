@@ -34,6 +34,9 @@ kotlin {
         nodejs {
             testTask { useMocha { timeout = "3600s" } }
         }
+        // A browser, with -Pbrowser=true only: headless Firefox through Karma (wasmJsBrowserTest). Fixture files come
+        // from bundleBrowserFixtures (see karma.config.d/fixtures.js).
+        if (findProperty("browser") == "true") browser { testTask { useKarma { useFirefoxHeadless() } } }
     }
 
     // iOS simulator, with -Pios=true only: it needs a cqframework build with iOS targets, which no release has, such as
@@ -148,3 +151,28 @@ tasks.withType<Test>().configureEach {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
+
+// Browser runs: the fixture files WhoSuiteTest reads, as one JSON object from project-relative path to text.
+val bundleBrowserFixtures by tasks.registering {
+    val dirs = listOf(
+        "fixtures/who-suite",
+        "fixtures/expected",
+        "third_party/smart-immunizations-0.2.0/cql",
+        "third_party/smart-immunizations-0.2.0/valuesets",
+    )
+    val files = listOf(
+        "third_party/cqframework-quick-5.4.0/fhir-modelinfo-4.0.1.xml",
+        "third_party/cqframework-quick-5.4.0/FHIRHelpers-4.0.1.cql",
+    )
+    val root = projectDir
+    dirs.forEach { inputs.dir(it) }
+    files.forEach { inputs.file(it) }
+    val out = layout.buildDirectory.file("browser-fixtures/fixtures.json")
+    outputs.file(out)
+    doLast {
+        val all = dirs.flatMap { d -> root.resolve(d).walkTopDown().filter { it.isFile }.toList() } + files.map(root::resolve)
+        val map = all.associate { it.relativeTo(root).invariantSeparatorsPath to it.readText() }.toSortedMap()
+        out.get().asFile.apply { parentFile.mkdirs() }.writeText(groovy.json.JsonOutput.toJson(map))
+    }
+}
+tasks.matching { it.name == "wasmJsBrowserTest" }.configureEach { dependsOn(bundleBrowserFixtures) }

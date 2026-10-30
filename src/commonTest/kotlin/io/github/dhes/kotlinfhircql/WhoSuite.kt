@@ -4,8 +4,6 @@ import dev.ohs.fhir.model.r4.Bundle
 import dev.ohs.fhir.model.r4.Library
 import dev.ohs.fhir.model.r4.Resource
 import dev.ohs.fhir.model.r4.ValueSet
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
 import org.opencds.cqf.cql.engine.runtime.ClassInstance
 import org.opencds.cqf.cql.engine.runtime.Date
@@ -13,6 +11,12 @@ import org.opencds.cqf.cql.engine.runtime.TemporalHelper
 import org.opencds.cqf.cql.engine.runtime.Value
 import org.opencds.cqf.cql.engine.util.ZonedDateTime
 import org.opencds.cqf.cql.engine.runtime.String as CqlString
+
+/**
+ * Loads the fixture files [WhoSuiteTest] reads into [MeaslesFixtures.preloaded] when running in a browser; elsewhere it
+ * does nothing, and files are read from the project directory.
+ */
+expect suspend fun preloadFixtures()
 
 /** Noon in the system time zone on the given date. */
 expect fun noonOn(year: Int, month: Int, day: Int): org.opencds.cqf.cql.engine.util.ZonedDateTime
@@ -59,7 +63,7 @@ object WhoSuite {
     val plans: Map<String, WhoPlan> by lazy { json.decodeFromString(read("fixtures/who-suite/plandefinitions.json")) }
 
     private val cqlByName: Map<String, String> by lazy {
-        SystemFileSystem.list(Path(PROJECT_DIR, CQL_DIR)).map { it.name }.filter { it.endsWith(".cql") }
+        MeaslesFixtures.list(CQL_DIR).filter { it.endsWith(".cql") }
             .associate { it.removeSuffix(".cql") to read("$CQL_DIR/$it") }
     }
 
@@ -69,7 +73,7 @@ object WhoSuite {
 
     val valueSets: List<ValueSet> by lazy {
         val dir = "third_party/smart-immunizations-0.2.0/valuesets"
-        SystemFileSystem.list(Path(PROJECT_DIR, dir)).map { it.name }.sorted().map {
+        MeaslesFixtures.list(dir).map {
             json.decodeFromString<Resource>(read("$dir/$it")) as ValueSet
         }
     }
@@ -92,7 +96,7 @@ object WhoSuite {
     /** WHO's Library resources, with their CQL only (see tools/copy_who_libraries.py). */
     val libraryResources: List<Library> by lazy {
         val dir = "third_party/smart-immunizations-0.2.0/libraries"
-        SystemFileSystem.list(Path(PROJECT_DIR, dir)).map { it.name }.sorted().map {
+        MeaslesFixtures.list(dir).map {
             json.decodeFromString<Resource>(read("$dir/$it")) as Library
         }
     }

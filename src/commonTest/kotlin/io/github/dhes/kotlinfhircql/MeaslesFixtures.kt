@@ -29,11 +29,20 @@ object MeaslesFixtures {
 
     val json = Json { ignoreUnknownKeys = true }
 
-    fun readText(relative: String): String =
-        SystemFileSystem.source(Path(PROJECT_DIR, relative)).buffered().use { it.readString() }
+    /**
+     * Fixture files by path relative to the project, when [preloadFixtures] has loaded them (in a browser, which has no
+     * file system); otherwise null, and files are read from the project directory.
+     */
+    var preloaded: Map<String, String>? = null
 
-    private fun list(relative: String): List<String> =
-        SystemFileSystem.list(Path(PROJECT_DIR, relative)).map { it.name }.sorted()
+    fun readText(relative: String): String =
+        preloaded?.let { it[relative] ?: error("$relative not among the preloaded fixtures") }
+            ?: SystemFileSystem.source(Path(PROJECT_DIR, relative)).buffered().use { it.readString() }
+
+    /** The names of the files in a project directory, sorted. */
+    fun list(relative: String): List<String> =
+        preloaded?.keys?.filter { it.substringBeforeLast("/") == relative }?.map { it.substringAfterLast("/") }?.sorted()
+            ?: SystemFileSystem.list(Path(PROJECT_DIR, relative)).map { it.name }.sorted()
 
     val modelInfoXml: String by lazy { readText("third_party/cqframework-quick-5.4.0/fhir-modelinfo-4.0.1.xml") }
 

@@ -701,6 +701,18 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     `text/cql-identifier`, as elsewhere. Through kotlin-fhir-knowledge (step 16): 0 different from the spike's copies.
     Repeated contained request ids (ohs-foundation/kotlin-fhir-workflow#10): 49 scenarios in the same 8
     PlanDefinitions as on the JVM.
+- 2026-10-30: a browser, branch `browser`.
+  - **What runs:** `WhoSuiteTest` on Wasm in headless Firefox 158 through Karma (`./gradlew wasmJsBrowserTest
+    -Pbrowser=true --tests '*WhoSuiteTest*'`), cqframework 5.5.0 from Maven Central. Chrome isn't installed on this
+    Mac, so Firefox. A browser has no file system, so the Gradle task `bundleBrowserFixtures` writes the files the
+    test reads (WHO's CQL, value sets and scenarios, the model info, FHIRHelpers, the recorded outcomes) into one JSON
+    file (11 MB), Karma serves it (`karma.config.d/fixtures.js`), and the test fetches it before it starts
+    (`preloadFixtures`). Elsewhere `preloadFixtures` does nothing and files are read from disk, as before.
+  - **Result** (ran): 1,098 scenarios in 1 minute 25 seconds (Node: 44 seconds), 0 different from the recorded HAPI
+    outcomes. As on Node with 5.5.0, 6 Typhoid scenarios reach `Split` (cqframework/clinical_quality_language#1870,
+    fixed on `main` after 5.5.0), and with them excluded the guidance matches WHO's in 631/631 and the resource count
+    in 1,076/1,092. JVM and Node rerun with the change: unchanged.
+  - **Not yet:** `$apply` and kotlin-fhir-engine in the browser; Chrome; a page that shows the result.
 
 ## Findings so far
 
