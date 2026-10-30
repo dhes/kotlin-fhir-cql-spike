@@ -27,6 +27,8 @@
   .muted { color: var(--muted); }
   .versions { font-size: 13px; }
   a { color: var(--accent); }
+  footer { margin-top: 48px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+  footer h2 { font-size: 14px; color: var(--text); }
   code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
   .run { display: flex; align-items: center; gap: 14px; margin: 22px 0 6px; flex-wrap: wrap; }
   button {
@@ -91,6 +93,10 @@
   </p>
   <p id="rewrites"></p>
   <p class="muted versions" id="versions"></p>
+  <p class="muted versions">
+    A prototype, not a WHO or Open Health Stack release. Source:
+    <a href="https://github.com/dhes/kotlin-fhir-cql-spike/tree/browser/demo">dhes/kotlin-fhir-cql-spike</a>.
+  </p>
 
   <div class="run">
     <button id="run">Run the test cases</button>
@@ -123,6 +129,22 @@
       </table>
     </div>
   </div>
+
+  <footer>
+    <h2>Sources and licences</h2>
+    <p>
+      WHO's CQL, value sets, PlanDefinitions and ActivityDefinitions are from WHO's package
+      <code>smart.who.int.immunizations</code> 0.2.0, which declares CC0-1.0. The test cases (patients, dates and
+      expected results) are from <a href="https://github.com/WorldHealthOrganization/smart-immunizations/tree/12ec2fc54">WorldHealthOrganization/smart-immunizations</a>
+      at 12ec2fc54, whose <code>LICENSE.md</code> puts WHO-authored guideline content under CC BY-NC-SA 3.0 IGO and
+      software under the 3-clause BSD licence. Neither WHO nor the Open Health Stack has reviewed or endorsed this page.
+    </p>
+    <p>
+      The page's own code is under the Apache License 2.0. It uses cqframework/clinical_quality_language,
+      ohs-foundation/kotlin-fhir and ohs-foundation/kotlin-fhir-workflow (Apache License 2.0) and the
+      <code>@lhncbc/ucum-lhc</code> package for UCUM units.
+    </p>
+  </footer>
 </main>
 
 <script>
