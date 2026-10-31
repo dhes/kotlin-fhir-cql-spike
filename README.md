@@ -42,8 +42,11 @@ below.
   scenarios, and WHO's guidance in all 636 that state one (the 634 above, plus the 2 whose bundle kotlin-fhir rejects;
   clinical-reasoning reads it with HAPI). Its CarePlans differ in structure (step 17). As a server
   would return them, 49 lose a request, because two get one id.
-- **Not tested:** a browser (JS and Wasm ran under Node only, so kotlin-fhir-engine's browser storage wasn't tried
-  either), a terminology server, and `$apply` on iOS or Android. WHO's CQL never reaches date-range filtering in retrieve or
+- **In a browser** (Status, 2026-10-30, Wasm in Firefox, cqframework 5.5.0): the suite gives the same outcomes as
+  under Node, `$apply` and kotlin-fhir-knowledge included. A page, https://dhes.github.io/kotlin-fhir-cql-spike/, runs
+  WHO's 1,021 test cases through kotlin-fhir-workflow's `$apply` in the tab (`demo/`).
+- **Not tested:** kotlin-fhir-engine's on-disk browser storage (OPFS), a terminology server, and `$apply` on iOS or
+  Android. WHO's CQL never reaches date-range filtering in retrieve or
   code-system lookups; steps 10 and 11 test them with CQL of the spike's own.
 
 ## What a scenario is, and how it is tested
@@ -738,7 +741,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     patch), with `WhoApply.rewritePaths` false, so only the expression languages are rewritten: 998 of 1,021, the same
     23 not passing. Control, 214c56d without the path rewrites: 70, the conformance test's number before the fix.
     The page uses the fix build; hosted at https://dhes.github.io/kotlin-fhir-cql-spike/ (branch `gh-pages`).
-  - **Not yet:** Chrome; OPFS (on-disk storage, which needs COOP/COEP headers); the page hosted anywhere.
+  - **Not yet:** automated runs in Chrome (Dan opened the page by hand in Firefox, Safari and Chrome); OPFS (on-disk
+    storage, which needs COOP/COEP headers).
 
 ## Findings so far
 
