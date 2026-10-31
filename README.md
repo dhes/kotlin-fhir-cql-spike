@@ -748,6 +748,15 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   package. Until step 14 the tests used a stand-in that accepted every unit and converted only between identical
   units. That was exact for WHO's content: the closure's quantity literals use only calendar units (`months` 160
   times, `weeks` 70, `year` 4). Step 14 replaces it with `UcumLhcService`.
+- **cqframework's Wasm `createUcumService` export divides by multiplying** (ran 2026-10-30, Wasm under Node,
+  `UcumExportDivideTest`). The export (`cql-to-elm/src/wasmJsMain/.../ucum/UcumServiceWasmJs.kt`, since #1578) hands
+  `createUcumService` the caller's `multiply` for both `multiply` and `divideBy`, so the engine's Quantity division
+  (`DivideEvaluator`, when the divisor's unit isn't `'1'`) multiplies. Given ucum-lhc's functions, on 5.5.0:
+  `divideBy(2 'm', 4 's')` gives `8.0 'm.s'` and calls only `multiply`, and CQL `2 'm' / 4 's'` gives `8.0 'm.s'`
+  (ucum-lhc alone: `0.5 'm.s-1'`). With the one-line fix (dhes/clinical_quality_language `ucum-wasm-divide`,
+  76ce236d, from `main` at 92e56684, built locally as `5.6.0-ucum-wasm-divide-76ce236d-SNAPSHOT`): `0.5 'm.s-1'`, CQL
+  `0.50 'm.s-1'`, only `divideBy` called. The JS export isn't affected (it passes the caller's functions straight
+  through). The spike's own runs don't reach it: they use `UcumLhcService` directly, not the export.
 - **cqframework's decimal arithmetic on JS and Wasm** (ran, cqframework 5.4.0, under Node):
 
   | CQL | JVM | JS and Wasm |
