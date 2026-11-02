@@ -1006,6 +1006,15 @@ under CC BY-NC-SA 3.0 IGO and software under the 3-clause BSD licence (read 2026
 
 ## Third-party content
 
+WHO's content here is `smart.who.int.immunizations` 0.2.0, the CI build of WorldHealthOrganization/smart-immunizations
+at 12ec2fc54 (2026-07-07), which build.fhir.org no longer serves. WHO's release
+[v1.0.0](https://github.com/WorldHealthOrganization/smart-immunizations/releases/tag/v1.0.0) (2026-10-02) has the same
+CQL and test cases, and in its package on packages.fhir.org the Libraries, PlanDefinitions, ActivityDefinitions and
+ValueSets the spike uses differ only in version, dates and generated narrative (13 profiles and 2 StructureMaps also
+differ; the spike doesn't use them). With 1.0.0's files in place of these, every test gives the same result (ran
+2026-11-02: the JVM, and JS and Wasm under Node; steps 6 and 7 with the cqframework build that has #1874's fix, as
+before).
+
 - `third_party/cqframework-quick-5.4.0/`: `fhir-modelinfo-4.0.1.xml` and `FHIRHelpers-4.0.1.cql`, copied from
   `org.cqframework:quick:5.4.0` (Apache License 2.0).
 - `third_party/smart-immunizations-0.2.0/cql/` and `valuesets/`: the CQL of all 279 Library resources and all 192
