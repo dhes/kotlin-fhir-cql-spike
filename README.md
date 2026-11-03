@@ -19,11 +19,14 @@ below.
   with cqframework's HAPI-based `R4FhirModelResolver`, compared element by element, resources included. The only
   differences change no CQL value: HAPI adds an empty `meta` that isn't in the data, and names one backbone element
   by its Java class. The guidance text matches WHO's in all 634 scenarios that state one.
-- **JS and Wasm (under Node):** the same outcomes, except 6 scenarios that reach CQL's `Split`, which cqframework 5.4.0
-  does not implement there (cqframework/clinical_quality_language#1870). cqframework/clinical_quality_language#1876,
-  merged 2026-10-28 and not yet released, implements it: with cqframework `main` at 2b5c7401, all 1,098 scenarios give
-  the JVM's outcomes on JS and Wasm too (Status, 2026-10-28). Outside WHO's content, cqframework's decimal
-  multiplication, division, `mod`, `div` and equivalence give wrong values or fail there (step 14, Findings).
+- **JS and Wasm (under Node):** the same outcomes as the JVM in 1,092 of the 1,098 scenarios. The other 6 use CQL's
+  `Split`, which throws on JS and Wasm in cqframework 5.4.0 (cqframework/clinical_quality_language#1870).
+  - cqframework/clinical_quality_language#1876 fixes `Split`. It was merged on 2026-10-28 and is not yet in a
+    release. Built from cqframework `main` at 2b5c7401, which includes it, all 1,098 scenarios match the JVM on JS
+    and Wasm ([Status](#status), 2026-10-28).
+  - Separately, cqframework's decimal arithmetic is wrong on JS and Wasm, in CQL that WHO's suite doesn't reach:
+    multiplication, division, `mod` and `div` give wrong values, and `~` on decimals throws
+    (cqframework/clinical_quality_language#1894; a fix is offered in #1895; see [Findings](#findings-so-far)).
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service,
   which the spike supplies over the `@lhncbc/ucum-lhc` npm package (step 14; see also
