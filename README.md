@@ -49,8 +49,9 @@ below.
   under Node, `$apply` and kotlin-fhir-knowledge included. A page, https://dhes.github.io/kotlin-fhir-cql-spike/, runs
   WHO's 1,021 test cases through kotlin-fhir-workflow's `$apply` in the tab (`demo/`).
 - **Not tested:** kotlin-fhir-engine's on-disk browser storage (OPFS), a terminology server, and `$apply` on iOS or
-  Android. WHO's CQL never reaches date-range filtering in retrieve or
-  code-system lookups; steps 10 and 11 test them with CQL of the spike's own.
+  Android. No retrieve in WHO's CQL libraries, as compiled, has a date range, and none of them tests a code against a
+  code system, so WHO's test cases can't exercise those parts of the spike; steps 10 and 11 test them with CQL
+  libraries written for the spike (`fixtures/retrieve/`, `fixtures/terminology/`).
 
 ## What a scenario is, and how it is tested
 
@@ -997,8 +998,9 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   server these definitions use the day the test runs. Run on 2026-10-27, 14 scenarios change, and 7 no longer give
   WHO's guidance. Steps 4 to 17 set Now() to noon on Today.
 - **Coverage.** WHO's test suite has Immunization, Observation and MedicationRequest data but no Conditions; the
-  twins cover Conditions. WHO's CQL never reaches date-range filtering in retrieve, a profile, a value set version or
-  a code-system test; steps 10 and 11 cover them with CQL of the spike's own.
+  twins cover Conditions. No retrieve in WHO's CQL libraries, as compiled, has a date range or a profile; they name no
+  value set version and never test a code against a code system. So WHO's test cases can't exercise those parts of
+  the spike; steps 10 and 11 test them with CQL libraries written for the spike.
 
 ## Licence
 
