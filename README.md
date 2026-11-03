@@ -167,11 +167,11 @@ PlanDefinition, its logic library, the patient, the bundle, Today, the expected 
   the browser's Web Worker. [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 8, 9
   and 13.
 - **Does the retrieve provider cover all of cqframework's `RetrieveProvider` interface?** Yes: date range and profile
-  as well, on the JVM, JS and Wasm, tested with CQL of the spike's own. A date range reaches a retrieve only through a
+  as well, on the JVM, JS and Wasm, tested with CQL libraries written for the spike. A date range reaches a retrieve only through a
   compiler option that can drop a test's precision or choice type; in the spike's tests, 4 of the 10 retrieves given
   a date range can't match their where clause for that reason (see Findings). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 10.
 - **Does the terminology provider give the same answers as clinical-reasoning's?** Yes, on WHO's whole suite (all
-  343,922 values, JVM) and on CQL of the spike's own, except where the spike checks a code against a CodeSystem
+  343,922 values, JVM) and on CQL libraries written for the spike, except where the spike checks a code against a CodeSystem
   resource it holds, which clinical-reasoning's provider doesn't. [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 11.
 
 ## Code
