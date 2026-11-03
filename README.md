@@ -26,7 +26,7 @@ below.
     and Wasm ([Status](#status), 2026-10-28).
   - Separately, cqframework's decimal arithmetic is wrong on JS and Wasm, in CQL that WHO's suite doesn't reach:
     multiplication, division, `mod` and `div` give wrong values, and `~` on decimals throws
-    (cqframework/clinical_quality_language#1894; a fix is offered in #1895; see [Findings](#findings-so-far)).
+    (cqframework/clinical_quality_language#1894; a fix is offered in cqframework/clinical_quality_language#1895; see [Findings](#findings-so-far)).
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service,
   which the spike supplies over the `@lhncbc/ucum-lhc` npm package (step 14; see also
