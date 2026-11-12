@@ -45,9 +45,17 @@ class ElmFromRepositoryTest {
         val fromElm = cql.libraries.requests.filter { it.second == LibraryContentType.JSON }.map { it.first }.toSet()
         println("Libraries the suite needs: ${fromElm.size}; loaded from ELM: ${fromElm.size - fromCql.size}; compiled from CQL: ${fromCql.sorted()}")
         assertTrue(differences.isEmpty(), "${differences.size} scenarios differ from the recorded HAPI outcomes")
-        // cqframework 5.4.0 rejects the ELM of libraries with overloaded functions (cqframework#1873); the local build
-        // with the fix proposed in #1874 (-PcqlVersion=5.5.0-elm-functions-fb8055df-SNAPSHOT) uses it.
-        if (CQL_VERSION.startsWith("5.5.0-elm-functions")) assertEquals(emptySet(), fromCql) else assertEquals(setOf("FHIRHelpers", "IMMZCommon", "WHOCommon"), fromCql)
+        // cqframework before 5.6.0 rejects the ELM of libraries with overloaded functions (cqframework#1873, fixed by
+        // #1874). Releases from 5.6.0 use it, and so does the local build made from that fix
+        // (-PcqlVersion=5.5.0-elm-functions-fb8055df-SNAPSHOT); other local builds are taken not to have the fix.
+        if (loadsElmOfOverloadedFunctions(CQL_VERSION)) assertEquals(emptySet(), fromCql) else assertEquals(setOf("FHIRHelpers", "IMMZCommon", "WHOCommon"), fromCql)
+    }
+
+    private fun loadsElmOfOverloadedFunctions(version: String): Boolean {
+        if (version.startsWith("5.5.0-elm-functions")) return true
+        if (version.endsWith("-SNAPSHOT")) return false
+        val (major, minor) = version.split('.').map { it.toInt() }
+        return major > 5 || (major == 5 && minor >= 6)
     }
 
     private fun Library.withElm(elm: String): Library =

@@ -21,16 +21,18 @@ below.
   by its Java class. The guidance text matches WHO's in all 634 scenarios that state one.
 - **JS and Wasm (under Node):** the same outcomes as the JVM in 1,092 of the 1,098 scenarios. The other 6 use CQL's
   `Split`, which throws on JS and Wasm in cqframework 5.4.0 (cqframework/clinical_quality_language#1870).
-  - cqframework/clinical_quality_language#1876 fixes `Split`. It was merged on 2026-10-28 and is not yet in a
-    release. Built from cqframework `main` at 2b5c7401, which includes it, all 1,098 scenarios match the JVM on JS
-    and Wasm ([Status](#status), 2026-10-28).
+  - cqframework/clinical_quality_language#1876 fixes `Split`, and is in cqframework 5.6.0 (2026-11-10). With
+    cqframework 5.6.1 from Maven Central (`-PcqlVersion=5.6.1`), all 1,098 scenarios match the JVM on JS and Wasm
+    ([Status](#status), 2026-11-11).
   - Separately, cqframework's decimal arithmetic is wrong on JS and Wasm, in CQL that WHO's suite doesn't reach:
     multiplication, division, `mod` and `div` give wrong values, and `~` on decimals throws
     (cqframework/clinical_quality_language#1894; a fix is offered in cqframework/clinical_quality_language#1895; see [Findings](#findings-so-far)).
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service,
   which the spike supplies over the `@lhncbc/ucum-lhc` npm package (step 14; see also
-  cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build.
+  cqframework/clinical_quality_language#1869); and a 6 GB Gradle heap for the JS build. From cqframework 5.6.0,
+  WHO's suite itself runs on Wasm with no UCUM service, because its only quantities are calendar durations
+  ([Status](#status), 2026-11-11); CQL that uses UCUM units still needs one.
 - **`$apply` through kotlin-fhir-workflow** (step 15, JVM and Wasm; kotlin-fhir-workflow has no JS target): each
   scenario's PlanDefinition, run by kotlin-fhir-workflow's own `FhirOperator.generateCarePlan` with the spike's CQL
   evaluator behind its `ExpressionEvaluator`, gives step 4's resource count and guidance in every scenario that
@@ -153,9 +155,10 @@ PlanDefinition, its logic library, the patient, the bundle, Today, the expected 
 
 ## Follow-on questions
 
-- **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** Yes, once a cqframework
-  defect is fixed (cqframework/clinical_quality_language#1873, fix in PR #1874): the libraries on the JVM, JS and
-  Wasm, read as ELM from Library resources in a `WorkflowRepository`; the inline dynamicValues on the JVM.
+- **Can WHO's CQL, inline dynamicValues included, be compiled to ELM ahead of time?** Yes, from cqframework
+  5.6.0, which fixes a defect in loading ELM (cqframework/clinical_quality_language#1873, fixed by #1874; ran with
+  5.6.1, [Status](#status), 2026-11-11): the libraries on the JVM, JS and Wasm, read as ELM from Library resources
+  in a `WorkflowRepository`; the inline dynamicValues on the JVM.
   [Steps](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 5, 6 and 12.
 - **Can the results be written back with kotlin-fhir-workflow's own code?** Not as it stands: on the JVM, for 4 of
   WHO's 8 dynamicValue paths, the resources it writes don't decode (ohs-foundation/kotlin-fhir-workflow#9). [Step](https://github.com/dhes/kotlin-fhir-cql-spike/blob/main/README.md#status) 7.
@@ -748,6 +751,30 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - **Not yet:** automated runs in Chrome (Dan opened the page by hand in Firefox, Safari and Chrome); OPFS (on-disk
     storage, which needs COOP/COEP headers).
 
+- 2026-11-11: cqframework 5.6.1, from Maven Central.
+  - **What runs:** the whole suite (`./gradlew allTests -PcqlVersion=5.6.1`: the JVM, and JS and Wasm under Node),
+    and steps 5 to 7 on the JVM with `WHO_PACKAGE_DIR` set to WHO's package 1.0.0. cqframework 5.6.0 (2026-11-10) is
+    the first release with three fixes the spike had used local builds for:
+    cqframework/clinical_quality_language#1876 (`Split` on JS and Wasm, closing #1870), #1874 (loading the ELM of
+    libraries that define functions, closing #1873) and #1884 (calendar durations compile without a UCUM service,
+    closing #1869). 5.6.1 followed on 2026-11-11.
+  - **Result** (ran): every test passes on the three targets. No scenario reaches an unimplemented operation, and on
+    JS and Wasm no scenario differs from the recorded HAPI outcomes, as with the 2026-10-28 build. In step 12
+    (`ElmFromRepositoryTest`), all 237 libraries the suite needs load from ELM on the JVM, JS and Wasm, and none is
+    compiled from CQL; with 5.4.0, FHIRHelpers, IMMZCommon and WHOCommon were. Steps 5 to 7 give what they gave with
+    the local build `5.5.0-elm-functions-fb8055df-SNAPSHOT`: 280 of 280 libraries load from ELM alone, the suite run
+    from ELM matches the recorded HAPI outcomes in all 1,098 scenarios with nothing compiled from CQL, the 9,066
+    dynamicValue evaluations agree between ELM and CQL source, and the write-back test passes. So steps 5 to 7 and 12
+    no longer need a local cqframework build. The spike's default is still 5.4.0; `ElmFromRepositoryTest` now
+    expects the three libraries from CQL only for versions before 5.6.0.
+  - **Without a UCUM service, on Wasm** (ran): with `platformUcumService()` replaced by one that throws when it is
+    read (a temporary edit, not committed), `WhoSuiteTest` and `WhoApplyTest` pass on Wasm under Node with 5.6.1:
+    1,098 scenarios, none different from the recorded HAPI outcomes, and `$apply` applies the same 1,098 of 1,100.
+    With 5.5.0 the same run does not finish: Node runs out of memory (a 4 GB heap) after about 75 seconds. Why it
+    runs out of memory, where #1869 describes an exception, was not traced.
+  - **Not run:** JS without a UCUM service; the quantity cases of step 14 without one (they use UCUM units, which
+    still need a service); the browser page (`demo/`, still built with 5.5.0); the iOS simulator.
+
 ## Findings so far
 
 - **UCUM service on JS and Wasm.** On JS and Wasm the caller must supply a UCUM service, by design: cqframework's
@@ -838,7 +865,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   check for UCUM arbitrary units consults the service for every quantity literal. So the WHO closure, whose only
   quantities are calendar durations, compiled on JS and Wasm with no UCUM service before 5.2.0 and does not now.
   The probe is in Dan's cqframework hub, `probes/2026-10-15-ucum-calendar-units`. Reported as
-  cqframework/clinical_quality_language#1869 (2026-10-16).
+  cqframework/clinical_quality_language#1869 (2026-10-16). Fixed by cqframework/clinical_quality_language#1884,
+  released in 5.6.0 (Status, 2026-11-11).
 - **`validateUnits` compiler option is not read** (read, not run). On cqframework `main` at fb8055df, and still at
   1072c579, the CLI and options files set it, but nothing in the compiler reads it. The compiler always validates a
   quantity's unit (`LibraryBuilder.createQuantity` calls `validateUnit`, which asks the UCUM service), so setting
@@ -864,8 +892,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   Apache Commons `StringUtils.split`. WHO's `WHOCommon.references()` and `IMMZCommon`'s medication lookup use
   `Split`. In step 4 it is reached by 6 Typhoid Ty21a scenarios. Reported as
   cqframework/clinical_quality_language#1870 (2026-10-16). Fixed by cqframework/clinical_quality_language#1876
-  (merged 2026-10-28, not yet released): with cqframework `main` at 2b5c7401 the 6 scenarios pass on JS and Wasm
-  (Status, 2026-10-28).
+  (merged 2026-10-28, released in 5.6.0): with cqframework `main` at 2b5c7401 the 6 scenarios pass on JS and Wasm
+  (Status, 2026-10-28), and with 5.6.1 from Maven Central (Status, 2026-11-11).
 - **An invalid WHO test bundle.** `tests-Typhoid41.1-bundle.json` has a MedicationRequest without `medication[x]`,
   which R4 requires. kotlin-fhir rejects the bundle; HAPI's parser accepts it. Its scenario and twin are skipped on
   the kotlin-fhir side. Not raised upstream.
@@ -882,7 +910,8 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - IMMZIndicatorElements (one function, no overloads) passes that check, but loading throws a
     `NullPointerException`: the types of a function's operands are not resolved from the ELM. The exception is not
     caught, so this Library fails to load even when its CQL source is also available.
-  - Filed as cqframework/clinical_quality_language#1873, with a fix proposed in #1874 (see step 5).
+  - Filed as cqframework/clinical_quality_language#1873, with a fix proposed in #1874 (see step 5). #1874 was
+    merged on 2026-11-10 and is in 5.6.0 (Status, 2026-11-11).
 - **WHO's inline dynamicValues are all constants.** Scan, 2026-10-19: the 959 `text/cql-expression` dynamicValues in
   the 138 PlanDefinitions are 32 distinct literals (`'active'`, `'proposal'`, `'draft'`, `Code { … }` for category and
   priority, `Concept { … }` for medication); none refers to a library definition or a `%` parameter. A wrapper still
