@@ -10,7 +10,7 @@ Reads the Karate feature files of WorldHealthOrganization/smart-immunizations at
   fixtures/who-suite/plandefinitions.json  per PlanDefinition used: logic library and its actions' applicability
                                            conditions (all are single CQL identifiers in this package)
   fixtures/who-suite/data/                 the test bundles the scenarios create
-  third_party/smart-immunizations-0.2.0/   all CQL and ValueSets of the package
+  third_party/smart-immunizations-1.0.0/   all CQL and ValueSets of the package
 
 It also writes, for each contraindication (IMMZ.D5) scenario whose bundle records a contraindication as an
 Observation coded DE161 "Potential contraindications", a twin scenario whose bundle records the same
@@ -128,7 +128,7 @@ def main() -> None:
     (out / "data").mkdir(parents=True, exist_ok=True)
 
     # Package content: libraries by url, all CQL, all ValueSets.
-    third = root / "third_party/smart-immunizations-0.2.0"
+    third = root / "third_party/smart-immunizations-1.0.0"
     (third / "cql").mkdir(parents=True, exist_ok=True)
     (third / "valuesets").mkdir(parents=True, exist_ok=True)
     library_names = {}

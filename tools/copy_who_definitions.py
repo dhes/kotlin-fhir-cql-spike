@@ -4,7 +4,7 @@
 Usage: python3 -I tools/copy_who_definitions.py <package dir>
 
 Each resource is copied as it is, without its narrative (`text`), to
-third_party/smart-immunizations-0.2.0/definitions/<resourceType>-<id>.json.
+third_party/smart-immunizations-1.0.0/definitions/<resourceType>-<id>.json.
 """
 
 import json
@@ -12,7 +12,7 @@ import os
 import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-OUT = os.path.join(ROOT, "third_party", "smart-immunizations-0.2.0", "definitions")
+OUT = os.path.join(ROOT, "third_party", "smart-immunizations-1.0.0", "definitions")
 
 
 def main() -> None:

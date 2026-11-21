@@ -23,7 +23,7 @@ data class ApplyOutcome(val contained: Int?, val guidance: String?, val error: S
 
 /** WHO's PlanDefinitions run through kotlin-fhir-workflow's `FhirOperator.generateCarePlan`, with CQL behind it. */
 object WhoApply {
-    private const val DEFINITIONS_DIR = "third_party/smart-immunizations-0.2.0/definitions"
+    private const val DEFINITIONS_DIR = "third_party/smart-immunizations-1.0.0/definitions"
 
     /** WHO's PlanDefinitions and ActivityDefinitions, as JSON, by canonical url. */
     val definitionsJson: Map<String, JsonObject> by lazy {

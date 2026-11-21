@@ -5,7 +5,7 @@ Usage: python3 tools/copy_who_libraries.py <package dir>
 
 Each Library keeps resourceType, id, url, version, name, status, type, relatedArtifact and its text/cql
 content; the ELM XML attachment and the other elements are left out. Exits non-zero if any library's CQL
-differs from third_party/smart-immunizations-0.2.0/cql/<name>.cql, line endings aside.
+differs from third_party/smart-immunizations-1.0.0/cql/<name>.cql, line endings aside.
 """
 
 import base64
@@ -15,8 +15,8 @@ import sys
 
 KEEP = ["resourceType", "id", "url", "version", "name", "status", "type", "relatedArtifact"]
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-OUT = os.path.join(ROOT, "third_party", "smart-immunizations-0.2.0", "libraries")
-CQL = os.path.join(ROOT, "third_party", "smart-immunizations-0.2.0", "cql")
+OUT = os.path.join(ROOT, "third_party", "smart-immunizations-1.0.0", "libraries")
+CQL = os.path.join(ROOT, "third_party", "smart-immunizations-1.0.0", "cql")
 
 
 def main(package_dir):

@@ -51,9 +51,9 @@ data class WhoOutcome(
     val containedMatchesWho: Boolean?,
 )
 
-/** WHO's immunization test suite (smart-immunizations at 12ec2fc54) and package 0.2.0, read from the project. */
+/** WHO's immunization test suite (smart-immunizations at v1.0.0, 8dd61d69) and package 1.0.0, read from the project. */
 object WhoSuite {
-    private const val CQL_DIR = "third_party/smart-immunizations-0.2.0/cql"
+    private const val CQL_DIR = "third_party/smart-immunizations-1.0.0/cql"
     const val EXPECTED = "fixtures/expected/who-suite-outcomes.json"
 
     private val json = MeaslesFixtures.json
@@ -72,7 +72,7 @@ object WhoSuite {
     }
 
     val valueSets: List<ValueSet> by lazy {
-        val dir = "third_party/smart-immunizations-0.2.0/valuesets"
+        val dir = "third_party/smart-immunizations-1.0.0/valuesets"
         MeaslesFixtures.list(dir).map {
             json.decodeFromString<Resource>(read("$dir/$it")) as ValueSet
         }
@@ -95,7 +95,7 @@ object WhoSuite {
 
     /** WHO's Library resources, with their CQL only (see tools/copy_who_libraries.py). */
     val libraryResources: List<Library> by lazy {
-        val dir = "third_party/smart-immunizations-0.2.0/libraries"
+        val dir = "third_party/smart-immunizations-1.0.0/libraries"
         MeaslesFixtures.list(dir).map {
             json.decodeFromString<Resource>(read("$dir/$it")) as Library
         }

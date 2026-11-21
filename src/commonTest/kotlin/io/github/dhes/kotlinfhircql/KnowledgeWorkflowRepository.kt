@@ -4,14 +4,14 @@ import dev.ohs.fhir.knowledge.KnowledgeManager
 import dev.ohs.fhir.model.r4.Resource
 import dev.ohs.fhir.workflow.WorkflowRepository
 
-/** WHO's package `smart.who.int.immunizations` 0.2.0 in kotlin-fhir-knowledge, and how it got there. */
+/** WHO's package `smart.who.int.immunizations` 1.0.0 in kotlin-fhir-knowledge, and how it got there. */
 class WhoKnowledge(val manager: KnowledgeManager, val how: String)
 
 /** The tarball of WHO's package, and the directory the build unpacks it into for the JS and Wasm tests. */
 object WhoPackage {
     const val NAME = "smart.who.int.immunizations"
-    const val VERSION = "0.2.0"
-    const val TGZ = "third_party/smart-immunizations-0.2.0/smart.who.int.immunizations-0.2.0.tgz"
+    const val VERSION = "1.0.0"
+    const val TGZ = "third_party/smart-immunizations-1.0.0/smart.who.int.immunizations-1.0.0.tgz"
     const val UNPACKED = "build/who-package/package"
 }
 

@@ -32,7 +32,7 @@ import org.opencds.cqf.cql.engine.runtime.Date
  * Library resources as `application/elm+json` content, and checks which libraries cqframework's CQL engine then
  * loads from ELM alone and whether WHO's test suite gives the recorded HAPI outcomes from them.
  *
- * WHO's Library resources are read from `WHO_PACKAGE_DIR` (package smart.who.int.immunizations 0.2.0); the
+ * WHO's Library resources are read from `WHO_PACKAGE_DIR` (package smart.who.int.immunizations 1.0.0); the
  * Libraries with ELM JSON added are written to `build/who-libraries-elm-json`.
  */
 class PrecompiledElmTest {

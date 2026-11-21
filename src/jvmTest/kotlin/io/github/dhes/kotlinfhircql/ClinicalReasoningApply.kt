@@ -32,7 +32,7 @@ data class CrApplyOutcome(
 
 /**
  * WHO's PlanDefinitions run through clinical-reasoning's `PlanDefinitionProcessor` (cqf-fhir-cr 4.13.0), over an
- * in-memory repository holding WHO's package 0.2.0 as published and one scenario's bundle, with the `Today`
+ * in-memory repository holding WHO's package 1.0.0 as published and one scenario's bundle, with the `Today`
  * parameter WHO's test sends and CQL's Now() at noon on that day, as in steps 4 and 15.
  */
 object ClinicalReasoningApply {

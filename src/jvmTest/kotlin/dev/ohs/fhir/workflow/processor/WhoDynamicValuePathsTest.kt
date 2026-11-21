@@ -12,7 +12,7 @@ import kotlinx.serialization.json.jsonObject
 
 /**
  * Writes one value at each dynamicValue path that WHO's immunization PlanDefinitions use (smart.who.int.immunizations
- * 0.2.0), with `evaluatedValueToJson` and `DynamicValueApplier` from kotlin-fhir-workflow 214c56d, and decodes the
+ * 1.0.0), with `evaluatedValueToJson` and `DynamicValueApplier` from kotlin-fhir-workflow 214c56d, and decodes the
  * result as a kotlin-fhir resource.
  */
 class WhoDynamicValuePathsTest {

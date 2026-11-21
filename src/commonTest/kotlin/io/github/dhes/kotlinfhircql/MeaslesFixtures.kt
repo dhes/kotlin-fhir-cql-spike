@@ -23,7 +23,7 @@ expect fun whoTestDateTime(): ZonedDateTime
 /** WHO's measles closure, value sets and example patients, read from the project directory. */
 object MeaslesFixtures {
     const val LOGIC_LIBRARY = "IMMZD2DTMeaslesOngoingTransmissionLogic"
-    private const val CQL_DIR = "third_party/smart-immunizations-0.2.0/cql"
+    private const val CQL_DIR = "third_party/smart-immunizations-1.0.0/cql"
     private const val TESTS_DIR = "fixtures/who-measles-tests"
     const val EXPECTED_RESULTS = "fixtures/expected/measles-closure-results.json"
 
@@ -54,7 +54,7 @@ object MeaslesFixtures {
     }
 
     val valueSets: List<ValueSet> by lazy {
-        val dir = "third_party/smart-immunizations-0.2.0/valuesets"
+        val dir = "third_party/smart-immunizations-1.0.0/valuesets"
         list(dir).map { json.decodeFromString<Resource>(readText("$dir/$it")) as ValueSet }
     }
 

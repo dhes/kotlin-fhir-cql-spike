@@ -56,9 +56,9 @@ val versions by tasks.registering {
 val fixtures by tasks.registering {
     val dirs = listOf(
         "fixtures/who-suite",
-        "third_party/smart-immunizations-0.2.0/cql",
-        "third_party/smart-immunizations-0.2.0/valuesets",
-        "third_party/smart-immunizations-0.2.0/definitions",
+        "third_party/smart-immunizations-1.0.0/cql",
+        "third_party/smart-immunizations-1.0.0/valuesets",
+        "third_party/smart-immunizations-1.0.0/definitions",
     )
     val files = listOf(
         "third_party/cqframework-quick-5.4.0/fhir-modelinfo-4.0.1.xml",

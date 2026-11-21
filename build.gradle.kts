@@ -135,7 +135,7 @@ val generateTestPaths by tasks.registering {
 
 // Step 16: WHO's package, unpacked for the JS and Wasm tests, where kotlin-fhir-knowledge can't unpack it (no gzip).
 val unpackWhoPackage by tasks.registering(Copy::class) {
-    from(tarTree(resources.gzip(file("third_party/smart-immunizations-0.2.0/smart.who.int.immunizations-0.2.0.tgz"))))
+    from(tarTree(resources.gzip(file("third_party/smart-immunizations-1.0.0/smart.who.int.immunizations-1.0.0.tgz"))))
     into(layout.buildDirectory.dir("who-package"))
 }
 
@@ -157,12 +157,12 @@ val bundleBrowserFixtures by tasks.registering {
     val dirs = listOf(
         "fixtures/who-suite",
         "fixtures/expected",
-        "third_party/smart-immunizations-0.2.0/cql",
-        "third_party/smart-immunizations-0.2.0/valuesets",
+        "third_party/smart-immunizations-1.0.0/cql",
+        "third_party/smart-immunizations-1.0.0/valuesets",
         // $apply (WhoApply)
-        "third_party/smart-immunizations-0.2.0/definitions",
+        "third_party/smart-immunizations-1.0.0/definitions",
         // WHO's Library resources (WhoSuite.libraryResources), for the repository tests
-        "third_party/smart-immunizations-0.2.0/libraries",
+        "third_party/smart-immunizations-1.0.0/libraries",
     )
     val files = listOf(
         "third_party/cqframework-quick-5.4.0/fhir-modelinfo-4.0.1.xml",

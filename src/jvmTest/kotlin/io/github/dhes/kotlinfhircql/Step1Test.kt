@@ -18,7 +18,7 @@ class Step1Test {
     private val root = File(System.getProperty("user.dir"))
     private val modelInfoXml = File(root, "third_party/cqframework-quick-5.4.0/fhir-modelinfo-4.0.1.xml").readText()
     private val librarySources =
-        File(root, "third_party/smart-immunizations-0.2.0/cql").listFiles()!!.filter { it.extension == "cql" }.map { it.readText() } +
+        File(root, "third_party/smart-immunizations-1.0.0/cql").listFiles()!!.filter { it.extension == "cql" }.map { it.readText() } +
             File(root, "third_party/cqframework-quick-5.4.0/FHIRHelpers-4.0.1.cql").readText()
     private val bundleJson = File(root, "fixtures/patients/step1-p1.json").readText()
 

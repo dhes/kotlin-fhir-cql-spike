@@ -1,7 +1,7 @@
 # A page that runs WHO's immunization test cases
 
 A web page that runs each of WHO's 1,021 test cases for the SMART Guidelines immunizations guide (smart-immunizations
-at 12ec2fc54, package 0.2.0) in the browser tab, and shows how many pass. For each case, ohs-foundation/kotlin-fhir-workflow
+at v1.0.0, package 1.0.0) in the browser tab, and shows how many pass. For each case, ohs-foundation/kotlin-fhir-workflow
 applies the case's PlanDefinition to its patient (`FhirOperator.generateCarePlan`, its `$apply`), and cqframework's CQL
 evaluator evaluates the CQL the PlanDefinition calls over ohs-foundation/kotlin-fhir resources. Everything is Kotlin
 compiled to WebAssembly; no server takes part beyond serving the files.
@@ -50,11 +50,12 @@ Clicking a test case shows what WHO expects, what the CarePlan has, and the Care
 
 ## Result
 
-Ran 2026-11-20 in headless Firefox 160, production build, cqframework 5.7.0, on the #9 fix: 1,004 of 1,021 pass in 55
-seconds. The 17 others: 16 whose resource count differs from WHO's (HAPI and clinical-reasoning give the same, steps 4
-and 17), and Typhoid41.1, whose bundle isn't valid R4. That is the number the conformance test gives on the JVM.
+Ran 2026-11-21 in headless Firefox 160, production build, cqframework 5.7.0, WHO's release 1.0.0, on the #9 fix: 1,004
+of 1,021 pass in 55 seconds (the same on 2026-11-20 with WHO's 0.2.0 CI build, which the page used until then). The 17
+others: 16 whose resource count differs from WHO's (HAPI and clinical-reasoning give the same, steps 4 and 17), and
+Typhoid41.1, whose bundle isn't valid R4. That is the number the conformance test gives on the JVM.
 
-Earlier, with cqframework 5.5.0:
+Earlier, with cqframework 5.5.0 and WHO's 0.2.0 CI build (smart-immunizations at 12ec2fc54):
 
 Ran 2026-10-30 in headless Firefox 159, production build: 998 of 1,021 pass in 55 seconds, on the #9 fix and on
 `main` with the spike's rewrites alike, with the same 23 not passing. A control, `main` without the path rewrites,

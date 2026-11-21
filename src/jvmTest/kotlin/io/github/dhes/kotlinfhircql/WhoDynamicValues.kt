@@ -18,7 +18,7 @@ import org.hl7.elm.r1.VersionedIdentifier
 import org.junit.Assume.assumeTrue
 
 /**
- * WHO's package `smart.who.int.immunizations` 0.2.0, unpacked, from the environment variable `WHO_PACKAGE_DIR`; a
+ * WHO's package `smart.who.int.immunizations` 1.0.0, unpacked, from the environment variable `WHO_PACKAGE_DIR`; a
  * test that calls this is skipped when the variable is not set.
  */
 internal fun whoPackageDir(): File {

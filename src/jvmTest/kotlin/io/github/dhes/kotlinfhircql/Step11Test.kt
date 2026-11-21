@@ -54,7 +54,7 @@ class Step11Test {
      */
     @Test
     fun whoValueSetsExpandTheSame() {
-        val dir = File(PROJECT_DIR, "third_party/smart-immunizations-0.2.0/valuesets")
+        val dir = File(PROJECT_DIR, "third_party/smart-immunizations-1.0.0/valuesets")
         val hapi = dir.listFiles()!!.filter { it.name.endsWith(".json") }.map { context.newJsonParser().parseResource(ValueSet::class.java, it.readText()) }
         val reference = clinicalReasoning(hapi)
         val ours = InMemoryTerminologyProvider(WhoSuite.valueSets)
@@ -86,7 +86,7 @@ class Step11Test {
     /** WHO's whole suite, every definition, with clinical-reasoning's provider in place of the spike's. */
     @Test
     fun whoSuiteAgreesWithClinicalReasoningTerminology() {
-        val dir = File(PROJECT_DIR, "third_party/smart-immunizations-0.2.0/valuesets")
+        val dir = File(PROJECT_DIR, "third_party/smart-immunizations-1.0.0/valuesets")
         val hapi = dir.listFiles()!!.filter { it.name.endsWith(".json") }.map { context.newJsonParser().parseResource(ValueSet::class.java, it.readText()) }
         val ours = FhirCqlEvaluator(WhoSuite.librarySources, MeaslesFixtures.modelInfoXml, InMemoryTerminologyProvider(WhoSuite.valueSets))
         val reference = FhirCqlEvaluator(WhoSuite.librarySources, MeaslesFixtures.modelInfoXml, clinicalReasoning(hapi))

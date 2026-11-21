@@ -11,7 +11,7 @@ route over kotlin-fhir.
 
 ## Answer
 
-Yes, on WHO's immunization test suite (`smart.who.int.immunizations` 0.2.0, 1,098 scenarios), with the conditions
+Yes, on WHO's immunization test suite (`smart.who.int.immunizations` 1.0.0, 1,098 scenarios), with the conditions
 below.
 
 - **JVM:** for each of the 343,922 definition values (every definition in each scenario's library closure: its
@@ -51,7 +51,7 @@ below.
 - **In a browser** (Status, 2026-10-30, Wasm in Firefox, cqframework 5.5.0): the suite gives the same outcomes as
   under Node, `$apply` and kotlin-fhir-knowledge included. A page, https://dhes.github.io/kotlin-fhir-cql-spike/, runs
   WHO's 1,021 test cases through kotlin-fhir-workflow's `$apply` in the tab (`demo/`). Since 2026-11-20 the page is
-  built with cqframework 5.7.0, and 1,004 of the 1,021 pass.
+  built with cqframework 5.7.0, and 1,004 of the 1,021 pass; since 2026-11-21 it uses WHO's release 1.0.0.
 - **Not tested:** kotlin-fhir-engine's on-disk browser storage (OPFS), a terminology server, and `$apply` on iOS or
   Android. No retrieve in WHO's CQL libraries, as compiled, has a date range, and none of them tests a code against a
   code system, so WHO's test cases can't exercise those parts of the spike; steps 10 and 11 test them with CQL
@@ -809,6 +809,20 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     offered on #9, rc04). The hosted page is updated.
   - **Not run:** the iOS simulator. The spike's default is still 5.4.0, and `KNOWN_DIFFERENCES` is unchanged, since
     the listed cases still differ with earlier versions.
+- 2026-11-21: WHO's release 1.0.0 in place of the 0.2.0 CI build.
+  - **What changed:** WHO's files are now those of release 1.0.0 (see [Third-party content](#third-party-content)),
+    in `third_party/smart-immunizations-1.0.0/` (the folder was `third_party/smart-immunizations-0.2.0/`, the name the
+    earlier entries use). They were written by the same tools as before, from WHO's repository at v1.0.0 and package
+    1.0.0 from packages.fhir.org: `fixtures/who-suite/` came out unchanged, the CQL byte for byte the same, and the
+    Libraries, PlanDefinitions, ActivityDefinitions and ValueSets with only `version` and `date` different.
+  - **The page** (ran, `demo/`, cqframework 5.7.0): in headless Firefox 160, 1,004 of 1,021 pass in 55 seconds, with
+    the same 17 not passing as on 0.2.0. The hosted page is updated and names release 1.0.0.
+  - **The tests** (ran, `./gradlew jvmTest jsNodeTest wasmJsNodeTest -PcqlVersion=5.7.0`, with `WHO_PACKAGE_DIR` set
+    to package 1.0.0): every test passes, 41 on the JVM, 18 on JS and 23 on Wasm, as on 2026-11-20 with 0.2.0. On all
+    three targets `WhoSuiteTest` gives 1,098 scenarios with none different from the recorded HAPI outcomes. Steps 5 to
+    7 give what they gave before: 280 of 280 libraries load from ELM alone, and the 9,066 dynamicValue evaluations
+    agree between ELM and CQL source.
+  - **Not run:** the iOS simulator, Android, and the page in Safari or Chrome.
 
 ## Findings so far
 
@@ -1069,31 +1083,34 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
 ## Licence
 
 The spike's own code is under the Apache License 2.0 (`LICENSE`). The third-party content below keeps its own
-licence. WHO's licensing is mixed: the package `smart.who.int.immunizations` 0.2.0 declares CC0-1.0 (its
+licence. WHO's licensing is mixed: the package `smart.who.int.immunizations` 1.0.0 declares CC0-1.0 (its
 `package.json`), while WorldHealthOrganization/smart-immunizations' `LICENSE.md` puts WHO-authored guideline content
-under CC BY-NC-SA 3.0 IGO and software under the 3-clause BSD licence (read 2026-10-29, at 12ec2fc54).
+under CC BY-NC-SA 3.0 IGO and software under the 3-clause BSD licence (read 2026-10-29, at 12ec2fc54; the file is the same at v1.0.0).
 
 ## Third-party content
 
-WHO's content here is `smart.who.int.immunizations` 0.2.0, the CI build of WorldHealthOrganization/smart-immunizations
-at 12ec2fc54 (2026-07-07), which build.fhir.org no longer serves. WHO's release
-[v1.0.0](https://github.com/WorldHealthOrganization/smart-immunizations/releases/tag/v1.0.0) (2026-10-02) has the same
-CQL and test cases, and in its package on packages.fhir.org the Libraries, PlanDefinitions, ActivityDefinitions and
-ValueSets the spike uses differ only in version, dates and generated narrative (13 profiles and 2 StructureMaps also
-differ; the spike doesn't use them). With 1.0.0's files in place of these, every test gives the same result (ran
-2026-11-02: the JVM, and JS and Wasm under Node; steps 6 and 7 with the cqframework build that has #1874's fix, as
-before).
+WHO's content here is WHO's release 1.0.0 (2026-10-02): the package `smart.who.int.immunizations` 1.0.0 from
+packages.fhir.org, and the test cases of WorldHealthOrganization/smart-immunizations at
+[v1.0.0](https://github.com/WorldHealthOrganization/smart-immunizations/releases/tag/v1.0.0) (8dd61d69).
+
+Until 2026-11-21 it was package 0.2.0, the CI build of that repository at 12ec2fc54 (2026-07-07), which build.fhir.org
+no longer serves; the Status entries before that date ran on it and name the folder
+`third_party/smart-immunizations-0.2.0/`. The two differ little. Between 12ec2fc54 and v1.0.0 only
+`sushi-config.yaml` and `publication-request.json` changed (read, GitHub's comparison), so the CQL and the test cases
+are the same. Of the files copied here, the CQL is byte for byte the same, and the Libraries, PlanDefinitions,
+ActivityDefinitions and ValueSets differ only in `version` and `date` (ran, a comparison of every file, 2026-11-21).
+With 1.0.0's files every test gives the same result (ran 2026-11-02 and again 2026-11-21; see [Status](#status)).
 
 - `third_party/cqframework-quick-5.4.0/`: `fhir-modelinfo-4.0.1.xml` and `FHIRHelpers-4.0.1.cql`, copied from
   `org.cqframework:quick:5.4.0` (Apache License 2.0).
-- `third_party/smart-immunizations-0.2.0/cql/` and `valuesets/`: the CQL of all 279 Library resources and all 192
-  ValueSet resources of the WHO SMART immunizations package `smart.who.int.immunizations` 0.2.0 (package licence
-  CC0-1.0). The CQL is the same as in WorldHealthOrganization/smart-immunizations at 12ec2fc54, line endings aside.
-- `third_party/smart-immunizations-0.2.0/libraries/`: the same package's 279 Library resources with their CQL only,
+- `third_party/smart-immunizations-1.0.0/cql/` and `valuesets/`: the CQL of all 279 Library resources and all 192
+  ValueSet resources of the WHO SMART immunizations package `smart.who.int.immunizations` 1.0.0 (package licence
+  CC0-1.0). The CQL is the same as in WorldHealthOrganization/smart-immunizations at v1.0.0, line endings aside.
+- `third_party/smart-immunizations-1.0.0/libraries/`: the same package's 279 Library resources with their CQL only,
   written by `tools/copy_who_libraries.py`, which leaves out the ELM XML attachment and other elements and checks
   the CQL against `cql/`.
 - `fixtures/who-measles-tests/` and `fixtures/who-suite/`: test bundles, `.feature` file and scenario list from
-  WorldHealthOrganization/smart-immunizations at 12ec2fc54, `input/testing/features/plandefinition/`. These files
+  WorldHealthOrganization/smart-immunizations at v1.0.0, `input/testing/features/plandefinition/`. These files
   are not in the package, so its CC0-1.0 may not cover them; the repo's `LICENSE.md` puts WHO's guideline content
   under CC BY-NC-SA 3.0 IGO and software under the 3-clause BSD licence. `fixtures/who-suite/` is written by
   `tools/build_who_suite.py`, which also writes the Condition twins.
@@ -1108,15 +1125,15 @@ before).
 - `third_party/cqframework-cql-tests-5.4.0/quantity-cases.json`: test cases extracted from the CQL test suite files
   in cqframework/clinical_quality_language at v5.4.0, `engine-fhir/src/jvmTest/resources/org/hl7/fhirpath/cql/`
   (Apache License 2.0), by `tools/extract_quantity_cases.py`, for step 14.
-- `third_party/smart-immunizations-0.2.0/definitions/`: the 138 PlanDefinition and 3 ActivityDefinition resources of
+- `third_party/smart-immunizations-1.0.0/definitions/`: the 138 PlanDefinition and 3 ActivityDefinition resources of
   the same package (CC0-1.0), without their narratives, written by `tools/copy_who_definitions.py`, for step 15.
 - `patches/kotlin-fhir-workflow-214c56d-rc04.patch` and `patches/kotlin-fhirpath-461a7b9-local.patch`: changes to
   ohs-foundation/kotlin-fhir-workflow and ohs-foundation/kotlin-fhirpath (Apache License 2.0) for the spike's local
   builds of them (step 15). `patches/kotlin-fhir-knowledge-45b6960-rc04.patch`: the same for
   ohs-foundation/kotlin-fhir-knowledge (step 16).
-- `third_party/smart-immunizations-0.2.0/smart.who.int.immunizations-0.2.0.tgz`: the package
-  `smart.who.int.immunizations` 0.2.0 as published (CC0-1.0), WHO's CI build at build.fhir.org (its `package.json`
-  is dated 2026-07-07), for step 16. Its 279
+- `third_party/smart-immunizations-1.0.0/smart.who.int.immunizations-1.0.0.tgz`: the package
+  `smart.who.int.immunizations` 1.0.0 as published (CC0-1.0), from packages.fhir.org (its `package.json`
+  is dated 2026-10-02), for step 16. Its 279
   Libraries' CQL and its 192 ValueSets are the same as in `cql/` and `valuesets/`.
 - `@lhncbc/ucum-lhc` 7.1.10, an npm dependency of the JS and Wasm builds (step 14), is not in the repository. Its
   licence is NLM's, with the UCUM table's terms from Regenstrief Institute and the UCUM Organization (its
