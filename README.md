@@ -26,7 +26,8 @@ below.
     ([Status](#status), 2026-11-11).
   - Separately, cqframework's decimal arithmetic is wrong on JS and Wasm, in CQL that WHO's suite doesn't reach:
     multiplication, division, `mod` and `div` give wrong values, and `~` on decimals throws
-    (cqframework/clinical_quality_language#1894; a fix is offered in cqframework/clinical_quality_language#1895; see [Findings](#findings-so-far)).
+    (cqframework/clinical_quality_language#1894; see [Findings](#findings-so-far)). cqframework 5.7.0 (2026-11-20)
+    has the fix, cqframework/clinical_quality_language#1895 ([Status](#status), 2026-11-20).
 - **What it takes:** a generated element table in place of reflection (`generated/R4Structures.kt`); a hand-written
   table of the element that links each resource type to its patient (seven types); on JS and Wasm, a UCUM service,
   which the spike supplies over the `@lhncbc/ucum-lhc` npm package (step 14; see also
@@ -774,6 +775,33 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
     runs out of memory, where #1869 describes an exception, was not traced.
   - **Not run:** JS without a UCUM service; the quantity cases of step 14 without one (they use UCUM units, which
     still need a service); the browser page (`demo/`, still built with 5.5.0); the iOS simulator.
+
+- 2026-11-20: cqframework 5.7.0, from Maven Central.
+  - **What runs:** `./gradlew jsNodeTest wasmJsNodeTest -PcqlVersion=5.7.0` (JS and Wasm under Node), then
+    `./gradlew jvmTest -PcqlVersion=5.7.0`, then steps 5 to 7 on the JVM with `WHO_PACKAGE_DIR` set to WHO's package
+    1.0.0. 5.7.0 is the first release with three fixes for JS and Wasm that earlier entries tried as local builds:
+    cqframework/clinical_quality_language#1895 (decimal arithmetic, closing #1894), #1888 (`Matches`,
+    `ReplaceMatches`, `SplitOnMatches` and `Combine`, closing #1885) and #1901 (the Wasm `createUcumService` export).
+  - **Result** (ran): every test passes: 18 on JS, 23 on Wasm, 41 on the JVM. On JS and Wasm, `WhoSuiteTest` gives
+    1,098 scenarios with none different from the recorded HAPI outcomes, as with 5.6.1. Steps 5 to 7 give what they
+    gave with 5.6.1: 280 of 280 libraries load from ELM alone, the suite from ELM matches the recorded HAPI outcomes
+    in all 1,098 scenarios, and the 9,066 dynamicValue evaluations agree between ELM and CQL source.
+  - **The three fixes** (ran):
+    - *Decimal arithmetic.* Of the 194 quantity cases (`QuantityCasesTest`), none of the 17 listed under the two
+      `BigDecimal` reasons in `KNOWN_DIFFERENCES` differs from the JVM any more, on JS or on Wasm.
+    - *String functions.* The one case listed under `Matches` no longer differs on JS. `MatchesProbeTest` gives
+      `Matches('abc', '\'abc\'')` false and `Matches('abc', 'abc')` true on both targets.
+    - *Wasm UCUM export.* `UcumExportDivideTest`: `divideBy(2 'm', 4 's')` through the export gives `0.5 'm.s-1'` and
+      calls only `divideBy`; CQL `2 'm' / 4 's'` gives `0.50000000 'm.s-1'`. With 5.5.0 both gave `8.0 'm.s'`.
+  - **What still differs from the JVM:** 4 of the 194 quantity cases, on both targets, for the two reasons in
+    `KNOWN_DIFFERENCES` that are not cqframework's (ucum-lhc converts units with an offset and the JVM's fhir-ucum
+    does not; ucum-lhc rejects a space in an annotation). `ReplaceMatches('abc', '.*', 'X')` still gives `'X'` on
+    Wasm and `'XX'` on JS (see Findings).
+  - **HAPI on the JVM:** cqframework 5.7.0 moves to HAPI FHIR 9.0.0, and Gradle then resolves every HAPI artifact
+    in `jvmTest` to 9.0.0, although the build file names 8.12.0. clinical-reasoning 4.13.0 (steps 11 and 17), built
+    for HAPI 8.12.0, passed its tests on that mix; nothing else about the mix was checked.
+  - **Not run:** the browser page (`demo/`, still built with 5.5.0); the iOS simulator. The spike's default is
+    still 5.4.0, and `KNOWN_DIFFERENCES` is unchanged, since the listed cases still differ with earlier versions.
 
 ## Findings so far
 
