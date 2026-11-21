@@ -163,8 +163,8 @@
   const REASONS = [
     [/Resource count differs/, "The CarePlan has a different number of resources than WHO's test expects.",
       "cqframework's CQL evaluator on the JVM over HAPI FHIR resources, and cqframework/clinical-reasoning's $apply, give the same result in each of these cases, so the difference doesn't come from kotlin-fhir-workflow or the browser."],
-    [/NotImplementedError/, "The CQL calls Split, which cqframework 5.5.0 doesn't implement on JS and Wasm.",
-      "cqframework/clinical_quality_language#1870, fixed on its main branch after the 5.5.0 release."],
+    [/NotImplementedError/, "The CQL calls Split, which cqframework before 5.6.0 doesn't implement on JS and Wasm.",
+      "cqframework/clinical_quality_language#1870, fixed in the 5.6.0 release."],
     [/SerializationException/, "The test's patient bundle isn't valid FHIR R4.",
       "It has a MedicationRequest without its required medication, which kotlin-fhir rejects."],
   ];
