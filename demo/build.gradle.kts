@@ -8,7 +8,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-val cqlVersion = (findProperty("cqlVersion") as String?) ?: "5.5.0"
+val cqlVersion = (findProperty("cqlVersion") as String?) ?: "5.7.0"
 val kotlinFhirVersion = "1.0.0-rc04"
 // kotlin-fhir-workflow `main` at 214c56d with the fix offered on #9 (dhes/kotlin-fhir-workflow 6ba0f6c), built locally
 // against kotlin-fhir rc04 like the spike's 214c56d build (README, step 15). -PworkflowVersion=2.0.0-spike-214c56d-rc04

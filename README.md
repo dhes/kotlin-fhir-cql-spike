@@ -50,7 +50,8 @@ below.
   would return them, 49 lose a request, because two get one id.
 - **In a browser** (Status, 2026-10-30, Wasm in Firefox, cqframework 5.5.0): the suite gives the same outcomes as
   under Node, `$apply` and kotlin-fhir-knowledge included. A page, https://dhes.github.io/kotlin-fhir-cql-spike/, runs
-  WHO's 1,021 test cases through kotlin-fhir-workflow's `$apply` in the tab (`demo/`).
+  WHO's 1,021 test cases through kotlin-fhir-workflow's `$apply` in the tab (`demo/`). Since 2026-11-20 the page is
+  built with cqframework 5.7.0, and 1,004 of the 1,021 pass.
 - **Not tested:** kotlin-fhir-engine's on-disk browser storage (OPFS), a terminology server, and `$apply` on iOS or
   Android. No retrieve in WHO's CQL libraries, as compiled, has a date range, and none of them tests a code against a
   code system, so WHO's test cases can't exercise those parts of the spike; steps 10 and 11 test them with CQL
@@ -800,8 +801,14 @@ named by `WHO_PACKAGE_DIR`; they are skipped when it is not set.
   - **HAPI on the JVM:** cqframework 5.7.0 moves to HAPI FHIR 9.0.0, and Gradle then resolves every HAPI artifact
     in `jvmTest` to 9.0.0, although the build file names 8.12.0. clinical-reasoning 4.13.0 (steps 11 and 17), built
     for HAPI 8.12.0, passed its tests on that mix; nothing else about the mix was checked.
-  - **Not run:** the browser page (`demo/`, still built with 5.5.0); the iOS simulator. The spike's default is
-    still 5.4.0, and `KNOWN_DIFFERENCES` is unchanged, since the listed cases still differ with earlier versions.
+  - **The page** (ran, `demo/`, now built with 5.7.0 by default): in headless Firefox 160 (puppeteer-core,
+    production build), 1,004 of 1,021 pass in 55 seconds. With 5.5.0 it was 998: the 6 Typhoid cases whose CQL calls
+    `Split` now pass (cqframework/clinical_quality_language#1870, fixed in 5.6.0). The 17 others are the 16 count
+    differences HAPI and clinical-reasoning share and Typhoid41.1's invalid bundle, so the page now gives the
+    conformance test's number on the JVM. kotlin-fhir-workflow and kotlin-fhir are as before (214c56d plus the fix
+    offered on #9, rc04). The hosted page is updated.
+  - **Not run:** the iOS simulator. The spike's default is still 5.4.0, and `KNOWN_DIFFERENCES` is unchanged, since
+    the listed cases still differ with earlier versions.
 
 ## Findings so far
 

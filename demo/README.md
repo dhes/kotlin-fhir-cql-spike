@@ -25,7 +25,7 @@ routes. The page says so. Built like the spike's 214c56d build (spike README, st
 -PmavenVersion=2.0.0-spike-6ba0f6c-rc04`. `-PworkflowVersion=2.0.0-spike-214c56d-rc04` builds the page on `main`
 instead, with the spike's path rewrites, and the page's text follows.
 
-Versions: cqframework 5.5.0 (`-PcqlVersion` to change), kotlin-fhir 1.0.0-rc04.
+Versions: cqframework 5.7.0 (`-PcqlVersion` to change), kotlin-fhir 1.0.0-rc04.
 
 WHO's files (the scenarios and their bundles, the CQL, value sets and definitions, the model info and FHIRHelpers) go
 next to the page as one JSON file, `fixtures.json` (17.5 MB), which it fetches when the run starts.
@@ -49,6 +49,12 @@ local build.
 Clicking a test case shows what WHO expects, what the CarePlan has, and the CarePlan itself.
 
 ## Result
+
+Ran 2026-11-20 in headless Firefox 160, production build, cqframework 5.7.0, on the #9 fix: 1,004 of 1,021 pass in 55
+seconds. The 17 others: 16 whose resource count differs from WHO's (HAPI and clinical-reasoning give the same, steps 4
+and 17), and Typhoid41.1, whose bundle isn't valid R4. That is the number the conformance test gives on the JVM.
+
+Earlier, with cqframework 5.5.0:
 
 Ran 2026-10-30 in headless Firefox 159, production build: 998 of 1,021 pass in 55 seconds, on the #9 fix and on
 `main` with the spike's rewrites alike, with the same 23 not passing. A control, `main` without the path rewrites,
