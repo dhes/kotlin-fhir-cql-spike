@@ -81,15 +81,15 @@
 <main>
   <h1>WHO's immunization test cases, run in this browser</h1>
   <p>
-    WHO's SMART Guidelines immunizations guide (release 1.0.0) comes with test cases: a patient, a date and a PlanDefinition,
-    and what applying it should give. This page runs every one of them here, in this browser tab, with no server.
+    WHO's SMART Guidelines immunizations guide (release 1.0.0) comes with test cases: a patient, a date and a
+    PlanDefinition, and what applying it should give. This page runs them in this browser tab, with no server.
     For each case, ohs-foundation/kotlin-fhir-workflow applies the PlanDefinition to the patient (<code>$apply</code>),
     and cqframework's CQL evaluator evaluates the CQL it calls over ohs-foundation/kotlin-fhir resources, all compiled
     from Kotlin to WebAssembly.
   </p>
   <p>
-    A case passes when the CarePlan contains the number of resources WHO's test expects and, where the test gives one,
-    the same guidance text.
+    A case passes when the CarePlan contains the number of resources WHO's test expects, and the same guidance text,
+    where the test gives one.
   </p>
   <p id="rewrites"></p>
   <p class="muted versions" id="versions"></p>
