@@ -34,9 +34,19 @@ class DemoBehavioursTest {
         label: String,
         plan: String = base.planDefinition,
         extra: List<JsonObject> = emptyList(),
+        birthDate: String? = null,
     ): WhoScenario {
         val bundle = json.parseToJsonElement(WhoSuite.bundleJson(base)).jsonObject
-        val entries = bundle.getValue("entry").jsonArray + extra.map { JsonObject(mapOf("resource" to it)) }
+        val original =
+            bundle.getValue("entry").jsonArray.map { entry ->
+                val resource = entry.jsonObject.getValue("resource").jsonObject
+                if (birthDate != null && resource.getValue("resourceType").jsonPrimitive.content == "Patient") {
+                    JsonObject(entry.jsonObject + ("resource" to JsonObject(resource + ("birthDate" to JsonPrimitive(birthDate)))))
+                } else {
+                    entry
+                }
+            }
+        val entries = original + extra.map { JsonObject(mapOf("resource" to it)) }
         dir.resolve("$label.json").writeText(JsonObject(bundle + ("entry" to JsonArray(entries))).toString())
         return base.copy(
             id = label,
@@ -48,8 +58,21 @@ class DemoBehavioursTest {
         )
     }
 
-    private fun immunization(patient: String, system: String, code: String, display: String, date: String) =
+    /** A completed dose; [primarySeries] adds the `protocolApplied.series` WHO's logic counts primary-series doses by. */
+    private fun immunization(
+        patient: String,
+        system: String,
+        code: String,
+        display: String,
+        date: String,
+        primarySeries: Boolean = false,
+    ) =
         buildJsonObject {
+            if (primarySeries) {
+                putJsonArray("protocolApplied") {
+                    add(buildJsonObject { put("series", "Primary series"); put("doseNumberString", "1") })
+                }
+            }
             put("resourceType", "Immunization")
             put("id", "added-$code-$date")
             put("status", "completed")
@@ -169,6 +192,29 @@ class DemoBehavioursTest {
                     println("    CQL ${case.library}: ${e::class.simpleName}: ${e.message}")
                 }
             }
+        }
+    }
+
+    /** Cases prompted by WHO's "Table 2: Summary of WHO Position Papers" (updated December 2025). */
+    @Test
+    fun oralPolioBeforeMeaslesAndLateStarters() = runTest(timeout = 30.minutes) {
+        println("=== 4. Oral polio vaccine two weeks before a measles or yellow fever visit")
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val opv = "Poliomyelitis oral, bivalent, live attenuated"
+        val measles = base("IMMZD2DTMeaslesOngoingTransmission/Measles09.3")
+        show("The child of ${measles.id}, plus $opv given 2025-10-29", variant(measles, "Measles09.3-opv-14d", extra = listOf(immunization(measles.patient, icd, "XM79H3", opv, "2025-10-29"))))
+        val yellow = base("IMMZD2DTYellowfeverYellowFever/Yellowfever09.3")
+        show("The child of ${yellow.id}, plus $opv given 2025-11-03", variant(yellow, "Yellowfever09.3-opv-14d", extra = listOf(immunization(yellow.patient, icd, "XM79H3", opv, "2025-11-03"))))
+
+        println("=== 5. Measles schedules for a child who starts late (born 2023-11-12, aged 2 on 2025-11-12)")
+        val mcv = "Measles, combinations with rubella, live attenuated"
+        for (id in listOf("IMMZD18SMeaslesLowTransmission/Measles23.3", "IMMZD18SMeaslesOngoingTransmission/Measles09.3")) {
+            val scenario = base(id)
+            show("${scenario.planDefinition}: no measles dose", variant(scenario, "${scenario.patient}-late-none", birthDate = "2023-11-12"))
+            show("${scenario.planDefinition}: first dose given today, 2025-11-12, recorded without protocolApplied",
+                variant(scenario, "${scenario.patient}-late-mcv1-bare", birthDate = "2023-11-12", extra = listOf(immunization(scenario.patient, icd, "XM21H2", mcv, "2025-11-12"))))
+            show("${scenario.planDefinition}: first dose given today, 2025-11-12, recorded as a primary-series dose",
+                variant(scenario, "${scenario.patient}-late-mcv1", birthDate = "2023-11-12", extra = listOf(immunization(scenario.patient, icd, "XM21H2", mcv, "2025-11-12", primarySeries = true))))
         }
     }
 
