@@ -20,7 +20,8 @@ private fun status(result: JsAny): String = js("result.status")
 
 private fun messages(result: JsAny): String = js("(result.msg || []).join(' ')")
 
-private fun toVal(result: JsAny): Double = js("result.toVal")
+/** The converted value to 15 significant digits, which drops the noise a double carries in its last digits. */
+private fun convertedValue(result: JsAny): String = js("String(Number(result.toVal.toPrecision(15)))")
 
 private fun magnitude(result: JsAny): String = js("String(result.magnitude)")
 
@@ -47,7 +48,7 @@ object UcumLhcService : UcumService {
         if (sourceUnit == destUnit) return value
         val result = convertUnitTo(utils, sourceUnit, value.toDouble(), destUnit)
         if (status(result) != "succeeded") throw IllegalArgumentException(messages(result))
-        return BigDecimal(toVal(result).toString())
+        return BigDecimal(convertedValue(result))
     }
 
     override fun multiply(left: Pair<BigDecimal, String>, right: Pair<BigDecimal, String>): Pair<BigDecimal, String> =
