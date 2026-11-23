@@ -218,6 +218,34 @@ class DemoBehavioursTest {
         }
     }
 
+    /** A measles visit with other doses recorded the same day: which must still block, and which need not. */
+    @Test
+    fun sameDayDosesAtAMeaslesVisit() = runTest(timeout = 30.minutes) {
+        println("=== 6. Same-day doses at a measles visit (child born 2024-07-12, aged 16 months on 2025-11-12)")
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val mr = "Measles, combinations with rubella, live attenuated"
+        val yf = "Yellow fever, live attenuated"
+        val scenario = base("IMMZD2DTMeaslesOngoingTransmission/Measles09.3")
+        fun mcv1(date: String) = immunization(scenario.patient, icd, "XM21H2", mr, date, primarySeries = true)
+        fun yellowFever(date: String) = immunization(scenario.patient, icd, "XM3418", yf, date)
+        val cases =
+            listOf(
+                "no measles dose" to emptyList(),
+                "no measles dose, yellow fever given today" to listOf(yellowFever("2025-11-12")),
+                "no measles dose, yellow fever given yesterday" to listOf(yellowFever("2025-11-11")),
+                "MCV1 given today" to listOf(mcv1("2025-11-12")),
+                "MCV1 and yellow fever given today" to listOf(mcv1("2025-11-12"), yellowFever("2025-11-12")),
+                "MCV1 given 27 days ago" to listOf(mcv1("2025-10-16")),
+                "MCV1 given 28 days ago" to listOf(mcv1("2025-10-15")),
+                "MCV1 given 28 days ago, yellow fever given today" to listOf(mcv1("2025-10-15"), yellowFever("2025-11-12")),
+            )
+        cases.forEachIndexed { index, (title, doses) ->
+            val changed = variant(scenario, "${scenario.patient}-sameday-$index", birthDate = "2024-07-12", extra = doses)
+            show(title, changed)
+            print(cql(changed, "IMMZD2DTMeaslesOngoingTransmissionLogic", "Client is due for MCV1", "Client is due for MCV2"))
+        }
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
