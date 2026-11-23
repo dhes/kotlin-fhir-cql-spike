@@ -246,6 +246,69 @@ class DemoBehavioursTest {
         }
     }
 
+    /** The same-day question at yellow fever, rubella and varicella visits. */
+    @Test
+    fun sameDayDosesAtOtherLiveVaccineVisits() = runTest(timeout = 30.minutes) {
+        println("=== 7. Same-day doses at yellow fever, rubella and varicella visits")
+        val icd = "http://id.who.int/icd/release/11/mms"
+        data class Dose(val code: String, val display: String, val date: String, val primary: Boolean = false)
+        data class Visit(val base: String, val library: String, val due: String, val cases: List<Pair<String, List<Dose>>>)
+        fun mr(date: String, primary: Boolean = false) = Dose("XM21H2", "Measles, combinations with rubella, live attenuated", date, primary)
+        fun yf(date: String, primary: Boolean = false) = Dose("XM3418", "Yellow fever, live attenuated", date, primary)
+        fun varicella(date: String) = Dose("XM0NS8", "Varicella, live attenuated", date, true)
+        val visits =
+            listOf(
+                Visit("IMMZD2DTYellowfeverYellowFever/Yellowfever09.3", "IMMZD2DTYellowfeverYellowFeverLogic", "Client is due for yellow fever vaccination",
+                    listOf(
+                        "nothing added" to emptyList(),
+                        "measles-rubella given today" to listOf(mr("2025-11-17")),
+                        "measles-rubella given yesterday" to listOf(mr("2025-11-16")),
+                        "yellow fever given today" to listOf(yf("2025-11-17", primary = true)),
+                    )),
+                Visit("IMMZD2DTRubellaHighIncidence/Rubella09.3", "IMMZD2DTRubellaHighIncidenceLogic", "Client is due for rubella vaccination",
+                    listOf(
+                        "nothing added" to emptyList(),
+                        "yellow fever given today" to listOf(yf("2025-11-13")),
+                        "yellow fever given yesterday" to listOf(yf("2025-11-12")),
+                        "measles-rubella given today" to listOf(mr("2025-11-13", primary = true)),
+                    )),
+                Visit("IMMZD2DTVaricella2Doses/Varicella23.3", "IMMZD2DTVaricella2DosesLogic", "Client is due for varicella vaccination",
+                    listOf(
+                        "nothing added" to emptyList(),
+                        "measles-rubella given today" to listOf(mr("2025-11-25")),
+                        "measles-rubella given yesterday" to listOf(mr("2025-11-24")),
+                        "first varicella dose given today" to listOf(varicella("2025-11-25")),
+                        "first varicella dose given 29 days ago" to listOf(varicella("2025-10-27")),
+                        "first varicella dose given 29 days ago, measles-rubella given today" to listOf(varicella("2025-10-27"), mr("2025-11-25")),
+                    )),
+            )
+        for (visit in visits) {
+            val scenario = base(visit.base)
+            visit.cases.forEachIndexed { index, (title, doses) ->
+                val extra = doses.map { immunization(scenario.patient, icd, it.code, it.display, it.date, it.primary) }
+                val changed = variant(scenario, "${scenario.patient}-otherlive-$index", extra = extra)
+                show("${scenario.planDefinition}: $title", changed)
+                print(cql(changed, visit.library, visit.due))
+            }
+        }
+    }
+
+    /** Whether the interval between MCV1 and MCV2 holds when MCV1 was recorded with a code outside the live set. */
+    @Test
+    fun measlesDoseRecordedWithAGeneralCode() = runTest(timeout = 30.minutes) {
+        println("=== 8. MCV1 ten days ago, recorded with a specific or a general code (child aged 16 months on 2025-11-12)")
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTMeaslesOngoingTransmission/Measles09.3")
+        val codes = listOf("XM21H2" to "Measles, combinations with rubella, live attenuated", "XM28X5" to "Measles vaccines")
+        for ((code, display) in codes) {
+            val changed =
+                variant(scenario, "${scenario.patient}-code-$code", birthDate = "2024-07-12",
+                    extra = listOf(immunization(scenario.patient, icd, code, display, "2025-11-02", primarySeries = true)))
+            show("MCV1 recorded as $display ($code)", changed)
+            print(cql(changed, "IMMZD2DTMeaslesOngoingTransmissionLogic", "Client is due for MCV1", "Client is due for MCV2"))
+        }
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
