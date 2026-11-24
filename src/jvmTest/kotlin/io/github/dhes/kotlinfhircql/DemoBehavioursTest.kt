@@ -335,6 +335,30 @@ class DemoBehavioursTest {
         }
     }
 
+    /** One 9-month visit through the measles, rubella and yellow fever tables, as doses are recorded by product. */
+    @Test
+    fun nineMonthVisitThroughThreeTables() = runTest(timeout = 30.minutes) {
+        println("=== 10. A 9-month visit on 2025-11-12 through three decision tables, doses recorded by product")
+        val prequal = "http://smart.who.int/pcmt-vaxprequal/CodeSystem/PreQualProductIds"
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTMeaslesOngoingTransmission/Measles09.3")
+        val mr =
+            immunization(scenario.patient, prequal, "a3K3X000006MiimUAC",
+                "Measles and Rubella Vaccine Live Attenuated (MR), Serum Institute of India, Vial, 10 doses [FVP-P-140]", "2025-11-12",
+                primarySeries = true, alsoCodedAs = Triple(icd, "XM21H2", "Measles, combinations with rubella, live attenuated"))
+        val yf =
+            immunization(scenario.patient, prequal, "a3K3X000006MihwUAC",
+                "Stabilized Yellow Fever Vaccine (YF), Institut Pasteur de Dakar (IPD), Ampoule, 10 doses [FVP-P-66]", "2025-11-12",
+                primarySeries = true, alsoCodedAs = Triple(icd, "XM3418", "Yellow fever, live attenuated"))
+        val steps = listOf("nothing recorded yet" to emptyList(), "MR recorded" to listOf(mr), "MR and yellow fever recorded" to listOf(mr, yf))
+        val tables = listOf("IMMZD2DTMeaslesOngoingTransmission", "IMMZD2DTRubellaHighIncidence", "IMMZD2DTYellowfeverYellowFever")
+        steps.forEachIndexed { index, (title, doses) ->
+            for (table in tables) {
+                show("$title; $table", variant(scenario, "${scenario.patient}-visit-$index-$table", plan = table, extra = doses))
+            }
+        }
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
