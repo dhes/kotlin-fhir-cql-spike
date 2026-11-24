@@ -280,6 +280,8 @@ class DemoBehavioursTest {
                         "first varicella dose given today" to listOf(varicella("2025-11-25")),
                         "first varicella dose given 29 days ago" to listOf(varicella("2025-10-27")),
                         "first varicella dose given 29 days ago, measles-rubella given today" to listOf(varicella("2025-10-27"), mr("2025-11-25")),
+                        "yellow fever given today" to listOf(yf("2025-11-25")),
+                        "yellow fever given yesterday" to listOf(yf("2025-11-24")),
                     )),
             )
         for (visit in visits) {
