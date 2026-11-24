@@ -360,6 +360,27 @@ class DemoBehavioursTest {
     }
 
     @Test
+    fun rubellaTablesAfterTwoMeaslesRubellaDoses() = runTest(timeout = 30.minutes) {
+        println("=== 11. The rubella tables for a child aged 15 months on 2025-11-13, after one and after two measles-rubella doses")
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTRubellaHighIncidence/Rubella09.3")
+        fun mr(date: String) = immunization(scenario.patient, icd, "XM21H2", "Measles, combinations with rubella, live attenuated", date, primarySeries = true)
+        val steps =
+            listOf(
+                "one dose, at 9 months" to listOf(mr("2025-05-13")),
+                "two doses, at 9 months and 6 weeks ago" to listOf(mr("2025-05-13"), mr("2025-10-02")),
+                "two doses, at 9 months and today" to listOf(mr("2025-05-13"), mr("2025-11-13")),
+            )
+        for (table in listOf("IMMZD2DTRubellaHighIncidence", "IMMZD2DTRubellaLowIncidence")) {
+            steps.forEachIndexed { index, (title, doses) ->
+                val variant = variant(scenario, "${scenario.patient}-two-doses-$index-$table", plan = table, extra = doses, birthDate = "2024-08-13")
+                show("$table: $title", variant)
+                print(cql(variant, "${table}Logic", "Rubella immunization schedule is complete", "Client is due for rubella vaccination", "Client is not due for rubella vaccination"))
+            }
+        }
+    }
+
+    @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
         val child = base("IMMZD2DTMeaslesLowTransmission/Measles23.3")
