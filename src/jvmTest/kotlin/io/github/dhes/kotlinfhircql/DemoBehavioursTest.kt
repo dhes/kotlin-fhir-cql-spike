@@ -66,6 +66,7 @@ class DemoBehavioursTest {
         display: String,
         date: String,
         primarySeries: Boolean = false,
+        alsoCodedAs: Triple<String, String, String>? = null,
     ) =
         buildJsonObject {
             if (primarySeries) {
@@ -79,6 +80,7 @@ class DemoBehavioursTest {
             putJsonObject("vaccineCode") {
                 putJsonArray("coding") {
                     add(buildJsonObject { put("system", system); put("code", code); put("display", display) })
+                    alsoCodedAs?.let { (s, c, d) -> add(buildJsonObject { put("system", s); put("code", c); put("display", d) }) }
                 }
             }
             putJsonObject("patient") { put("reference", "Patient/$patient") }
@@ -307,6 +309,28 @@ class DemoBehavioursTest {
                 variant(scenario, "${scenario.patient}-code-$code", birthDate = "2024-07-12",
                     extra = listOf(immunization(scenario.patient, icd, code, display, "2025-11-02", primarySeries = true)))
             show("MCV1 recorded as $display ($code)", changed)
+            print(cql(changed, "IMMZD2DTMeaslesOngoingTransmissionLogic", "Client is due for MCV1", "Client is due for MCV2"))
+        }
+    }
+
+    /** Whether a dose recorded with a WHO prequalification product identifier counts, alone or beside an ICD-11 code. */
+    @Test
+    fun measlesDoseRecordedWithAPrequalificationProductCode() = runTest(timeout = 30.minutes) {
+        println("=== 9. MCV1 ten days ago, recorded with a WHO PreQual product identifier (child aged 16 months on 2025-11-12)")
+        val prequal = "http://smart.who.int/pcmt-vaxprequal/CodeSystem/PreQualProductIds"
+        val product = "a3K3X000006MiiEUAS"
+        val productName = "Measles and Rubella Vaccine Live Attenuated (MR), Serum Institute of India, Vial, 1 dose [FVP-P-137]"
+        val icd = Triple("http://id.who.int/icd/release/11/mms", "XM21H2", "Measles, combinations with rubella, live attenuated")
+        val scenario = base("IMMZD2DTMeaslesOngoingTransmission/Measles09.3")
+        val cases =
+            listOf(
+                "the product identifier only" to immunization(scenario.patient, prequal, product, productName, "2025-11-02", primarySeries = true),
+                "the product identifier and ICD-11 XM21H2" to
+                    immunization(scenario.patient, prequal, product, productName, "2025-11-02", primarySeries = true, alsoCodedAs = icd),
+            )
+        cases.forEachIndexed { index, (title, dose) ->
+            val changed = variant(scenario, "${scenario.patient}-prequal-$index", birthDate = "2024-07-12", extra = listOf(dose))
+            show("MCV1 recorded with $title", changed)
             print(cql(changed, "IMMZD2DTMeaslesOngoingTransmissionLogic", "Client is due for MCV1", "Client is due for MCV2"))
         }
     }
