@@ -67,11 +67,12 @@ class DemoBehavioursTest {
         date: String,
         primarySeries: Boolean = false,
         alsoCodedAs: Triple<String, String, String>? = null,
+        series: String? = if (primarySeries) "Primary series" else null,
     ) =
         buildJsonObject {
-            if (primarySeries) {
+            if (series != null) {
                 putJsonArray("protocolApplied") {
-                    add(buildJsonObject { put("series", "Primary series"); put("doseNumberString", "1") })
+                    add(buildJsonObject { put("series", series); put("doseNumberString", "1") })
                 }
             }
             put("resourceType", "Immunization")
@@ -376,6 +377,42 @@ class DemoBehavioursTest {
                 val variant = variant(scenario, "${scenario.patient}-two-doses-$index-$table", plan = table, extra = doses, birthDate = "2024-08-13")
                 show("$table: $title", variant)
                 print(cql(variant, "${table}Logic", "Rubella immunization schedule is complete", "Client is due for rubella vaccination", "Client is not due for rubella vaccination"))
+            }
+        }
+    }
+
+    /** WHO's three tables for the vaccines given at birth, by the child's age and as doses are recorded. */
+    @Test
+    fun birthVisitThroughThreeTables() = runTest(timeout = 60.minutes) {
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val tables = listOf("IMMZD2DTBCG", "IMMZD2DTHepatitisBBirthDose", "IMMZD2DTPolioBirthDose", "IMMZD2DTHepatitisBDelayedStart")
+        println("=== 12. A child with nothing on record, seen on ${scenario.today}, through the birth-visit tables, by age")
+        val born =
+            listOf(0 to "2025-10-01", 1 to "2025-09-30", 6 to "2025-09-25", 7 to "2025-09-24", 28 to "2025-09-03", 29 to "2025-09-02",
+                41 to "2025-08-21", 42 to "2025-08-20")
+        for ((days, birthDate) in born) {
+            for (table in tables) {
+                show("aged $days days (born $birthDate); $table", variant(scenario, "${scenario.patient}-age-$days-$table", plan = table, birthDate = birthDate))
+            }
+        }
+
+        println("=== 13. A child born ${scenario.today}, seen the same day, as the three birth doses are recorded")
+        fun bcg(series: String? = "Primary series") = immunization(scenario.patient, icd, "XM8142", "Tuberculosis, live attenuated vaccines", scenario.today, series = series)
+        fun hepB(series: String? = "Dose 0") = immunization(scenario.patient, icd, "XM9V38", "Hepatitis B, purified antigen", scenario.today, series = series)
+        fun opv(series: String? = "Dose 0") = immunization(scenario.patient, icd, "XM79H3", "Poliomyelitis oral, bivalent, live attenuated", scenario.today, series = series)
+        val steps =
+            listOf(
+                "BCG recorded" to listOf(bcg()),
+                "oral polio recorded as dose 0" to listOf(opv()),
+                "hepatitis B recorded as dose 0" to listOf(hepB()),
+                "all three recorded" to listOf(bcg(), hepB(), opv()),
+                "hepatitis B and oral polio recorded as primary-series doses" to listOf(hepB("Primary series"), opv("Primary series")),
+                "hepatitis B and oral polio recorded with no series" to listOf(hepB(null), opv(null)),
+            )
+        steps.forEachIndexed { index, (title, doses) ->
+            for (table in tables.take(3)) {
+                show("$title; $table", variant(scenario, "${scenario.patient}-birth-$index-$table", plan = table, extra = doses, birthDate = scenario.today))
             }
         }
     }
