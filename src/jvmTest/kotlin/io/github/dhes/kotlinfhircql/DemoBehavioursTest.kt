@@ -68,15 +68,44 @@ class DemoBehavioursTest {
         primarySeries: Boolean = false,
         alsoCodedAs: Triple<String, String, String>? = null,
         series: String? = if (primarySeries) "Primary series" else null,
+        dose: Int = 1,
+        seriesDoses: Int? = null,
+        brand: String? = null,
+        numbersAsIntegers: Boolean = false,
+        typeOfDose: Pair<String, String>? = null,
     ) =
         buildJsonObject {
+            if (brand != null || typeOfDose != null) {
+                putJsonArray("extension") {
+                    if (brand != null) add(buildJsonObject {
+                        put("url", "http://smart.who.int/immunizations/StructureDefinition/IMMZVaccineBrand")
+                        putJsonObject("valueCodeableConcept") {
+                            putJsonArray("coding") { add(buildJsonObject { put("system", "http://example.org/Brands"); put("code", brand); put("display", brand) }) }
+                        }
+                    })
+                    if (typeOfDose != null) add(buildJsonObject {
+                        put("url", "http://smart.who.int/immunizations/StructureDefinition/IMMZTypeOfDose")
+                        putJsonObject("valueCodeableConcept") {
+                            putJsonArray("coding") {
+                                add(buildJsonObject { put("system", "http://smart.who.int/immunizations/CodeSystem/IMMZ.D"); put("code", typeOfDose.first); put("display", typeOfDose.second) })
+                            }
+                        }
+                    })
+                }
+            }
             if (series != null) {
                 putJsonArray("protocolApplied") {
-                    add(buildJsonObject { put("series", series); put("doseNumberString", "1") })
+                    add(buildJsonObject {
+                        put("series", series)
+                        if (numbersAsIntegers) put("doseNumberPositiveInt", dose) else put("doseNumberString", dose.toString())
+                        if (seriesDoses != null) {
+                            if (numbersAsIntegers) put("seriesDosesPositiveInt", seriesDoses) else put("seriesDosesString", seriesDoses.toString())
+                        }
+                    })
                 }
             }
             put("resourceType", "Immunization")
-            put("id", "added-$code-$date")
+            put("id", "added-$code-$date-${series?.filter(Char::isLetterOrDigit)}-$dose")
             put("status", "completed")
             putJsonObject("vaccineCode") {
                 putJsonArray("coding") {
@@ -465,6 +494,81 @@ class DemoBehavioursTest {
         case("HIV-positive, on ART, immunologically stable, clinically well", "hiv-well", born, observationsOf("IMMZD2DTBCG/BCG19.7"))
         case("HIV-positive, on ART, not clinically well", "hiv-unwell", born, observationsOf("IMMZD2DTBCG/BCG18.5"))
         case("HIV-positive, not on ART", "hiv-no-art", born, observationsOf("IMMZD2DTBCG/BCG21.4"))
+    }
+
+    /** WHO's tables for the vaccines of the 6, 10 and 14 week visits, for one child as the visits go by. */
+    @Test
+    fun sixTenAndFourteenWeekVisits() = runTest(timeout = 60.minutes) {
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val today = scenario.today
+        val infant = listOf("IMMZD2DTDTPOnTimeStart", "IMMZD2DTHepatitisB4Doses", "IMMZD2DTHib3Doses", "IMMZD2DTPneumococcal3Doses", "IMMZD2DTPolioBOPVPlusIPV", "IMMZD2DTRotavirus")
+        var n = 0
+        suspend fun case(title: String, birthDate: String, doses: List<JsonObject>, tables: List<String> = infant) {
+            for (table in tables) show("$title; $table", variant(scenario, "${scenario.patient}-infant-${n++}", plan = table, extra = doses, birthDate = birthDate))
+        }
+        fun bcg(date: String) = immunization(scenario.patient, icd, "XM8142", "Tuberculosis, live attenuated vaccines", date, primarySeries = true)
+        fun hepB0(date: String) = immunization(scenario.patient, icd, "XM9V38", "Hepatitis B, purified antigen", date, series = "Dose 0")
+        val oral = "DE214" to "bOPV"
+        val injected = "DE213" to "IPV"
+        fun opv0(date: String) = immunization(scenario.patient, icd, "XM79H3", "Poliomyelitis oral, bivalent, live attenuated", date, series = "Dose 0", typeOfDose = oral)
+        fun atBirth(date: String) = listOf(bcg(date), hepB0(date), opv0(date))
+        fun penta(date: String, dose: Int) = immunization(scenario.patient, icd, "XM7JP3", "Diphtheria, hemophilus influenzae B, pertussis, tetanus, hepatitis B vaccines", date, primarySeries = true, dose = dose)
+        fun opv(date: String, dose: Int, typed: Boolean = true) =
+            immunization(scenario.patient, icd, "XM79H3", "Poliomyelitis oral, bivalent, live attenuated", date, primarySeries = true, dose = dose, typeOfDose = oral.takeIf { typed })
+        fun ipv(date: String, dose: Int) =
+            immunization(scenario.patient, icd, "XM5V19", "Poliomyelitis, trivalent, inactivated, whole virus", date, primarySeries = true, dose = dose, typeOfDose = injected)
+        fun pcv(date: String, dose: Int) = immunization(scenario.patient, icd, "XM96S7", "Pneumococcus, purified polysaccharides antigen conjugated vaccines", date, primarySeries = true, dose = dose)
+        fun rota(date: String, dose: Int, of: Int = 2, brand: String? = "Rotarix", code: String = "XM4GV0", integers: Boolean = false) =
+            immunization(scenario.patient, icd, code, if (code == "XM4GV0") "Rota virus, live attenuated" else "Rota virus, pentavalent, live, reassorted", date,
+                primarySeries = true, dose = dose, seriesDoses = of, brand = brand, numbersAsIntegers = integers)
+        fun visit(date: String, dose: Int) = listOf(penta(date, dose), opv(date, dose), pcv(date, dose), rota(date, dose))
+
+        println("=== 17. The infant tables by age, for a child seen on $today with the three birth doses on record")
+        case("aged 4 weeks", "2025-09-03", atBirth("2025-09-03"))
+        case("aged 41 days", "2025-08-21", atBirth("2025-08-21"))
+        case("aged 6 weeks", "2025-08-20", atBirth("2025-08-20"))
+
+        println("=== 18. The 6-week visit (born 2025-08-20) as doses are recorded")
+        val six = "2025-08-20"
+        case("rotavirus and oral polio recorded", six, atBirth(six) + rota(today, 1) + opv(today, 1))
+        case("all four recorded", six, atBirth(six) + visit(today, 1))
+        case("no BCG on record; BCG recorded today", six, listOf(hepB0(six), opv0(six), bcg(today)), listOf("IMMZD2DTRotavirus"))
+        case("no BCG on record; rotavirus recorded today", six, listOf(hepB0(six), opv0(six), rota(today, 1)), listOf("IMMZD2DTBCG"))
+        case("BCG given late, 3 weeks ago", six, listOf(hepB0(six), opv0(six), bcg("2025-09-10")), listOf("IMMZD2DTRotavirus"))
+        case("hepatitis B birth dose given late, 7 days ago", six, listOf(bcg(six), opv0(six), hepB0("2025-09-24")), listOf("IMMZD2DTHepatitisB4Doses", "IMMZD2DTDTPOnTimeStart"))
+
+        println("=== 19. The 10-week visit (born 2025-07-23), the 6-week doses given 2025-09-03")
+        val ten = "2025-07-23"
+        case("nothing recorded yet today", ten, atBirth(ten) + visit("2025-09-03", 1))
+
+        println("=== 20. The 14-week visit (born 2025-06-25), doses given 2025-08-06 and 2025-09-03")
+        val fourteen = "2025-06-25"
+        val before = atBirth(fourteen) + visit("2025-08-06", 1) + visit("2025-09-03", 2)
+        case("nothing recorded yet today", fourteen, before)
+        case("pentavalent, oral polio, IPV and pneumococcal recorded", fourteen, before + penta(today, 3) + opv(today, 3) + ipv(today, 4) + pcv(today, 3))
+
+        println("=== 21. How a rotavirus dose is recorded")
+        fun rotaCase(title: String, birthDate: String, doses: List<JsonObject>) = suspend { case(title, birthDate, doses, listOf("IMMZD2DTRotavirus")) }
+        rotaCase("aged 10 weeks; dose 1 yesterday, coded 'live attenuated' (XM4GV0)", ten, listOf(rota("2025-09-30", 1)))()
+        rotaCase("aged 10 weeks; dose 1 yesterday, coded 'pentavalent, live, reassorted' (XM4VG1)", ten, listOf(rota("2025-09-30", 1, of = 3, brand = "ROTASIIL", code = "XM4VG1")))()
+        rotaCase("aged 14 weeks; two doses of a 2-dose product, brand and series length recorded", fourteen, listOf(rota("2025-08-06", 1), rota("2025-09-03", 2)))()
+        rotaCase("aged 14 weeks; the same two doses with no brand recorded", fourteen, listOf(rota("2025-08-06", 1, brand = null), rota("2025-09-03", 2, brand = null)))()
+        rotaCase("aged 14 weeks; the same two doses, dose number and series length recorded as integers", fourteen, listOf(rota("2025-08-06", 1, integers = true), rota("2025-09-03", 2, integers = true)))()
+        rotaCase("aged 14 weeks; two doses of a 3-dose product, brand and series length recorded", fourteen, listOf(rota("2025-08-06", 1, of = 3, brand = "ROTASIIL"), rota("2025-09-03", 2, of = 3, brand = "ROTASIIL")))()
+
+        println("=== 23. How a polio dose is recorded (the 6-week visit, born 2025-08-20)")
+        case("oral polio recorded today with the type of dose", six, atBirth(six) + opv(today, 1), listOf("IMMZD2DTPolioBOPVPlusIPV"))
+        case("oral polio recorded today without the type of dose", six, atBirth(six) + opv(today, 1, typed = false), listOf("IMMZD2DTPolioBOPVPlusIPV"))
+
+        println("=== 22. Later: the same tables at 9 and 12 months, and for a child who never started")
+        val complete = { born: String, d6: String, d10: String, d14: String ->
+            atBirth(born) + visit(d6, 1) + visit(d10, 2) + listOf(penta(d14, 3), opv(d14, 3), ipv(d14, 4), pcv(d14, 3))
+        }
+        case("aged 9 months (born 2025-01-01), infant doses complete", "2025-01-01", complete("2025-01-01", "2025-02-12", "2025-03-12", "2025-04-09"))
+        case("aged 12 months (born 2024-10-01), infant doses complete, IPV2 given at 9 months", "2024-10-01",
+            complete("2024-10-01", "2024-11-12", "2024-12-10", "2025-01-07") + ipv("2025-07-01", 5))
+        case("aged 13 months (born 2024-09-01), nothing on record", "2024-09-01", emptyList(), infant + "IMMZD2DTDTPDelayedOrInterruptedSeries")
     }
 
     @Test
