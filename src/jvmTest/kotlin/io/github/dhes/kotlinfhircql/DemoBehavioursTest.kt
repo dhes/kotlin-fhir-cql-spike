@@ -703,6 +703,93 @@ class DemoBehavioursTest {
         case("first visit 28 days ago", java.time.LocalDate.parse(ago(28)).minusYears(3).toString(), firstAtThree(ago(28)))
     }
 
+    /** WHO's contraindication tables for the ten vaccines of Freedonia's programme, one recorded answer at a time. */
+    @Test
+    fun screening() = runTest(timeout = 180.minutes) {
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val today = scenario.today
+        val immzD = "http://smart.who.int/immunizations/CodeSystem/IMMZ.D"
+        val immzZ = "http://smart.who.int/immunizations/CodeSystem/IMMZ.Z"
+        fun table(vaccine: String) = "IMMZD5DT${vaccine}Contraindications"
+        val tables = listOf("BCG", "HepatitisB", "Polio", "DTP", "Hib", "Pneumococcal", "Rotavirus", "Measles", "Rubella", "YellowFever").map(::table)
+        val answers = listOf(
+            "DE162" to "Currently pregnant", "DE163" to "Immunocompromised", "DE200" to "Severely immunocompromised",
+            "DE164" to "Exposed to immunosuppressive treatment", "DE165" to "Severely immunosuppressed", "DE187" to "Immunodeficiency syndromes",
+            "DE166" to "History of anaphylactic reactions", "DE167" to "Severe allergic reactions", "DE168" to "Symptomatic HIV infection",
+            "DE169" to "Planning to get pregnant in the next month", "DE170" to "Receiving blood products", "DE188" to "Severe acute illness",
+            "DE190" to "TB disease", "DE191" to "Breastfeeding", "DE192" to "Spina bifida", "DE193" to "Bladder exstrophy",
+            "DE194" to "Acute gastroenteritis", "DE195" to "Moderate to severe fever", "DE196" to "Prior history of intussusception",
+            "DE197" to "Altered immunocompetence", "DE198" to "Hypersensitivity to vaccine components", "DE199" to "Taking antibiotics",
+        ).toMap()
+        /** The categories WHO's decision tables propose for Freedonia's programme, as they return them. */
+        val proposed = listOf(
+            "DE1" to "BCG vaccines", "DE6" to "Hepatitis B-containing vaccines", "DE30" to "Oral polio vaccines", "DE31" to "Inactivated polio vaccines",
+            "DE24" to "DTP-containing vaccines", "DE4" to "Hib-containing vaccines", "DE13" to "Pneumococcal vaccines", "DE16" to "Rotavirus vaccines",
+            "DE9" to "Measles-containing vaccines", "DE17" to "Rubella-containing vaccines", "DE23" to "Yellow fever vaccines",
+        )
+        fun answer(code: String, date: String = today) =
+            buildJsonObject {
+                put("resourceType", "Observation")
+                put("id", "answer-$code-$date")
+                put("status", "final")
+                putJsonObject("code") {
+                    putJsonArray("coding") { add(buildJsonObject { put("system", immzD); put("code", "DE161"); put("display", "Potential contraindications") }) }
+                }
+                putJsonObject("subject") { put("reference", "Patient/${scenario.patient}") }
+                put("effectiveDateTime", date)
+                putJsonObject("valueCodeableConcept") {
+                    putJsonArray("coding") { add(buildJsonObject { put("system", immzD); put("code", code); put("display", answers.getValue(code)) }) }
+                }
+            }
+        fun proposal(code: String, display: String) =
+            buildJsonObject {
+                put("resourceType", "MedicationRequest")
+                put("id", "proposal-$code")
+                put("status", "draft")
+                put("intent", "proposal")
+                putJsonObject("medicationCodeableConcept") {
+                    putJsonArray("coding") { add(buildJsonObject { put("system", immzZ); put("code", code); put("display", display) }) }
+                    put("text", display)
+                }
+                putJsonObject("subject") { put("reference", "Patient/${scenario.patient}") }
+                put("authoredOn", today)
+            }
+        val proposals = proposed.map { (code, display) -> proposal(code, display) }
+        var n = 0
+        suspend fun case(title: String, birthDate: String, extra: List<JsonObject>, which: List<String> = tables) {
+            for (t in which) show("$title; $t", variant(scenario, "${scenario.patient}-screen-${n++}", plan = t, extra = extra, birthDate = birthDate))
+        }
+        val nine = "2025-01-01"
+
+        println("=== 35. A child aged 9 months (born $nine), a proposal dated today on record for each of eleven kinds of vaccine, one answer recorded today")
+        case("no answer recorded", nine, proposals)
+        for ((code, display) in answers) case("answer $code $display", nine, proposals + answer(code))
+
+        println("=== 36. Rows that depend on age")
+        for ((age, born) in listOf("11 months" to "2024-10-02", "12 months" to "2024-10-01")) {
+            case("aged $age, answer DE164 Exposed to immunosuppressive treatment", born, proposals + answer("DE164"), listOf(table("BCG")))
+        }
+        for ((age, born) in listOf("5 months" to "2025-04-02", "6 months" to "2025-04-01", "8 months" to "2025-01-02", "9 months" to "2025-01-01")) {
+            case("aged $age, no answer recorded", born, proposals, listOf(table("YellowFever")))
+        }
+
+        println("=== 37. An answer recorded at an earlier visit and nothing recorded today")
+        case("aged 9 months, DE195 Moderate to severe fever recorded 2025-05-01", nine, proposals + answer("DE195", "2025-05-01"), listOf(table("Rotavirus")))
+        case("aged 9 months, DE194 Acute gastroenteritis recorded 2025-05-01", nine, proposals + answer("DE194", "2025-05-01"), listOf(table("Rotavirus")))
+        case("aged 9 months, DE188 Severe acute illness recorded 2025-09-03", nine, proposals + answer("DE188", "2025-09-03"), listOf(table("DTP")))
+        case("aged 15 months (born 2024-07-01), DE170 Receiving blood products recorded 2024-10-01", "2024-07-01", proposals + answer("DE170", "2024-10-01"), listOf(table("Rubella")))
+
+        println("=== 38. Two answers recorded today")
+        case("aged 9 months, DE187 Immunodeficiency syndromes and DE167 Severe allergic reactions", nine, proposals + answer("DE187") + answer("DE167"), listOf(table("BCG"), table("Polio"), table("Rubella")))
+        case("aged 9 months, DE195 Moderate to severe fever and DE196 Prior history of intussusception", nine, proposals + answer("DE195") + answer("DE196"), listOf(table("Rotavirus")))
+
+        println("=== 39. An answer recorded today and no proposal on record")
+        case("aged 9 months, DE196 Prior history of intussusception", nine, listOf(answer("DE196")), listOf(table("Rotavirus")))
+        case("aged 9 months, DE192 Spina bifida", nine, listOf(answer("DE192")), listOf(table("Rotavirus")))
+        case("aged 9 months, DE167 Severe allergic reactions", nine, listOf(answer("DE167")), listOf(table("HepatitisB")))
+        case("aged 9 months, DE165 Severely immunosuppressed", nine, listOf(answer("DE165")), listOf(table("Measles")))
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
