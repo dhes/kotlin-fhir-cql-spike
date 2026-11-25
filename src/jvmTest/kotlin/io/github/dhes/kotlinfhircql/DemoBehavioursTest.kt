@@ -610,6 +610,10 @@ class DemoBehavioursTest {
         case("aged 4 years", "2021-10-01", withFirstBooster("2021-10-01"), dtp)
         case("aged 9 years, second booster (tetanus-diphtheria) given at 4 years", "2016-10-01",
             withFirstBooster("2016-10-01") + booster("XM32Q5", "Tetanus and diphtheria vaccines", "2020-10-01", 2), dtp)
+        println("=== 27. If the Hib table with a booster were used: a pentavalent booster before 12 months")
+        case("aged 10 months (born 2024-12-01), three pentavalent doses", "2024-12-01", infantDoses("2024-12-01"), dtp + hib)
+        case("aged 13 months (born 2024-09-01), pentavalent booster given at 10 months", "2024-09-01",
+            infantDoses("2024-09-01") + penta("2025-07-01", 1, "Booster dose"), dtp + hib)
     }
 
     @Test
