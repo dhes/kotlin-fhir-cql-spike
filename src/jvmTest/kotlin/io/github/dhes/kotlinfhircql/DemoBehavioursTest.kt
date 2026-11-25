@@ -417,6 +417,56 @@ class DemoBehavioursTest {
         }
     }
 
+    /** The BCG table for a child with no BCG dose, older than a newborn: by age, with other doses, and with results on record. */
+    @Test
+    fun bcgForAChildWhoMissedItAtBirth() = runTest(timeout = 60.minutes) {
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val library = "IMMZD2DTBCGLogic"
+        val outcomes = arrayOf("Client is due for BCG vaccination", "Client is not due for BCG vaccination", "Clinical judgement is required. Create clinical note.", "BCG immunization schedule is complete")
+        suspend fun case(title: String, label: String, birthDate: String, extra: List<JsonObject> = emptyList()) {
+            val variant = variant(scenario, "${scenario.patient}-late-bcg-$label", extra = extra, birthDate = birthDate)
+            show(title, variant)
+            print(cql(variant, library, *outcomes))
+        }
+        /** The observations of one of WHO's BCG test patients, moved to this child. */
+        fun observationsOf(id: String): List<JsonObject> =
+            json.parseToJsonElement(WhoSuite.bundleJson(base(id))).jsonObject.getValue("entry").jsonArray
+                .map { it.jsonObject.getValue("resource").jsonObject }
+                .filter { it.getValue("resourceType").jsonPrimitive.content == "Observation" }
+                .map { JsonObject(it + ("subject" to buildJsonObject { put("reference", "Patient/${scenario.patient}") })) }
+        fun rotavirus(date: String) = immunization(scenario.patient, icd, "XM4GV0", "Rota virus, live attenuated", date, primarySeries = true)
+        fun mr(date: String) = immunization(scenario.patient, icd, "XM21H2", "Measles, combinations with rubella, live attenuated", date, primarySeries = true)
+        fun yf(date: String) = immunization(scenario.patient, icd, "XM3418", "Yellow fever, live attenuated", date, primarySeries = true)
+        fun opv(date: String) = immunization(scenario.patient, icd, "XM79H3", "Poliomyelitis oral, bivalent, live attenuated", date, primarySeries = true)
+        fun bcg(date: String) = immunization(scenario.patient, icd, "XM8142", "Tuberculosis, live attenuated vaccines", date, primarySeries = true)
+
+        println("=== 14. BCG for a child with nothing on record, seen on ${scenario.today}, by age")
+        for ((age, birthDate) in listOf(
+            "28 days" to "2025-09-03", "29 days" to "2025-09-02", "6 weeks" to "2025-08-20", "6 months" to "2025-04-01",
+            "11 months and 29 days" to "2024-10-02", "12 months" to "2024-10-01", "13 months" to "2024-09-01", "5 years" to "2020-10-01",
+        )) {
+            case("aged $age (born $birthDate)", "age-$birthDate", birthDate)
+        }
+
+        println("=== 15. BCG for a child aged 6 months (born 2025-04-01) with no BCG dose, other live vaccines on record")
+        val born = "2025-04-01"
+        case("rotavirus given today", "rota-today", born, listOf(rotavirus("2025-10-01")))
+        case("rotavirus given yesterday", "rota-yesterday", born, listOf(rotavirus("2025-09-30")))
+        case("rotavirus given 27 days ago", "rota-27d", born, listOf(rotavirus("2025-09-04")))
+        case("rotavirus given 28 days ago", "rota-28d", born, listOf(rotavirus("2025-09-03")))
+        case("oral polio given yesterday", "opv-yesterday", born, listOf(opv("2025-09-30")))
+        case("measles-rubella and yellow fever given today (child aged 9 months, born 2025-01-01)", "mr-yf-today", "2025-01-01", listOf(mr("2025-10-01"), yf("2025-10-01")))
+        case("BCG given today", "bcg-today", born, listOf(bcg("2025-10-01")))
+
+        println("=== 16. BCG for a child aged 6 months (born 2025-04-01) with no BCG dose, results on record")
+        case("TB infection test negative", "tb-negative", born, observationsOf("IMMZD2DTBCG/BCG13.5"))
+        case("TB infection test positive", "tb-positive", born, observationsOf("IMMZD2DTBCG/BCG16.4"))
+        case("HIV-positive, on ART, immunologically stable, clinically well", "hiv-well", born, observationsOf("IMMZD2DTBCG/BCG19.7"))
+        case("HIV-positive, on ART, not clinically well", "hiv-unwell", born, observationsOf("IMMZD2DTBCG/BCG18.5"))
+        case("HIV-positive, not on ART", "hiv-no-art", born, observationsOf("IMMZD2DTBCG/BCG21.4"))
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
