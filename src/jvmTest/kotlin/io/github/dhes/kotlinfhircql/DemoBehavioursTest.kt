@@ -444,7 +444,7 @@ class DemoBehavioursTest {
         println("=== 14. BCG for a child with nothing on record, seen on ${scenario.today}, by age")
         for ((age, birthDate) in listOf(
             "28 days" to "2025-09-03", "29 days" to "2025-09-02", "6 weeks" to "2025-08-20", "6 months" to "2025-04-01",
-            "11 months and 29 days" to "2024-10-02", "12 months" to "2024-10-01", "13 months" to "2024-09-01", "5 years" to "2020-10-01",
+            "11 months and 29 days" to "2024-10-02", "12 months" to "2024-10-01", "13 months" to "2024-09-01", "4 years 11 months" to "2020-10-02", "5 years" to "2020-10-01",
         )) {
             case("aged $age (born $birthDate)", "age-$birthDate", birthDate)
         }
