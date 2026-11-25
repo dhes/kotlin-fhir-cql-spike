@@ -571,6 +571,47 @@ class DemoBehavioursTest {
         case("aged 13 months (born 2024-09-01), nothing on record", "2024-09-01", emptyList(), infant + "IMMZD2DTDTPDelayedOrInterruptedSeries")
     }
 
+    /** WHO's DTP and Hib tables for a child whose infant doses are complete, around the boosters. */
+    @Test
+    fun boosters() = runTest(timeout = 60.minutes) {
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val today = scenario.today
+        var n = 0
+        suspend fun case(title: String, birthDate: String, doses: List<JsonObject>, tables: List<String>) {
+            for (table in tables) show("$title; $table", variant(scenario, "${scenario.patient}-booster-${n++}", plan = table, extra = doses, birthDate = birthDate))
+        }
+        fun after(born: String, days: Long) = java.time.LocalDate.parse(born).plusDays(days).toString()
+        fun penta(date: String, dose: Int, series: String = "Primary series") =
+            immunization(scenario.patient, icd, "XM7JP3", "Diphtheria, hemophilus influenzae B, pertussis, tetanus, hepatitis B vaccines", date, series = series, dose = dose)
+        fun infantDoses(born: String) = listOf(penta(after(born, 42), 1), penta(after(born, 70), 2), penta(after(born, 98), 3))
+        fun booster(code: String, display: String, date: String, dose: Int = 1) = immunization(scenario.patient, icd, code, display, date, series = "Booster dose", dose = dose)
+        val dtp = listOf("IMMZD2DTDTPOnTimeStart")
+        val hib = listOf("IMMZD2DTHib3Doses", "IMMZD2DTHib3DosesWithBoosterDose")
+
+        println("=== 24. A child with three pentavalent doses on record, seen on $today, by age")
+        case("aged 9 months", "2025-01-01", infantDoses("2025-01-01"), dtp + hib)
+        case("aged 11 months and 29 days", "2024-10-02", infantDoses("2024-10-02"), dtp)
+        case("aged 12 months", "2024-10-01", infantDoses("2024-10-01"), dtp + hib)
+        case("aged 15 months", "2024-07-01", infantDoses("2024-07-01"), dtp + hib)
+
+        println("=== 25. The same child aged 15 months (born 2024-07-01), as a booster is recorded today")
+        val born = "2024-07-01"
+        val all = dtp + hib + "IMMZD2DTHepatitisB4Doses"
+        case("pentavalent recorded as a booster dose", born, infantDoses(born) + penta(today, 1, "Booster dose"), all)
+        case("pentavalent recorded as a fourth primary-series dose", born, infantDoses(born) + penta(today, 4), all)
+        case("whole-cell DTP (XM2TK2) recorded as a booster dose", born,
+            infantDoses(born) + booster("XM2TK2", "Pertussis, inactivated, whole cell, combinations with toxoids vaccines", today), dtp)
+        case("tetanus-diphtheria (XM32Q5) recorded as a booster dose", born, infantDoses(born) + booster("XM32Q5", "Tetanus and diphtheria vaccines", today), dtp)
+
+        println("=== 26. Later boosters: the pentavalent booster was given at 15 months")
+        fun withFirstBooster(b: String) = infantDoses(b) + penta(after(b, 457), 1, "Booster dose")
+        case("aged 3 years 11 months", "2021-10-02", withFirstBooster("2021-10-02"), dtp)
+        case("aged 4 years", "2021-10-01", withFirstBooster("2021-10-01"), dtp)
+        case("aged 9 years, second booster (tetanus-diphtheria) given at 4 years", "2016-10-01",
+            withFirstBooster("2016-10-01") + booster("XM32Q5", "Tetanus and diphtheria vaccines", "2020-10-01", 2), dtp)
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
