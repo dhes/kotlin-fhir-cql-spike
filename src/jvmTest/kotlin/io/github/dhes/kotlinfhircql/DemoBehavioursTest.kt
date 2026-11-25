@@ -617,6 +617,93 @@ class DemoBehavioursTest {
     }
 
     @Test
+    fun lateStarters() = runTest(timeout = 120.minutes) {
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val today = scenario.today
+        val programme = listOf(
+            "IMMZD2DTBCG", "IMMZD2DTHepatitisBBirthDose", "IMMZD2DTPolioBirthDose", "IMMZD2DTDTPOnTimeStart", "IMMZD2DTHepatitisB4Doses", "IMMZD2DTHib3Doses",
+            "IMMZD2DTPneumococcal3Doses", "IMMZD2DTPolioBOPVPlusIPV", "IMMZD2DTRotavirus", "IMMZD2DTMeaslesOngoingTransmission", "IMMZD2DTRubellaHighIncidence",
+            "IMMZD2DTYellowfeverYellowFever",
+        )
+        val delayed = listOf("IMMZD2DTDTPDelayedOrInterruptedSeries", "IMMZD2DTHepatitisBDelayedStart")
+        var n = 0
+        suspend fun case(title: String, birthDate: String, doses: List<JsonObject>, tables: List<String> = programme + delayed) {
+            for (table in tables) show("$title; $table", variant(scenario, "${scenario.patient}-late-${n++}", plan = table, extra = doses, birthDate = birthDate))
+        }
+        fun after(born: String, days: Long) = java.time.LocalDate.parse(born).plusDays(days).toString()
+        val oral = "DE214" to "bOPV"
+        val injected = "DE213" to "IPV"
+        fun bcg(date: String) = immunization(scenario.patient, icd, "XM8142", "Tuberculosis, live attenuated vaccines", date, primarySeries = true)
+        fun hepB0(date: String) = immunization(scenario.patient, icd, "XM9V38", "Hepatitis B, purified antigen", date, series = "Dose 0")
+        fun opv0(date: String) = immunization(scenario.patient, icd, "XM79H3", "Poliomyelitis oral, bivalent, live attenuated", date, series = "Dose 0", typeOfDose = oral)
+        fun atBirth(date: String) = listOf(bcg(date), hepB0(date), opv0(date))
+        fun penta(date: String, dose: Int) = immunization(scenario.patient, icd, "XM7JP3", "Diphtheria, hemophilus influenzae B, pertussis, tetanus, hepatitis B vaccines", date, primarySeries = true, dose = dose)
+        fun opv(date: String, dose: Int) = immunization(scenario.patient, icd, "XM79H3", "Poliomyelitis oral, bivalent, live attenuated", date, primarySeries = true, dose = dose, typeOfDose = oral)
+        fun ipv(date: String, dose: Int) = immunization(scenario.patient, icd, "XM5V19", "Poliomyelitis, trivalent, inactivated, whole virus", date, primarySeries = true, dose = dose, typeOfDose = injected)
+        fun pcv(date: String, dose: Int) = immunization(scenario.patient, icd, "XM96S7", "Pneumococcus, purified polysaccharides antigen conjugated vaccines", date, primarySeries = true, dose = dose)
+        fun rota(date: String, dose: Int) = immunization(scenario.patient, icd, "XM4GV0", "Rota virus, live attenuated", date, primarySeries = true, dose = dose, seriesDoses = 2, brand = "Rotarix")
+        fun mr(date: String, dose: Int) = immunization(scenario.patient, icd, "XM21H2", "Measles, combinations with rubella, live attenuated", date, primarySeries = true, dose = dose)
+        fun yf(date: String) = immunization(scenario.patient, icd, "XM3418", "Yellow fever, live attenuated", date, primarySeries = true)
+        fun visit(date: String, dose: Int) = listOf(penta(date, dose), opv(date, dose), pcv(date, dose)) + (if (dose <= 2) listOf(rota(date, dose)) else emptyList())
+
+        println("=== 28. A child with nothing on record, seen on $today, by age")
+        case("aged 4 months", "2025-06-01", emptyList())
+        case("aged 9 months", "2025-01-01", emptyList())
+        case("aged 12 months", "2024-10-01", emptyList())
+        case("aged 15 months", "2024-07-01", emptyList())
+        case("aged 2 years", "2023-10-01", emptyList())
+        case("aged 3 years", "2022-10-01", emptyList())
+        case("aged 5 years", "2020-10-01", emptyList())
+        case("aged 7 years", "2018-10-01", emptyList())
+
+        println("=== 29. A child aged 14 months (born 2024-08-01) whose infant visits were interrupted")
+        val b = "2024-08-01"
+        case("birth doses only", b, atBirth(b))
+        case("birth doses and the 6-week visit", b, atBirth(b) + visit(after(b, 42), 1))
+        case("birth doses, the 6-week and 10-week visits", b, atBirth(b) + visit(after(b, 42), 1) + visit(after(b, 70), 2))
+        case("everything to 14 weeks (with the first IPV), nothing since", b, atBirth(b) + visit(after(b, 42), 1) + visit(after(b, 70), 2) + visit(after(b, 98), 3) + ipv(after(b, 98), 4))
+
+        // A child first seen at 15 months with nothing on record, followed forward. Today is fixed, so each case moves
+        // the birth date and the earlier visits back. Every dose WHO's tables proposed at a visit is recorded there.
+        fun ago(days: Long) = java.time.LocalDate.parse(today).minusDays(days).toString()
+        fun bornFor(firstVisit: String) = java.time.LocalDate.parse(firstVisit).minusMonths(15).toString()
+        fun first(date: String) = listOf(bcg(date), penta(date, 1), opv(date, 1), ipv(date, 1), pcv(date, 1), rota(date, 1), mr(date, 1), yf(date))
+        fun second(date: String) = listOf(penta(date, 2), opv(date, 2), pcv(date, 2), rota(date, 2), mr(date, 2))
+
+        println("=== 30. A child first seen at 15 months with nothing on record: the first visit and 4 weeks later")
+        case("first visit today, everything proposed recorded", bornFor(today), first(today))
+        case("first visit 27 days ago", bornFor(ago(27)), first(ago(27)))
+        case("first visit 28 days ago", bornFor(ago(28)), first(ago(28)))
+        case("first visit 28 days ago; second pentavalent, oral polio, pneumococcal, rotavirus, measles-rubella recorded today", bornFor(ago(28)), first(ago(28)) + second(today))
+
+        println("=== 31. The same child after two visits 4 weeks apart: when is the third pentavalent dose due?")
+        case("second visit 28 days ago", bornFor(ago(56)), first(ago(56)) + second(ago(28)))
+        case("second visit 28 days ago; oral polio 3 recorded today", bornFor(ago(56)), first(ago(56)) + second(ago(28)) + opv(today, 3))
+        case("second visit 5 months ago (150 days)", bornFor(ago(178)), first(ago(178)) + second(ago(150)) + opv(ago(122), 3))
+        case("second visit 6 months ago (184 days)", bornFor(ago(212)), first(ago(212)) + second(ago(184)) + opv(ago(156), 3))
+
+        println("=== 32. Third pentavalent dose 6 months after the second (the 0, 1, 7 month course), and after")
+        fun slow(thirdDaysAgo: Long) = first(ago(thirdDaysAgo + 212)) + second(ago(thirdDaysAgo + 184)) + opv(ago(thirdDaysAgo + 156), 3) + penta(ago(thirdDaysAgo), 3) + ipv(ago(thirdDaysAgo), 2)
+        case("third dose recorded today", bornFor(ago(212)), slow(0))
+        case("third dose 6 months ago (183 days)", bornFor(ago(395)), slow(183))
+        case("third dose 364 days ago", bornFor(ago(576)), slow(364))
+        case("third dose 1 year ago (366 days)", bornFor(ago(578)), slow(366))
+        case("third dose 1 year ago; pentavalent recorded today as a booster", bornFor(ago(578)), slow(366) + immunization(scenario.patient, icd, "XM7JP3", "Diphtheria, hemophilus influenzae B, pertussis, tetanus, hepatitis B vaccines", today, series = "Booster dose", dose = 1))
+
+        println("=== 33. Third pentavalent dose 4 weeks after the second (a 0, 1, 2 month course), and after")
+        fun fast(thirdDaysAgo: Long) = first(ago(thirdDaysAgo + 56)) + second(ago(thirdDaysAgo + 28)) + penta(ago(thirdDaysAgo), 3) + opv(ago(thirdDaysAgo), 3)
+        case("third dose recorded today", bornFor(ago(56)), fast(0))
+        case("third dose 6 months ago (183 days)", bornFor(ago(239)), fast(183))
+
+        println("=== 34. A child first seen at 3 years with nothing on record")
+        val three = java.time.LocalDate.parse(today).minusYears(3).toString()
+        fun firstAtThree(date: String) = listOf(bcg(date), penta(date, 1), opv(date, 1), ipv(date, 1), pcv(date, 1), mr(date, 1), yf(date))
+        case("first visit today, everything proposed recorded", three, firstAtThree(today))
+        case("first visit 28 days ago", java.time.LocalDate.parse(ago(28)).minusYears(3).toString(), firstAtThree(ago(28)))
+    }
+
+    @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
         val child = base("IMMZD2DTMeaslesLowTransmission/Measles23.3")
