@@ -858,6 +858,107 @@ class DemoBehavioursTest {
         }
     }
 
+    /** What WHO's tables do with a child's HIV status, preterm birth and pneumococcal risk, for Freedonia's programme. */
+    @Test
+    fun riskAnswers() = runTest(timeout = 180.minutes) {
+        val icd = "http://id.who.int/icd/release/11/mms"
+        val immzD = "http://smart.who.int/immunizations/CodeSystem/IMMZ.D"
+        val immzZ = "http://smart.who.int/immunizations/CodeSystem/IMMZ.Z"
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val today = scenario.today
+        fun ago(days: Long) = java.time.LocalDate.parse(today).minusDays(days).toString()
+        fun observation(code: String, display: String, value: JsonObject.() -> Map<String, kotlinx.serialization.json.JsonElement>) =
+            buildJsonObject {
+                put("resourceType", "Observation")
+                put("id", "risk-$code")
+                put("status", "final")
+                putJsonObject("code") { putJsonArray("coding") { add(buildJsonObject { put("system", immzD); put("code", code); put("display", display) }) } }
+                putJsonObject("subject") { put("reference", "Patient/${scenario.patient}") }
+                put("effectiveDateTime", ago(14))
+            }.let { JsonObject(it + it.value()) }
+        fun flag(code: String, display: String, value: Boolean) = observation(code, display) { mapOf("valueBoolean" to JsonPrimitive(value)) }
+        fun hiv(code: String, display: String) =
+            observation("DE204", "HIV status") {
+                mapOf("valueCodeableConcept" to buildJsonObject { putJsonArray("coding") { add(buildJsonObject { put("system", immzD); put("code", code); put("display", display) }) } })
+            }
+        val positive = hiv("DE205", "HIV-positive")
+        fun art(v: Boolean) = flag("DE210", "Currently on ART", v)
+        fun stable(v: Boolean) = flag("DE249", "Immunologically stable", v)
+        fun well(v: Boolean) = flag("DE250", "Clinically well", v)
+        val preterm = flag("DE208", "Preterm birth", true)
+        val highRisk = flag("DE251", "At high risk for pneumococcal infection", true)
+        fun pcv(date: String, dose: Int, series: String = "Primary series") =
+            immunization(scenario.patient, icd, "XM96S7", "Pneumococcus, purified polysaccharides antigen conjugated vaccines", date, series = series, dose = dose)
+        var n = 0
+        suspend fun case(title: String, table: String, birthDate: String, extra: List<JsonObject>) =
+            show("$title; $table", variant(scenario, "${scenario.patient}-risk-${n++}", plan = table, extra = extra, birthDate = birthDate))
+
+        println("=== 41. BCG table for a child with no BCG dose, by what is on record about HIV, and by age")
+        val states = listOf(
+            "HIV status negative" to listOf(hiv("DE206", "HIV-negative")),
+            "HIV status unknown" to listOf(hiv("DE207", "Unknown")),
+            "HIV-positive, nothing else recorded" to listOf(positive),
+            "HIV-positive, on ART, nothing else recorded" to listOf(positive, art(true)),
+            "HIV-positive, on ART, immunologically stable, clinically well" to listOf(positive, art(true), stable(true), well(true)),
+            "HIV-positive, on ART, not immunologically stable, clinically well" to listOf(positive, art(true), stable(false), well(true)),
+            "HIV-positive, on ART, immunologically stable, not clinically well" to listOf(positive, art(true), stable(true), well(false)),
+            "HIV-positive, not on ART" to listOf(positive, art(false)),
+        )
+        for ((age, born) in listOf("newborn (2 days)" to ago(2), "6 weeks" to ago(42), "9 months" to "2025-01-01")) {
+            // The newborn's observations are dated 14 days ago in every case, before birth; WHO's logic takes any dated today or earlier.
+            for ((state, observations) in states) case("aged $age, $state", "IMMZD2DTBCG", born, observations)
+        }
+
+        println("=== 42. Pneumococcal 3-dose table after three doses at 6, 10 and 14 weeks, by time since the third dose and by risk")
+        fun primed(thirdDaysAgo: Long) = listOf(pcv(ago(thirdDaysAgo + 56), 1), pcv(ago(thirdDaysAgo + 28), 2), pcv(ago(thirdDaysAgo), 3))
+        fun bornFor(thirdDaysAgo: Long) = ago(thirdDaysAgo + 98)
+        val risks = listOf("nothing recorded" to emptyList(), "HIV-positive" to listOf(positive), "born preterm" to listOf(preterm), "at high risk" to listOf(highRisk))
+        for ((since, days) in listOf("today" to 0L, "55 days ago" to 55L, "56 days ago" to 56L, "57 days ago" to 57L, "6 months ago (aged 9 months)" to 183L, "aged 15 months" to 359L, "aged 23 months" to 600L, "aged 24 months" to 633L)) {
+            for ((risk, observations) in risks) case("third dose $since, $risk", "IMMZD2DTPneumococcal3Doses", bornFor(days), primed(days) + observations)
+        }
+        case("third dose 57 days ago, HIV-positive, a fourth dose recorded today as a booster", "IMMZD2DTPneumococcal3Doses", bornFor(57), primed(57) + positive + pcv(today, 1, "Booster dose"))
+        case("third dose 57 days ago, HIV-positive, a fourth dose recorded today in the primary series", "IMMZD2DTPneumococcal3Doses", bornFor(57), primed(57) + positive + pcv(today, 4))
+
+        println("=== 43. Pneumococcal 3-dose table for a late starter, by risk")
+        val lateRisks = listOf("nothing recorded" to emptyList(), "at high risk" to listOf(highRisk), "HIV-positive" to listOf(positive))
+        fun bornAt(months: Long, firstDaysAgo: Long) = java.time.LocalDate.parse(ago(firstDaysAgo)).minusMonths(months).toString()
+        for (days in listOf(27L, 28L, 55L, 56L, 57L)) {
+            for ((risk, observations) in lateRisks) case("first dose at 15 months, $days days ago, $risk", "IMMZD2DTPneumococcal3Doses", bornAt(15, days), listOf(pcv(ago(days), 1)) + observations)
+        }
+        for ((risk, observations) in lateRisks) {
+            case("first dose at 15 months and second 56 days later, 57 days ago, $risk", "IMMZD2DTPneumococcal3Doses", bornAt(15, 113), listOf(pcv(ago(113), 1), pcv(ago(57), 2)) + observations)
+            case("first dose at 3 years, 57 days ago, $risk", "IMMZD2DTPneumococcal3Doses", bornAt(36, 57), listOf(pcv(ago(57), 1)) + observations)
+            case("aged 3 years, no dose, $risk", "IMMZD2DTPneumococcal3Doses", bornAt(36, 0), observations)
+        }
+
+        println("=== 44. A child aged 9 months with nothing on record: every table of the programme, with no HIV status and HIV-positive")
+        val programme = listOf(
+            "IMMZD2DTBCG", "IMMZD2DTHepatitisBBirthDose", "IMMZD2DTPolioBirthDose", "IMMZD2DTDTPOnTimeStart", "IMMZD2DTHepatitisB4Doses", "IMMZD2DTHib3Doses",
+            "IMMZD2DTPneumococcal3Doses", "IMMZD2DTPolioBOPVPlusIPV", "IMMZD2DTRotavirus", "IMMZD2DTMeaslesOngoingTransmission", "IMMZD2DTRubellaHighIncidence",
+            "IMMZD2DTYellowfeverYellowFever",
+        )
+        for (table in programme) {
+            case("no HIV status", table, "2025-01-01", emptyList())
+            case("HIV-positive", table, "2025-01-01", listOf(positive))
+        }
+
+        println("=== 45. The same child, HIV-positive, a proposal dated today for each kind of vaccine: the ten contraindication tables")
+        val proposals = listOf("DE1", "DE6", "DE30", "DE31", "DE24", "DE4", "DE13", "DE16", "DE9", "DE17", "DE23").map { code ->
+            buildJsonObject {
+                put("resourceType", "MedicationRequest")
+                put("id", "proposal-$code")
+                put("status", "draft")
+                put("intent", "proposal")
+                putJsonObject("medicationCodeableConcept") { putJsonArray("coding") { add(buildJsonObject { put("system", immzZ); put("code", code) }) } }
+                putJsonObject("subject") { put("reference", "Patient/${scenario.patient}") }
+                put("authoredOn", today)
+            }
+        }
+        for (t in listOf("BCG", "HepatitisB", "Polio", "DTP", "Hib", "Pneumococcal", "Rotavirus", "Measles", "Rubella", "YellowFever")) {
+            case("HIV-positive, no answer to \"Potential contraindications\"", "IMMZD5DT${t}Contraindications", "2025-01-01", proposals + positive)
+        }
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
