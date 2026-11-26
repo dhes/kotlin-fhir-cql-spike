@@ -790,6 +790,74 @@ class DemoBehavioursTest {
         case("aged 9 months, DE165 Severely immunosuppressed", nine, listOf(answer("DE165")), listOf(table("Measles")))
     }
 
+    /**
+     * Freedonia's screening questions that go through WHO's contraindication tables: the WHO answers a "yes" stands
+     * for, with the proposals of one visit on record, applied to the table of each vaccine proposed at that visit.
+     */
+    @Test
+    fun freedoniaScreening() = runTest(timeout = 180.minutes) {
+        val scenario = base("IMMZD2DTBCG/BCG07.4")
+        val today = scenario.today
+        val immzD = "http://smart.who.int/immunizations/CodeSystem/IMMZ.D"
+        val immzZ = "http://smart.who.int/immunizations/CodeSystem/IMMZ.Z"
+        val tableOf = mapOf(
+            "DE1" to "BCG", "DE6" to "HepatitisB", "DE30" to "Polio", "DE31" to "Polio", "DE24" to "DTP", "DE28" to "DTP", "DE12" to "DTP",
+            "DE4" to "Hib", "DE13" to "Pneumococcal", "DE16" to "Rotavirus", "DE9" to "Measles", "DE17" to "Rubella", "DE23" to "YellowFever",
+        )
+        val questions = listOf(
+            "S2 diarrhoea or vomiting today" to listOf("DE194"),
+            "S3 severe allergic reaction" to listOf("DE166", "DE167"),
+            "S4 immune weakness or treatment" to listOf("DE187", "DE200", "DE165", "DE164"),
+            "S6 intussusception" to listOf("DE196"),
+            "S7 spina bifida, bladder exstrophy or bowel disease" to listOf("DE192", "DE193"),
+            "S8 blood product in the past 3 months" to listOf("DE170"),
+            "S9 TB" to listOf("DE190"),
+        )
+        val visits = listOf(
+            Triple("birth", "2025-10-01", listOf("DE1", "DE6", "DE30")),
+            Triple("6 weeks", "2025-08-20", listOf("DE24", "DE6", "DE4", "DE13", "DE30", "DE16")),
+            Triple("14 weeks", "2025-06-25", listOf("DE24", "DE6", "DE4", "DE13", "DE30", "DE31")),
+            Triple("second IPV dose (aged 8 months)", "2025-02-01", listOf("DE31")),
+            Triple("9 months", "2025-01-01", listOf("DE9", "DE17", "DE23")),
+            Triple("15 months", "2024-07-01", listOf("DE9", "DE17", "DE28", "DE12")),
+            Triple("catch-up at 15 months, nothing on record", "2024-07-01", listOf("DE1", "DE24", "DE6", "DE4", "DE13", "DE30", "DE31", "DE16", "DE9", "DE17", "DE23")),
+        )
+        fun answer(code: String) =
+            buildJsonObject {
+                put("resourceType", "Observation")
+                put("id", "answer-$code")
+                put("status", "final")
+                putJsonObject("code") {
+                    putJsonArray("coding") { add(buildJsonObject { put("system", immzD); put("code", "DE161"); put("display", "Potential contraindications") }) }
+                }
+                putJsonObject("subject") { put("reference", "Patient/${scenario.patient}") }
+                put("effectiveDateTime", today)
+                putJsonObject("valueCodeableConcept") { putJsonArray("coding") { add(buildJsonObject { put("system", immzD); put("code", code) }) } }
+            }
+        fun proposal(code: String) =
+            buildJsonObject {
+                put("resourceType", "MedicationRequest")
+                put("id", "proposal-$code")
+                put("status", "draft")
+                put("intent", "proposal")
+                putJsonObject("medicationCodeableConcept") { putJsonArray("coding") { add(buildJsonObject { put("system", immzZ); put("code", code) }) } }
+                putJsonObject("subject") { put("reference", "Patient/${scenario.patient}") }
+                put("authoredOn", today)
+            }
+        var n = 0
+        println("=== 40. Freedonia's screening questions: the WHO answers of one \"yes\", the proposals of one visit, each table with a proposal")
+        for ((visit, born, proposed) in visits) {
+            for ((question, codes) in questions) {
+                for (t in proposed.map(tableOf::getValue).distinct()) {
+                    show(
+                        "$visit, proposed ${proposed.joinToString(" ")}; yes to $question (${codes.joinToString(" ")}); IMMZD5DT${t}Contraindications",
+                        variant(scenario, "${scenario.patient}-fscreen-${n++}", plan = "IMMZD5DT${t}Contraindications", extra = proposed.map(::proposal) + codes.map(::answer), birthDate = born),
+                    )
+                }
+            }
+        }
+    }
+
     @Test
     fun contraindicationTableNeedsADatedProposal() = runTest(timeout = 30.minutes) {
         println("=== 3. The measles decision table's proposal, stored, then the measles contraindication table applied")
